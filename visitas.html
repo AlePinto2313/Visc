@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>VISC — Visitas</title>
+  <link rel="stylesheet" href="css/visc.css"/>
+</head>
+<body>
+<nav class="topbar">
+  <div class="topbar-brand">
+    <div class="logo-circle">V</div>
+    <a href="dashboard.html" style="color:#fff;font-weight:700;">← VISC</a>
+  </div>
+  <div class="topbar-right">
+    <span class="topbar-user" id="topUser"></span>
+    <button class="btn-logout" onclick="doLogout()">Salir</button>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="page-header">
+    <div><h1>🏢 Visitas a Terreno</h1><p>Registra visitas de inspección y sus acuerdos</p></div>
+    <button class="btn btn-secondary" onclick="toggleBuscar()">🔍 Buscar PDFs</button>
+  </div>
+
+  <!-- Buscar -->
+  <div id="buscarSection" class="card hidden">
+    <div class="card-header"><span class="card-title">Buscar visitas por empresa</span></div>
+    <div style="display:flex;gap:10px;align-items:end;">
+      <div class="form-group" style="flex:1;"><label>Nombre empresa</label><input id="empBuscar" placeholder="Empresa S.A."/></div>
+      <button class="btn btn-primary" onclick="buscarPDFs()">Buscar</button>
+    </div>
+    <div id="resultadosBuscar" class="mt-4"></div>
+  </div>
+
+  <!-- Formulario -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">Nueva visita</span></div>
+    <div id="alertVis" class="alert alert-error hidden"></div>
+
+    <div class="section-title">I. Información general</div>
+    <div class="form-grid">
+      <div class="form-group"><label>Nombre experto *</label><input id="nombreExperto" placeholder="Juan Pérez"/></div>
+      <div class="form-group"><label>Firma experto</label><input id="firmaExperto" placeholder="Nombre"/></div>
+      <div class="form-group"><label>Empresa visitada *</label><input id="empresaVisitada" placeholder="Empresa S.A."/></div>
+      <div class="form-group"><label>Socio estratégico</label><input id="socioEstrategico" placeholder="Nombre socio"/></div>
+      <div class="form-group"><label>Ciudad destino</label><input id="ciudadDestino" placeholder="Santiago"/></div>
+      <div class="form-group"><label>Fecha del evento *</label><input type="date" id="fechaEvento"/></div>
+      <div class="form-group"><label>Fecha y hora visita</label><input type="datetime-local" id="fechaHoraVisita"/></div>
+      <div class="form-group"><label>Email adicional</label><input type="email" id="emailAdicional" placeholder="cc@email.com"/></div>
+    </div>
+
+    <div class="section-title">II. Motivo u objetivo</div>
+    <div class="form-group full"><textarea id="motivoObjetivo" placeholder="Describa el motivo de la visita…"></textarea></div>
+
+    <div class="section-title">III. Actividades realizadas</div>
+    <div class="form-group full"><textarea id="actividadesRealizadas" placeholder="Actividades realizadas durante la visita…"></textarea></div>
+
+    <div class="section-title">IV. Observaciones y acuerdos</div>
+    <div id="observacionesList"></div>
+    <button class="btn btn-secondary btn-sm" onclick="agregarObservacion()">+ Agregar observación</button>
+
+    <div class="section-title">V. Información relevante</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Obligación de informar (DS40)</label>
+        <select id="ds40"><option value="No">No</option><option value="Sí">Sí</option></select>
+      </div>
+      <div class="form-group">
+        <label>Uso de EPP en faena</label>
+        <select id="epp"><option value="No">No</option><option value="Sí">Sí</option></select>
+      </div>
+      <div class="form-group">
+        <label>Actividades preventivas al día</label>
+        <select id="actividades"><option value="No">No</option><option value="Sí">Sí</option></select>
+      </div>
+      <div class="form-group">
+        <label>Listado trabajadores actualizado</label>
+        <select id="trabajadores"><option value="No">No</option><option value="Sí">Sí</option></select>
+      </div>
+      <div class="form-group">
+        <label>Revisión completada</label>
+        <select id="revision"><option value="No">No</option><option value="Sí">Sí</option></select>
+      </div>
+    </div>
+
+    <div class="section-title">VI. Visado</div>
+    <div class="form-grid">
+      <div class="form-group"><label>Nombre / Cargo visado</label><input id="nombreVisado" placeholder="Carlos Martínez - Gerente"/></div>
+      <div class="form-group"><label>Firma / Fecha visado</label><input id="firmaFecha" placeholder="CMartínez - 01/01/2025"/></div>
+    </div>
+
+    <div class="mt-6 btn-group">
+      <button class="btn btn-primary" id="btnGuardar" onclick="guardar()">💾 Guardar visita</button>
+      <button class="btn btn-ghost" onclick="limpiar()">Limpiar</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+let observacionesList = [];
+
+(async () => {
+  const sess = requireAuth();
+  if (!sess) return;
+  document.getElementById('topUser').textContent = sess.nombre || sess.correo;
+  document.getElementById('fechaEvento').value = new Date().toISOString().split('T')[0];
+  document.getElementById('nombreExperto').value = sess.nombre || '';
+})();
+
+function renderObservaciones() {
+  const c = document.getElementById('observacionesList');
+  c.innerHTML = '';
+  observacionesList.forEach((obs, i) => {
+    const div = document.createElement('div');
+    div.style.cssText = 'display:grid;grid-template-columns:1fr 180px auto;gap:8px;align-items:end;margin-bottom:8px;padding:10px;background:var(--orange-lt);border-radius:8px;';
+    div.innerHTML = `
+      <div class="form-group"><label>Observación / Acuerdo</label><input value="${obs.observacion||''}" oninput="observacionesList[${i}].observacion=this.value" placeholder="Descripción…"/></div>
+      <div class="form-group"><label>Fecha cumplimiento</label><input type="date" value="${obs.fecha_cumplimiento||''}" oninput="observacionesList[${i}].fecha_cumplimiento=this.value"/></div>
+      <button onclick="observacionesList.splice(${i},1);renderObservaciones()" style="background:#fee2e2;color:#991b1b;border:none;border-radius:6px;padding:8px 12px;cursor:pointer;align-self:flex-end;">✕</button>
+    `;
+    c.appendChild(div);
+  });
+}
+
+function agregarObservacion() {
+  observacionesList.push({ observacion: '', fecha_cumplimiento: '' });
+  renderObservaciones();
+}
+
+async function guardar() {
+  const alert = document.getElementById('alertVis');
+  alert.classList.add('hidden');
+  const btn = document.getElementById('btnGuardar');
+  setLoading(btn, true);
+
+  const datos = {
+    nombre_experto:       document.getElementById('nombreExperto').value.trim(),
+    firma_experto:        document.getElementById('firmaExperto').value.trim(),
+    empresa_visitada:     document.getElementById('empresaVisitada').value.trim(),
+    socio_estrategico:    document.getElementById('socioEstrategico').value.trim(),
+    ciudad_destino:       document.getElementById('ciudadDestino').value.trim(),
+    fecha_evento:         document.getElementById('fechaEvento').value,
+    fecha_hora_visita:    document.getElementById('fechaHoraVisita').value || new Date().toISOString(),
+    emailAdicional:       document.getElementById('emailAdicional').value.trim(),
+    motivo_objetivo:      document.getElementById('motivoObjetivo').value.trim(),
+    actividades_realizadas: document.getElementById('actividadesRealizadas').value.trim(),
+    observaciones:        observacionesList,
+    ds40:                 document.getElementById('ds40').value,
+    epp:                  document.getElementById('epp').value,
+    actividades:          document.getElementById('actividades').value,
+    trabajadores:         document.getElementById('trabajadores').value,
+    revision:             document.getElementById('revision').value,
+    nombre_visado:        document.getElementById('nombreVisado').value.trim(),
+    firma_fecha:          document.getElementById('firmaFecha').value.trim(),
+  };
+
+  try {
+    const res = await Visitas.guardar(datos);
+    if (res.success) {
+      toast('Visita guardada ✓', 'success');
+      if (res.pdfUrl) window.open(res.pdfUrl, '_blank');
+      limpiar();
+    } else {
+      alert.textContent = res.message || 'Error';
+      alert.classList.remove('hidden');
+    }
+  } catch(e) {
+    alert.textContent = 'Error: ' + e.message;
+    alert.classList.remove('hidden');
+  }
+  setLoading(btn, false);
+}
+
+async function buscarPDFs() {
+  const emp = document.getElementById('empBuscar').value.trim();
+  if (!emp) { toast('Ingresa nombre de empresa', 'error'); return; }
+  const res = await Visitas.buscarPDFs(emp).catch(e => ({ success: false }));
+  const div = document.getElementById('resultadosBuscar');
+  if (!res.success || !res.pdfs || !res.pdfs.length) {
+    div.innerHTML = '<p style="color:#888;">Sin resultados.</p>';
+    return;
+  }
+  div.innerHTML = res.pdfs.map(p =>
+    `<div style="padding:8px 0;border-bottom:1px solid #eee;">
+      <a class="pdf-link" href="${p.url}" target="_blank">📄 ${p.name}</a>
+      <span style="font-size:11px;color:#aaa;margin-left:8px;">${p.fecha}</span>
+    </div>`
+  ).join('');
+}
+
+function toggleBuscar() { document.getElementById('buscarSection').classList.toggle('hidden'); }
+
+function limpiar() {
+  observacionesList = [];
+  renderObservaciones();
+  document.querySelectorAll('input,textarea,select').forEach(el => { if (el.type !== 'date') el.value = ''; });
+  document.getElementById('fechaEvento').value = new Date().toISOString().split('T')[0];
+}
+
+async function doLogout() { await Auth.logout(); window.location.href = 'index.html'; }
+</script>
+</body>
+</html>

@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>VISC — Inspecciones</title>
+  <link rel="stylesheet" href="css/visc.css"/>
+</head>
+<body>
+<nav class="topbar">
+  <div class="topbar-brand">
+    <div class="logo-circle">V</div>
+    <a href="dashboard.html" style="color:#fff;font-weight:700;">← VISC</a>
+  </div>
+  <div class="topbar-right">
+    <span class="topbar-user" id="topUser"></span>
+    <button class="btn-logout" onclick="doLogout()">Salir</button>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="page-header">
+    <div><h1>🔍 Inspecciones de Seguridad</h1><p>Inspecciones basadas en plantillas configurables</p></div>
+    <div class="btn-group">
+      <button class="btn btn-secondary" onclick="togglePDFs()">📄 Ver PDFs</button>
+      <button class="btn btn-secondary" id="btnGestionar" onclick="togglePlantillas()">⚙️ Plantillas</button>
+    </div>
+  </div>
+
+  <!-- Listado PDFs -->
+  <div id="pdfsSection" class="card hidden">
+    <div class="card-header"><span class="card-title">Inspecciones guardadas</span></div>
+    <div id="pdfsList"><p style="color:#888;">Cargando…</p></div>
+  </div>
+
+  <!-- Gestión de plantillas (solo SUPER_ADMIN) -->
+  <div id="plantillasSection" class="card hidden">
+    <div class="card-header"><span class="card-title">Gestión de plantillas</span></div>
+    <div id="plantillasList" style="margin-bottom:16px;"></div>
+    <div id="editPlantillaForm" class="hidden">
+      <div class="section-title">Nueva / editar plantilla</div>
+      <div class="form-grid" style="margin-bottom:12px;">
+        <div class="form-group"><label>Nombre plantilla *</label><input id="pNombre" placeholder="Inspección de EPP"/></div>
+        <div class="form-group"><label>Descripción</label><input id="pDesc" placeholder="Breve descripción"/></div>
+      </div>
+      <div id="seccionesList"></div>
+      <button class="btn btn-secondary btn-sm" onclick="agregarSeccion()">+ Sección</button>
+      <div class="btn-group mt-4">
+        <button class="btn btn-primary btn-sm" onclick="guardarPlantilla()">Guardar plantilla</button>
+        <button class="btn btn-ghost btn-sm" onclick="cancelarPlantilla()">Cancelar</button>
+      </div>
+    </div>
+    <button class="btn btn-secondary btn-sm mt-4" onclick="nuevaPlantilla()">+ Nueva plantilla</button>
+  </div>
+
+  <!-- Formulario inspección -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">Nueva inspección</span></div>
+    <div id="alertInsp" class="alert alert-error hidden"></div>
+
+    <div class="section-title">Datos generales</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Plantilla</label>
+        <select id="plantillaSelect" onchange="cargarPlantilla()">
+          <option value="">— Libre (sin plantilla) —</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Inspector</label><input id="inspector" placeholder="Nombre inspector"/></div>
+      <div class="form-group"><label>Cargo inspector</label><input id="cargo" placeholder="Prevencionista"/></div>
+      <div class="form-group"><label>Lugar</label><input id="lugar" placeholder="Faena sur"/></div>
+      <div class="form-group"><label>Fecha inspección</label><input type="date" id="fechaInsp"/></div>
+    </div>
+
+    <div class="section-title">Ítems a inspeccionar</div>
+    <div id="seccionesForm">
+      <!-- Cargado dinámicamente -->
+    </div>
+    <button class="btn btn-secondary btn-sm" onclick="agregarSeccionInsp()">+ Agregar sección</button>
+
+    <div class="section-title">Observaciones generales</div>
+    <div class="form-group full"><textarea id="obsGenerales" placeholder="Observaciones generales de la inspección…"></textarea></div>
+
+    <div class="mt-6 btn-group">
+      <button class="btn btn-primary" id="btnGuardar" onclick="guardar()">💾 Guardar inspección</button>
+      <button class="btn btn-ghost" onclick="limpiar()">Limpiar</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+let plantillas = [];
+let seccionesData = []; // estado del formulario de inspección
+let plantillaEditando = null;
+let seccionesEdicion = [];
+
+(async () => {
+  const sess = requireAuth();
+  if (!sess) return;
+  document.getElementById('topUser').textContent = sess.nombre || sess.correo;
+  document.getElementById('fechaInsp').value = new Date().toISOString().split('T')[0];
+  document.getElementById('inspector').value = sess.nombre || '';
+
+  if (sess.role !== 'SUPER_ADMIN') {
+    document.getElementById('btnGestionar').classList.add('hidden');
+  }
+
+  await cargarPlantillas();
+  agregarSeccionInsp(); // una sección por defecto
+})();
+
+async function cargarPlantillas() {
+  const r = await Inspecciones.listarPlantillas().catch(() => ({ success: false, plantillas: [] }));
+  plantillas = r.plantillas || [];
+  const sel = document.getElementById('plantillaSelect');
+  // Limpiar opciones excepto la primera
+  while (sel.options.length > 1) sel.remove(1);
+  plantillas.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = p.nombre;
+    sel.appendChild(opt);
+  });
+  renderPlantillasList();
+}
+
+function renderPlantillasList() {
+  const c = document.getElementById('plantillasList');
+  if (!plantillas.length) { c.innerHTML = '<p style="color:#888;font-size:13px;">Sin plantillas.</p>'; return; }
+  c.innerHTML = plantillas.map(p => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;">
+      <div><strong>${p.nombre}</strong><br/><span style="font-size:12px;color:#888;">${p.descripcion||''} · ${(p.secciones||[]).length} secciones</span></div>
+      <div class="btn-group">
+        <button class="btn btn-ghost btn-sm" onclick="editarPlantilla('${p.id}')">Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="eliminarPlantilla('${p.id}')">Eliminar</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function cargarPlantilla() {
+  const id = document.getElementById('plantillaSelect').value;
+  if (!id) { seccionesData = [{ titulo: '', items: [{ descripcion: '', tipo: 'cumplimiento', estado: '', observacion: '' }] }]; renderSeccionesForm(); return; }
+  const p = plantillas.find(x => x.id === id);
+  if (!p) return;
+  seccionesData = (p.secciones || []).map(sec => ({
+    titulo: sec.titulo,
+    items: (sec.items || []).map(it => ({ ...it, estado: '', valor: '', observacion: '' }))
+  }));
+  renderSeccionesForm();
+}
+
+function renderSeccionesForm() {
+  const c = document.getElementById('seccionesForm');
+  c.innerHTML = '';
+  seccionesData.forEach((sec, si) => {
+    const div = document.createElement('div');
+    div.style.cssText = 'border:1px solid var(--border);border-radius:10px;margin-bottom:14px;overflow:hidden;';
+    div.innerHTML = `
+      <div style="background:var(--orange);padding:10px 14px;display:flex;align-items:center;gap:10px;">
+        <input value="${sec.titulo||''}" placeholder="Nombre de sección" oninput="seccionesData[${si}].titulo=this.value" style="flex:1;border:none;background:rgba(255,255,255,.2);border-radius:6px;padding:4px 10px;color:#fff;font-weight:600;font-size:13px;"/>
+        <button onclick="seccionesData.splice(${si},1);renderSeccionesForm()" style="background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:12px;">✕</button>
+      </div>
+      <div style="padding:12px;" id="items_${si}"></div>
+      <div style="padding:0 12px 12px;">
+        <button class="btn btn-secondary btn-sm" onclick="agregarItem(${si})">+ Ítem</button>
+      </div>
+    `;
+    c.appendChild(div);
+    renderItems(si);
+  });
+}
+
+function renderItems(si) {
+  const c = document.getElementById(`items_${si}`);
+  if (!c) return;
+  c.innerHTML = '';
+  seccionesData[si].items.forEach((it, ii) => {
+    const div = document.createElement('div');
+    div.className = 'insp-item';
+    div.innerHTML = `
+      <div class="insp-item-header">
+        <input value="${it.descripcion||''}" placeholder="Ítem a inspeccionar" oninput="seccionesData[${si}].items[${ii}].descripcion=this.value" style="flex:1;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:13px;"/>
+        <select onchange="seccionesData[${si}].items[${ii}].tipo=this.value;renderItems(${si})" style="border:1px solid var(--border);border-radius:6px;padding:6px;font-size:12px;">
+          <option value="cumplimiento" ${it.tipo==='cumplimiento'?'selected':''}>Cumplimiento</option>
+          <option value="texto" ${it.tipo==='texto'?'selected':''}>Texto</option>
+          <option value="numero" ${it.tipo==='numero'?'selected':''}>Número</option>
+        </select>
+        <button onclick="seccionesData[${si}].items.splice(${ii},1);renderItems(${si})" style="background:#fee2e2;color:#991b1b;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;">✕</button>
+      </div>
+      ${it.tipo==='cumplimiento' ? `
+      <div class="insp-item-btns">
+        <button class="insp-estado-btn cumple ${it.estado==='cumple'?'active':''}" onclick="setEstado(${si},${ii},'cumple')">✓ Cumple</button>
+        <button class="insp-estado-btn no_cumple ${it.estado==='no_cumple'?'active':''}" onclick="setEstado(${si},${ii},'no_cumple')">✗ No cumple</button>
+        <button class="insp-estado-btn na ${it.estado==='na'?'active':''}" onclick="setEstado(${si},${ii},'na')">⊘ N/A</button>
+      </div>` : `<input type="${it.tipo==='numero'?'number':'text'}" value="${it.valor||''}" placeholder="Valor…" oninput="seccionesData[${si}].items[${ii}].valor=this.value" style="border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:13px;width:100%;margin-top:6px;"/>`}
+      <input value="${it.observacion||''}" placeholder="Observación (opcional)" oninput="seccionesData[${si}].items[${ii}].observacion=this.value" style="border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:12px;width:100%;margin-top:8px;color:#555;"/>
+    `;
+    c.appendChild(div);
+  });
+}
+
+function setEstado(si, ii, estado) {
+  seccionesData[si].items[ii].estado = estado;
+  renderItems(si);
+}
+
+function agregarSeccionInsp() {
+  seccionesData.push({ titulo: '', items: [{ descripcion: '', tipo: 'cumplimiento', estado: '', observacion: '' }] });
+  renderSeccionesForm();
+}
+
+function agregarItem(si) {
+  seccionesData[si].items.push({ descripcion: '', tipo: 'cumplimiento', estado: '', observacion: '' });
+  renderItems(si);
+}
+
+async function guardar() {
+  const alertEl = document.getElementById('alertInsp');
+  alertEl.classList.add('hidden');
+  const btn = document.getElementById('btnGuardar');
+  setLoading(btn, true);
+
+  const plantillaId = document.getElementById('plantillaSelect').value;
+  const plantilla = plantillas.find(p => p.id === plantillaId);
+
+  const inspeccion = {
+    plantillaId:     plantillaId,
+    plantillaNombre: plantilla ? plantilla.nombre : 'Libre',
+    inspector:       document.getElementById('inspector').value.trim(),
+    cargo:           document.getElementById('cargo').value.trim(),
+    lugar:           document.getElementById('lugar').value.trim(),
+    fechaInspeccion: document.getElementById('fechaInsp').value,
+    observaciones:   document.getElementById('obsGenerales').value.trim(),
+    secciones:       seccionesData,
+  };
+
+  try {
+    const res = await Inspecciones.guardar(inspeccion);
+    if (res.success) {
+      toast(`Inspección guardada: ${res.resultado} ✓`, 'success');
+      if (res.pdfUrl) window.open(res.pdfUrl, '_blank');
+      limpiar();
+    } else {
+      alertEl.textContent = res.message || 'Error';
+      alertEl.classList.remove('hidden');
+    }
+  } catch(e) {
+    alertEl.textContent = 'Error: ' + e.message;
+    alertEl.classList.remove('hidden');
+  }
+  setLoading(btn, false);
+}
+
+async function togglePDFs() {
+  const sec = document.getElementById('pdfsSection');
+  sec.classList.toggle('hidden');
+  if (!sec.classList.contains('hidden')) {
+    const r = await Inspecciones.listarPDFs().catch(() => ({ success: false, items: [] }));
+    const c = document.getElementById('pdfsList');
+    if (!r.success || !r.items.length) { c.innerHTML = '<p style="color:#888;">Sin inspecciones guardadas.</p>'; return; }
+    c.innerHTML = r.items.map(p =>
+      `<div style="padding:8px 0;border-bottom:1px solid #eee;">
+        <a class="pdf-link" href="${p.url}" target="_blank">📄 ${p.name}</a>
+        <span style="font-size:11px;color:#aaa;margin-left:8px;">${p.fecha}</span>
+      </div>`
+    ).join('');
+  }
+}
+
+function togglePlantillas() { document.getElementById('plantillasSection').classList.toggle('hidden'); }
+
+function nuevaPlantilla() {
+  plantillaEditando = null;
+  seccionesEdicion = [{ titulo: '', items: [{ descripcion: '', tipo: 'cumplimiento' }] }];
+  document.getElementById('pNombre').value = '';
+  document.getElementById('pDesc').value = '';
+  document.getElementById('editPlantillaForm').classList.remove('hidden');
+  renderSeccionesEdicion();
+}
+
+function editarPlantilla(id) {
+  plantillaEditando = plantillas.find(p => p.id === id);
+  if (!plantillaEditando) return;
+  document.getElementById('pNombre').value = plantillaEditando.nombre;
+  document.getElementById('pDesc').value   = plantillaEditando.descripcion || '';
+  seccionesEdicion = JSON.parse(JSON.stringify(plantillaEditando.secciones || []));
+  document.getElementById('editPlantillaForm').classList.remove('hidden');
+  renderSeccionesEdicion();
+}
+
+async function eliminarPlantilla(id) {
+  if (!confirm('¿Eliminar esta plantilla?')) return;
+  await Inspecciones.eliminarPlantilla(id);
+  await cargarPlantillas();
+  toast('Plantilla eliminada', 'success');
+}
+
+function agregarSeccion() {
+  seccionesEdicion.push({ titulo: '', items: [{ descripcion: '', tipo: 'cumplimiento' }] });
+  renderSeccionesEdicion();
+}
+
+function renderSeccionesEdicion() {
+  const c = document.getElementById('seccionesList');
+  c.innerHTML = '';
+  seccionesEdicion.forEach((sec, si) => {
+    const div = document.createElement('div');
+    div.style.cssText = 'border:1px solid var(--border);border-radius:8px;margin-bottom:10px;padding:10px;';
+    div.innerHTML = `
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+        <input value="${sec.titulo||''}" placeholder="Nombre sección" oninput="seccionesEdicion[${si}].titulo=this.value" style="flex:1;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:13px;"/>
+        <button onclick="seccionesEdicion.splice(${si},1);renderSeccionesEdicion()" class="btn btn-danger btn-sm">✕</button>
+      </div>
+      ${sec.items.map((it,ii) => `
+        <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
+          <input value="${it.descripcion||''}" placeholder="Ítem…" oninput="seccionesEdicion[${si}].items[${ii}].descripcion=this.value" style="flex:1;border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:12px;"/>
+          <select onchange="seccionesEdicion[${si}].items[${ii}].tipo=this.value" style="border:1px solid var(--border);border-radius:6px;padding:5px;font-size:12px;">
+            <option value="cumplimiento" ${it.tipo==='cumplimiento'?'selected':''}>Cumpl.</option>
+            <option value="texto" ${it.tipo==='texto'?'selected':''}>Texto</option>
+            <option value="numero" ${it.tipo==='numero'?'selected':''}>Núm.</option>
+          </select>
+          <button onclick="seccionesEdicion[${si}].items.splice(${ii},1);renderSeccionesEdicion()" style="background:#fee2e2;color:#991b1b;border:none;border-radius:6px;padding:4px 8px;cursor:pointer;">✕</button>
+        </div>
+      `).join('')}
+      <button onclick="seccionesEdicion[${si}].items.push({descripcion:'',tipo:'cumplimiento'});renderSeccionesEdicion()" class="btn btn-ghost btn-sm">+ Ítem</button>
+    `;
+    c.appendChild(div);
+  });
+}
+
+async function guardarPlantilla() {
+  const nombre = document.getElementById('pNombre').value.trim();
+  const desc   = document.getElementById('pDesc').value.trim();
+  if (!nombre) { toast('Nombre obligatorio', 'error'); return; }
+  const plantilla = { nombre, descripcion: desc, secciones: seccionesEdicion };
+  if (plantillaEditando) plantilla.id = plantillaEditando.id;
+  const r = await Inspecciones.guardarPlantilla(plantilla).catch(e => ({ success: false, message: e.message }));
+  if (r.success) {
+    toast('Plantilla guardada ✓', 'success');
+    await cargarPlantillas();
+    cancelarPlantilla();
+  } else {
+    toast(r.message || 'Error', 'error');
+  }
+}
+
+function cancelarPlantilla() {
+  plantillaEditando = null;
+  seccionesEdicion = [];
+  document.getElementById('editPlantillaForm').classList.add('hidden');
+}
+
+function limpiar() {
+  seccionesData = [];
+  agregarSeccionInsp();
+  document.getElementById('plantillaSelect').value = '';
+  document.querySelectorAll('input[type=text],input[type=date],textarea').forEach(el => el.value = '');
+  document.getElementById('fechaInsp').value = new Date().toISOString().split('T')[0];
+}
+
+async function doLogout() { await Auth.logout(); window.location.href = 'index.html'; }
+</script>
+</body>
+</html>

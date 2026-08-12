@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>VISC — Iniciar sesión</title>
+  <link rel="stylesheet" href="css/visc.css"/>
+</head>
+<body>
+<div class="login-page">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="circle">V</div>
+      <div class="brand">Venegas Integral Safety Consultants</div>
+      <div class="sub">Sistema de Seguridad Laboral</div>
+    </div>
+    <h2>Iniciar sesión</h2>
+    <div id="alert" class="alert alert-error hidden"></div>
+    <form id="loginForm">
+      <div class="form-group" style="margin-bottom:14px;">
+        <label for="correo">Correo electrónico</label>
+        <input type="email" id="correo" placeholder="tu@email.com" required/>
+      </div>
+      <div class="form-group" style="margin-bottom:20px;">
+        <label for="clave">Contraseña</label>
+        <input type="password" id="clave" placeholder="••••••••" required/>
+      </div>
+      <button type="submit" class="btn btn-primary" id="btnLogin" style="width:100%;justify-content:center;">
+        Ingresar →
+      </button>
+    </form>
+    <p id="setupLink" class="hidden" style="text-align:center;margin-top:14px;font-size:12px;color:#888;">
+      ¿Primera vez? <a href="#" id="btnSetup">Crear administrador inicial</a>
+    </p>
+  </div>
+</div>
+
+<!-- Modal setup inicial -->
+<div id="setupModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:center;justify-content:center;">
+  <div class="card" style="width:360px;margin:0;">
+    <div class="card-header"><span class="card-title">Crear Super Admin</span></div>
+    <div class="form-group" style="margin-bottom:12px;">
+      <label>Correo</label><input type="email" id="setupCorreo" placeholder="admin@visc.cl"/>
+    </div>
+    <div class="form-group" style="margin-bottom:16px;">
+      <label>Clave</label><input type="password" id="setupClave" placeholder="mínimo 6 caracteres"/>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-primary" id="btnCrearAdmin">Crear</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('setupModal').classList.add('hidden')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+(async () => {
+  // Si ya hay sesión válida, redirigir
+  const token = Auth.getToken();
+  if (token) {
+    const r = await Auth.getSession().catch(() => ({ success: false }));
+    if (r.success) { window.location.href = 'dashboard.html'; return; }
+    Auth.logout();
+  }
+
+  // Verificar si hay usuarios
+  try {
+    const r = await Auth.tieneUsuarios();
+    if (!r.tiene) document.getElementById('setupLink').classList.remove('hidden');
+  } catch(e) {}
+
+  // Login
+  document.getElementById('loginForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = document.getElementById('btnLogin');
+    const alert = document.getElementById('alert');
+    alert.classList.add('hidden');
+    setLoading(btn, true);
+    try {
+      const res = await Auth.login(
+        document.getElementById('correo').value.trim(),
+        document.getElementById('clave').value
+      );
+      if (res.success) { window.location.href = 'dashboard.html'; }
+      else {
+        alert.textContent = res.message || 'Credenciales inválidas.';
+        alert.classList.remove('hidden');
+      }
+    } catch(err) {
+      alert.textContent = 'Error de conexión: ' + err.message;
+      alert.classList.remove('hidden');
+    }
+    setLoading(btn, false);
+  });
+
+  // Setup admin
+  document.getElementById('btnSetup').addEventListener('click', e => {
+    e.preventDefault();
+    document.getElementById('setupModal').classList.remove('hidden');
+  });
+
+  document.getElementById('btnCrearAdmin').addEventListener('click', async () => {
+    const correo = document.getElementById('setupCorreo').value.trim();
+    const clave  = document.getElementById('setupClave').value;
+    if (!correo || clave.length < 6) { toast('Correo y clave (mín 6 chars) requeridos', 'error'); return; }
+    const res = await Auth.crearSuperAdmin(correo, clave).catch(e => ({ success: false, message: e.message }));
+    if (res.success) {
+      document.getElementById('setupModal').classList.add('hidden');
+      document.getElementById('setupLink').classList.add('hidden');
+      toast('Admin creado. Inicia sesión.', 'success');
+    } else {
+      toast(res.message || 'Error', 'error');
+    }
+  });
+})();
+</script>
+</body>
+</html>

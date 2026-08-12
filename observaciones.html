@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>VISC — Observaciones</title>
+  <link rel="stylesheet" href="css/visc.css"/>
+</head>
+<body>
+<nav class="topbar">
+  <div class="topbar-brand">
+    <div class="logo-circle">V</div>
+    <a href="dashboard.html" style="color:#fff;font-weight:700;">← VISC</a>
+  </div>
+  <div class="topbar-right">
+    <span class="topbar-user" id="topUser"></span>
+    <button class="btn-logout" onclick="doLogout()">Salir</button>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="page-header">
+    <div><h1>📋 Observaciones Preventivas</h1><p>Registra observaciones de seguridad en terreno</p></div>
+    <button class="btn btn-secondary" onclick="toggleBuscar()">🔍 Buscar PDFs</button>
+  </div>
+
+  <!-- Buscar PDFs -->
+  <div id="buscarSection" class="card hidden">
+    <div class="card-header"><span class="card-title">Buscar observaciones por RUT</span></div>
+    <div style="display:flex;gap:10px;align-items:end;">
+      <div class="form-group" style="flex:1;"><label>RUT trabajador</label><input id="rutBuscar" placeholder="12345678-9"/></div>
+      <button class="btn btn-primary" onclick="buscarPDFs()">Buscar</button>
+    </div>
+    <div id="resultadosBuscar" class="mt-4"></div>
+  </div>
+
+  <!-- Formulario -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">Nueva observación</span></div>
+    <div id="alertObs" class="alert alert-error hidden"></div>
+
+    <div class="section-title">I. Información básica</div>
+    <div class="form-grid">
+      <div class="form-group"><label>Procedimiento *</label><input id="procedimiento" placeholder="Trabajo en altura"/></div>
+      <div class="form-group"><label>Empresa *</label><input id="empresa" placeholder="VISC S.A."/></div>
+      <div class="form-group"><label>RUT Trabajador *</label><input id="rutTrabajador" placeholder="12345678-9"/></div>
+      <div class="form-group"><label>Nombre Trabajador *</label><input id="trabajador" placeholder="Juan Pérez"/></div>
+      <div class="form-group"><label>Cargo Trabajador</label><input id="cargoTrabajador" placeholder="Operario"/></div>
+      <div class="form-group"><label>RUT Observador *</label><input id="rutObservador" placeholder="98765432-1"/></div>
+      <div class="form-group"><label>Nombre Observador *</label><input id="observador" placeholder="María González"/></div>
+      <div class="form-group"><label>Cargo Observador</label><input id="cargoObservador" placeholder="Prevencionista"/></div>
+      <div class="form-group"><label>Fecha *</label><input type="date" id="fecha"/></div>
+      <div class="form-group"><label>Duración</label><input id="duracion" placeholder="30 min"/></div>
+      <div class="form-group"><label>Firma</label><input id="firma" placeholder="Nombre completo"/></div>
+      <div class="form-group"><label>Email adicional</label><input type="email" id="emailAdicional" placeholder="cc@email.com"/></div>
+    </div>
+
+    <div class="section-title">II. Reacciones</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>EPP</label>
+        <select id="epp"><option value="">Seleccionar</option><option>Cumple</option><option>No cumple</option><option>N/A</option></select>
+      </div>
+      <div class="form-group">
+        <label>Posiciones</label>
+        <select id="posiciones"><option value="">Seleccionar</option><option>Cumple</option><option>No cumple</option><option>N/A</option></select>
+      </div>
+      <div class="form-group">
+        <label>Herramientas</label>
+        <select id="herramientas"><option value="">Seleccionar</option><option>Cumple</option><option>No cumple</option><option>N/A</option></select>
+      </div>
+      <div class="form-group">
+        <label>Orden / Limpieza</label>
+        <select id="orden"><option value="">Seleccionar</option><option>Cumple</option><option>No cumple</option><option>N/A</option></select>
+      </div>
+    </div>
+
+    <div class="section-title">III. Ajuste EPP</div>
+    <div class="check-list" id="ajustesEPP">
+      <!-- Generado por JS -->
+    </div>
+
+    <div class="section-title">IV. Identificación de riesgos</div>
+    <div class="check-list" id="riesgosCheck"></div>
+
+    <div class="section-title">V. Clasificación</div>
+    <div class="radio-group">
+      <label><input type="radio" name="sinActos" value="1" id="sinActosSi"/> Sin actos inseguros</label>
+      <label><input type="radio" name="sinActos" value="0" id="sinActosNo" checked/> Con actos subestándar</label>
+    </div>
+
+    <div class="section-title">VI. Descripción</div>
+    <div class="form-group full"><textarea id="descripcion" placeholder="Describa las observaciones realizadas…"></textarea></div>
+
+    <div class="section-title">VII. Acciones tomadas</div>
+    <div class="form-group full"><textarea id="acciones" placeholder="Acciones tomadas por el observador…"></textarea></div>
+
+    <div class="section-title">VIII. Recomendaciones</div>
+    <div class="form-group full"><textarea id="recomendaciones" placeholder="Recomendaciones adicionales…"></textarea></div>
+
+    <div class="mt-6 btn-group">
+      <button class="btn btn-primary" id="btnGuardar" onclick="guardar()">💾 Guardar observación</button>
+      <button class="btn btn-ghost" onclick="limpiar()">Limpiar</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+const AJUSTES_EPP = ['Casco','Lentes de seguridad','Protección auditiva','Respirador','Arnés de seguridad',
+  'Guantes','Calzado de seguridad','Ropa de trabajo','Chaleco reflectante','Protección facial'];
+const RIESGOS = ['Ojos','Cara','Oídos','Aparto Respiratorio','Tórax','Brazos','Manos','Piernas','Pies',
+  'Uso inadecuado de E-PP','E.PP en mal estado','Falta de EPP',
+  'Golpeado por','Atrapado por','Cayéndose','Temperatura Extremas','Corriente eléctrica'];
+
+function buildChecks(containerId, items) {
+  const c = document.getElementById(containerId);
+  items.forEach(it => {
+    const lbl = document.createElement('label');
+    lbl.innerHTML = `<input type="checkbox" value="${it}"/> ${it}`;
+    c.appendChild(lbl);
+  });
+}
+
+(async () => {
+  const sess = requireAuth();
+  if (!sess) return;
+  document.getElementById('topUser').textContent = sess.nombre || sess.correo;
+  document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+  // Pre-rellenar observador con datos del usuario
+  document.getElementById('observador').value = sess.nombre || '';
+
+  buildChecks('ajustesEPP', AJUSTES_EPP);
+  buildChecks('riesgosCheck', RIESGOS);
+})();
+
+function getChecked(containerId) {
+  return Array.from(document.querySelectorAll(`#${containerId} input[type=checkbox]:checked`)).map(c => c.value);
+}
+
+async function guardar() {
+  const alert = document.getElementById('alertObs');
+  alert.classList.add('hidden');
+  const btn   = document.getElementById('btnGuardar');
+  setLoading(btn, true);
+
+  const datos = {
+    procedimiento:  document.getElementById('procedimiento').value.trim(),
+    empresa:        document.getElementById('empresa').value.trim(),
+    rut_trabajador: document.getElementById('rutTrabajador').value.trim(),
+    trabajador:     document.getElementById('trabajador').value.trim(),
+    cargo_trabajador: document.getElementById('cargoTrabajador').value.trim(),
+    rut_observador: document.getElementById('rutObservador').value.trim(),
+    observador:     document.getElementById('observador').value.trim(),
+    cargo_observador: document.getElementById('cargoObservador').value.trim(),
+    fecha:          document.getElementById('fecha').value,
+    duracion:       document.getElementById('duracion').value.trim(),
+    firma:          document.getElementById('firma').value.trim(),
+    emailAdicional: document.getElementById('emailAdicional').value.trim(),
+    epp:            document.getElementById('epp').value,
+    posiciones:     document.getElementById('posiciones').value,
+    herramientas:   document.getElementById('herramientas').value,
+    orden:          document.getElementById('orden').value,
+    ajustes_epp:    getChecked('ajustesEPP'),
+    riesgos:        getChecked('riesgosCheck'),
+    sin_actos:      document.getElementById('sinActosSi').checked,
+    descripcion:    document.getElementById('descripcion').value.trim(),
+    acciones:       document.getElementById('acciones').value.trim(),
+    recomendaciones: document.getElementById('recomendaciones').value.trim(),
+  };
+
+  try {
+    const res = await Observaciones.guardar(datos);
+    if (res.success) {
+      toast('Observación guardada y PDF generado ✓', 'success');
+      if (res.pdfUrl) window.open(res.pdfUrl, '_blank');
+      limpiar();
+    } else {
+      alert.textContent = res.message || res.error || 'Error al guardar';
+      alert.classList.remove('hidden');
+    }
+  } catch(e) {
+    alert.textContent = 'Error: ' + e.message;
+    alert.classList.remove('hidden');
+  }
+  setLoading(btn, false);
+}
+
+async function buscarPDFs() {
+  const rut = document.getElementById('rutBuscar').value.trim();
+  if (!rut) { toast('Ingresa un RUT', 'error'); return; }
+  const res = await Observaciones.buscarPDFs(rut).catch(e => ({ success: false, message: e.message }));
+  const div = document.getElementById('resultadosBuscar');
+  if (!res.success || !res.pdfs || !res.pdfs.length) {
+    div.innerHTML = '<p style="color:#888;font-size:13px;">Sin resultados para ese RUT.</p>';
+    return;
+  }
+  div.innerHTML = res.pdfs.map(p =>
+    `<div style="padding:8px 0;border-bottom:1px solid #eee;">
+      <a class="pdf-link" href="${p.url}" target="_blank">📄 ${p.name}</a>
+      <span style="font-size:11px;color:#aaa;margin-left:8px;">${p.fecha}</span>
+    </div>`
+  ).join('');
+}
+
+function toggleBuscar() {
+  document.getElementById('buscarSection').classList.toggle('hidden');
+}
+
+function limpiar() {
+  document.querySelectorAll('input[type=text],input[type=email],input[type=date],textarea,select').forEach(el => {
+    if (el.id !== 'fecha') el.value = '';
+  });
+  document.querySelectorAll('input[type=checkbox]').forEach(c => c.checked = false);
+  document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+  document.getElementById('sinActosNo').checked = true;
+}
+
+async function doLogout() { await Auth.logout(); window.location.href = 'index.html'; }
+</script>
+</body>
+</html>

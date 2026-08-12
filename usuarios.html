@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>VISC — Usuarios</title>
+  <link rel="stylesheet" href="css/visc.css"/>
+</head>
+<body>
+<nav class="topbar">
+  <div class="topbar-brand">
+    <div class="logo-circle">V</div>
+    <a href="dashboard.html" style="color:#fff;font-weight:700;">← VISC</a>
+  </div>
+  <div class="topbar-right">
+    <span class="topbar-user" id="topUser"></span>
+    <button class="btn-logout" onclick="doLogout()">Salir</button>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="page-header">
+    <div><h1>👤 Mi cuenta</h1><p>Perfil, firma digital y gestión de usuarios</p></div>
+  </div>
+
+  <!-- Mi perfil -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">Mi perfil</span></div>
+    <div id="alertPerfil" class="alert hidden"></div>
+    <div class="form-grid">
+      <div class="form-group"><label>Nombre completo</label><input id="pNombre" placeholder="Juan Pérez"/></div>
+      <div class="form-group"><label>Correo nuevo</label><input type="email" id="pCorreoNuevo" placeholder="nuevo@email.com"/></div>
+      <div class="form-group"><label>Clave actual (para cambiar correo/clave)</label><input type="password" id="pClaveActual" placeholder="••••••"/></div>
+      <div class="form-group"><label>Nueva clave</label><input type="password" id="pClaveNueva" placeholder="mín. 6 caracteres"/></div>
+    </div>
+    <div class="btn-group mt-4">
+      <button class="btn btn-primary" id="btnSavePerfil" onclick="guardarPerfil()">Guardar perfil</button>
+    </div>
+  </div>
+
+  <!-- Firma digital -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">Firma digital</span></div>
+    <p style="font-size:13px;color:#888;margin-bottom:12px;">Dibuja tu firma. Se usará automáticamente en los PDFs generados.</p>
+    <canvas id="firmaCanvas" class="firma-canvas" width="500" height="160"></canvas>
+    <div class="btn-group mt-4">
+      <button class="btn btn-primary" onclick="guardarFirma()">💾 Guardar firma</button>
+      <button class="btn btn-ghost" onclick="limpiarFirma()">Limpiar</button>
+    </div>
+    <div id="firmaActual" class="mt-4" style="display:none;">
+      <p style="font-size:12px;color:#888;margin-bottom:6px;">Firma actual guardada:</p>
+      <img id="firmaImg" style="max-width:300px;border:1px solid var(--border);border-radius:8px;padding:8px;"/>
+    </div>
+  </div>
+
+  <!-- Gestión de usuarios (solo SUPER_ADMIN) -->
+  <div id="adminSection" class="hidden">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Gestión de usuarios</span>
+        <button class="btn btn-primary btn-sm" onclick="openNuevoUsuario()">+ Nuevo usuario</button>
+      </div>
+      <div id="usuariosList"><p style="color:#888;">Cargando…</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal nuevo/editar usuario -->
+<div id="usuarioModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:center;justify-content:center;overflow-y:auto;">
+  <div class="card" style="width:480px;margin:24px;max-height:90vh;overflow-y:auto;">
+    <div class="card-header">
+      <span class="card-title" id="modalTitle">Nuevo usuario</span>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()">✕</button>
+    </div>
+    <div id="alertModal" class="alert alert-error hidden"></div>
+    <div class="form-grid">
+      <div class="form-group full"><label>Correo *</label><input id="uCorreo" type="email" placeholder="usuario@email.com"/></div>
+      <div class="form-group"><label>Clave *</label><input id="uClave" type="password" placeholder="••••••"/></div>
+      <div class="form-group"><label>Nombre completo</label><input id="uNombre" placeholder="Juan Pérez"/></div>
+      <div class="form-group">
+        <label>Rol</label>
+        <select id="uRol">
+          <option value="TRABAJADOR">Trabajador</option>
+          <option value="SUPERVISOR_CLIENTE">Supervisor Cliente</option>
+          <option value="CLIENTE_ADMIN">Cliente Admin</option>
+          <option value="PROFESIONAL_VISC">Profesional VISC</option>
+          <option value="SUPER_ADMIN">Super Admin</option>
+        </select>
+      </div>
+      <div class="form-group full"><label>RUNs de empresas (uno por línea)</label><textarea id="uEmpresas" placeholder="12345678-9&#10;98765432-1" style="height:70px;"></textarea></div>
+    </div>
+    <div class="btn-group mt-4">
+      <button class="btn btn-primary" id="btnGuardarUsuario" onclick="guardarUsuario()">Guardar</button>
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+let usuarioEditando = null;
+
+// ── Firma canvas ──────────────────────────────────────────────────────────────
+const canvas = document.getElementById('firmaCanvas');
+const ctx    = canvas.getContext('2d');
+let dibujando = false;
+let lastX = 0, lastY = 0;
+
+function getPos(e) {
+  const r = canvas.getBoundingClientRect();
+  const src = e.touches ? e.touches[0] : e;
+  return { x: src.clientX - r.left, y: src.clientY - r.top };
+}
+
+canvas.addEventListener('mousedown',  e => { dibujando = true; const p = getPos(e); lastX = p.x; lastY = p.y; });
+canvas.addEventListener('mousemove',  e => { if (!dibujando) return; const p = getPos(e); draw(lastX, lastY, p.x, p.y); lastX=p.x; lastY=p.y; });
+canvas.addEventListener('mouseup',    () => dibujando = false);
+canvas.addEventListener('mouseleave', () => dibujando = false);
+canvas.addEventListener('touchstart', e => { e.preventDefault(); const p = getPos(e); dibujando = true; lastX=p.x; lastY=p.y; }, { passive:false });
+canvas.addEventListener('touchmove',  e => { e.preventDefault(); if (!dibujando) return; const p = getPos(e); draw(lastX, lastY, p.x, p.y); lastX=p.x; lastY=p.y; }, { passive:false });
+canvas.addEventListener('touchend',   () => dibujando = false);
+
+function draw(x1, y1, x2, y2) {
+  ctx.strokeStyle = '#1a1a1a';
+  ctx.lineWidth   = 2;
+  ctx.lineCap     = 'round';
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+}
+
+function limpiarFirma() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+async function guardarFirma() {
+  const b64 = canvas.toDataURL('image/png');
+  const r   = await Auth.guardarFirma(b64).catch(e => ({ success: false, message: e.message }));
+  if (r.success) toast('Firma guardada ✓', 'success');
+  else toast(r.message || 'Error', 'error');
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+(async () => {
+  const sess = requireAuth();
+  if (!sess) return;
+  document.getElementById('topUser').textContent = sess.nombre || sess.correo;
+  document.getElementById('pNombre').value   = sess.nombre || '';
+  document.getElementById('pCorreoNuevo').value = sess.correo || '';
+
+  // Cargar firma actual
+  const fr = await Auth.getFirma().catch(() => ({ success: false }));
+  if (fr.success && fr.firmaBase64) {
+    document.getElementById('firmaImg').src = fr.firmaBase64;
+    document.getElementById('firmaActual').style.display = 'block';
+    // Dibujar en canvas
+    const img = new Image();
+    img.onload = () => ctx.drawImage(img, 0, 0, Math.min(canvas.width, img.naturalWidth), Math.min(canvas.height, img.naturalHeight));
+    img.src = fr.firmaBase64;
+  }
+
+  // Sección admin
+  if (sess.role === 'SUPER_ADMIN') {
+    document.getElementById('adminSection').classList.remove('hidden');
+    await cargarUsuarios();
+  }
+})();
+
+// ── Perfil ────────────────────────────────────────────────────────────────────
+async function guardarPerfil() {
+  const alertEl = document.getElementById('alertPerfil');
+  alertEl.className = 'alert hidden';
+  const btn = document.getElementById('btnSavePerfil');
+  setLoading(btn, true);
+
+  const datos = {};
+  const nombre = document.getElementById('pNombre').value.trim();
+  const correoNuevo = document.getElementById('pCorreoNuevo').value.trim();
+  const claveActual = document.getElementById('pClaveActual').value;
+  const claveNueva  = document.getElementById('pClaveNueva').value;
+
+  if (nombre)     datos.nombre     = nombre;
+  if (correoNuevo) datos.correoNuevo = correoNuevo;
+  if (claveActual) datos.claveActual = claveActual;
+  if (claveNueva)  datos.claveNueva  = claveNueva;
+
+  const r = await Auth.actualizarPerfil(datos).catch(e => ({ success: false, message: e.message }));
+  if (r.success) {
+    alertEl.className = 'alert alert-success';
+    alertEl.textContent = '✓ Perfil actualizado: ' + (r.cambios || []).join(', ');
+    if (r.session) localStorage.setItem('visc_session', JSON.stringify(r.session));
+    document.getElementById('pClaveActual').value = '';
+    document.getElementById('pClaveNueva').value  = '';
+  } else {
+    alertEl.className = 'alert alert-error';
+    alertEl.textContent = r.message || 'Error';
+  }
+  setLoading(btn, false);
+}
+
+// ── Usuarios (admin) ──────────────────────────────────────────────────────────
+async function cargarUsuarios() {
+  const r = await Usuarios.listar().catch(() => ({ success: false, usuarios: [] }));
+  const c = document.getElementById('usuariosList');
+  if (!r.success || !r.usuarios.length) {
+    c.innerHTML = '<p style="color:#888;font-size:13px;">No hay usuarios.</p>';
+    return;
+  }
+  c.innerHTML = `
+    <div class="table-wrapper">
+      <table>
+        <thead><tr>
+          <th>Correo</th><th>Nombre</th><th>Rol</th><th>Empresas</th><th>Firma</th><th>Acciones</th>
+        </tr></thead>
+        <tbody>
+          ${r.usuarios.map(u => `
+            <tr>
+              <td>${u.correo}</td>
+              <td>${u.nombre||'—'}</td>
+              <td><span class="badge badge-orange">${u.rol}</span></td>
+              <td style="font-size:12px;">${(u.empresas||[]).join(', ')||'—'}</td>
+              <td style="text-align:center;">${u.tieneFirma ? '✓' : '—'}</td>
+              <td>
+                <div class="btn-group">
+                  <button class="btn btn-ghost btn-sm" onclick='editarUsuario(${JSON.stringify(u)})'>Editar</button>
+                  <button class="btn btn-danger btn-sm" onclick="eliminarUsuario('${u.correo}')">Eliminar</button>
+                </div>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function openNuevoUsuario() {
+  usuarioEditando = null;
+  document.getElementById('modalTitle').textContent = 'Nuevo usuario';
+  document.getElementById('uCorreo').value   = '';
+  document.getElementById('uClave').value    = '';
+  document.getElementById('uNombre').value   = '';
+  document.getElementById('uRol').value      = 'TRABAJADOR';
+  document.getElementById('uEmpresas').value = '';
+  document.getElementById('alertModal').classList.add('hidden');
+  document.getElementById('usuarioModal').classList.remove('hidden');
+}
+
+function editarUsuario(u) {
+  usuarioEditando = u;
+  document.getElementById('modalTitle').textContent = 'Editar: ' + u.correo;
+  document.getElementById('uCorreo').value   = u.correo;
+  document.getElementById('uClave').value    = '';
+  document.getElementById('uNombre').value   = u.nombre || '';
+  document.getElementById('uRol').value      = u.rol || 'TRABAJADOR';
+  document.getElementById('uEmpresas').value = (u.empresas||[]).join('\n');
+  document.getElementById('alertModal').classList.add('hidden');
+  document.getElementById('usuarioModal').classList.remove('hidden');
+}
+
+async function guardarUsuario() {
+  const alertEl = document.getElementById('alertModal');
+  alertEl.classList.add('hidden');
+  const correo  = document.getElementById('uCorreo').value.trim();
+  const clave   = document.getElementById('uClave').value;
+  const nombre  = document.getElementById('uNombre').value.trim();
+  const rol     = document.getElementById('uRol').value;
+  const empresas = document.getElementById('uEmpresas').value.split('\n').map(s => s.trim()).filter(Boolean);
+
+  let r;
+  if (usuarioEditando) {
+    const datos = { nombre, rol, empresas };
+    if (clave) datos.clave = clave;
+    r = await Usuarios.editar(usuarioEditando.correo, datos).catch(e => ({ success: false, message: e.message }));
+  } else {
+    r = await Usuarios.crear({ correo, clave, nombre, rol, empresas }).catch(e => ({ success: false, message: e.message }));
+  }
+
+  if (r.success) {
+    closeModal();
+    toast('Usuario guardado ✓', 'success');
+    await cargarUsuarios();
+  } else {
+    alertEl.textContent = r.message || 'Error';
+    alertEl.classList.remove('hidden');
+  }
+}
+
+async function eliminarUsuario(correo) {
+  if (!confirm(`¿Eliminar a ${correo}?`)) return;
+  const r = await Usuarios.eliminar(correo).catch(e => ({ success: false, message: e.message }));
+  if (r.success) { toast('Usuario eliminado', 'success'); await cargarUsuarios(); }
+  else toast(r.message || 'Error', 'error');
+}
+
+function closeModal() { document.getElementById('usuarioModal').classList.add('hidden'); }
+
+async function doLogout() { await Auth.logout(); window.location.href = 'index.html'; }
+</script>
+</body>
+</html>

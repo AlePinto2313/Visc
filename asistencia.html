@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>VISC — Asistencias</title>
+  <link rel="stylesheet" href="css/visc.css"/>
+</head>
+<body>
+<nav class="topbar">
+  <div class="topbar-brand">
+    <div class="logo-circle">V</div>
+    <a href="dashboard.html" style="color:#fff;font-weight:700;">← VISC</a>
+  </div>
+  <div class="topbar-right">
+    <span class="topbar-user" id="topUser"></span>
+    <button class="btn-logout" onclick="doLogout()">Salir</button>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="page-header">
+    <div><h1>📚 Registro de Asistencias</h1><p>Capacitaciones y confirmación de participantes</p></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="card-title">Nueva capacitación</span></div>
+    <div id="alertAsis" class="alert alert-error hidden"></div>
+
+    <div class="section-title">I. Datos de la capacitación</div>
+    <div class="form-grid">
+      <div class="form-group"><label>Nombre capacitación *</label><input id="nombreCap" placeholder="Inducción de seguridad"/></div>
+      <div class="form-group"><label>Tema</label><input id="tema" placeholder="EPP y riesgos generales"/></div>
+      <div class="form-group"><label>Lugar</label><input id="lugar" placeholder="Sala 1 — Planta"/></div>
+      <div class="form-group"><label>Fecha del evento</label><input type="date" id="fechaEvento"/></div>
+      <div class="form-group"><label>Nombre instructor</label><input id="instructor" placeholder="Juan Pérez"/></div>
+      <div class="form-group"><label>Firma instructor</label><input id="firmaInstructor" placeholder="Nombre"/></div>
+      <div class="form-group full"><label>Observaciones</label><textarea id="observaciones" placeholder="Notas generales…"></textarea></div>
+      <div class="form-group"><label>Email adicional (CC)</label><input type="email" id="emailAdicional" placeholder="cc@email.com"/></div>
+    </div>
+
+    <div class="section-title">II. Participantes</div>
+    <div id="participantesList"></div>
+    <button class="btn btn-secondary btn-sm" onclick="agregarParticipante()">+ Agregar participante</button>
+
+    <div class="mt-6 btn-group">
+      <button class="btn btn-primary" id="btnGuardar" onclick="guardar()">💾 Guardar asistencia</button>
+      <button class="btn btn-ghost" onclick="limpiar()">Limpiar</button>
+    </div>
+  </div>
+
+  <!-- Resultado con opciones post-guardado -->
+  <div id="resultadoCard" class="card hidden">
+    <div class="card-header"><span class="card-title">✓ Asistencia guardada</span></div>
+    <p id="resultadoMsg" style="margin-bottom:14px;"></p>
+    <div class="btn-group">
+      <button class="btn btn-primary" id="btnEnviarConfirm" onclick="enviarConfirmaciones()">📧 Enviar emails de confirmación</button>
+      <button class="btn btn-secondary" id="btnPDFFirmas" onclick="generarPDFFirmas()">📄 PDF con estado firmas</button>
+      <a class="btn btn-ghost" id="linkSheet" href="#" target="_blank">📊 Ver Sheet</a>
+    </div>
+    <div id="confirmResult" class="mt-4"></div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+let participantes = [];
+let ultimaAsistencia = null;
+
+(async () => {
+  const sess = requireAuth();
+  if (!sess) return;
+  document.getElementById('topUser').textContent = sess.nombre || sess.correo;
+  document.getElementById('fechaEvento').value = new Date().toISOString().split('T')[0];
+  document.getElementById('instructor').value = sess.nombre || '';
+})();
+
+function renderParticipantes() {
+  const c = document.getElementById('participantesList');
+  c.innerHTML = '';
+  participantes.forEach((p, i) => {
+    const div = document.createElement('div');
+    div.className = 'participant-row';
+    div.innerHTML = `
+      <div class="form-group"><label>Nombre</label><input value="${p.nombre||''}" oninput="participantes[${i}].nombre=this.value" placeholder="Juan Pérez"/></div>
+      <div class="form-group"><label>RUT</label><input value="${p.rut||''}" oninput="participantes[${i}].rut=this.value" placeholder="12345678-9"/></div>
+      <div class="form-group"><label>Cargo</label><input value="${p.cargo||''}" oninput="participantes[${i}].cargo=this.value" placeholder="Operario"/></div>
+      <div class="form-group"><label>Email</label><input type="email" value="${p.email||''}" oninput="participantes[${i}].email=this.value" placeholder="juan@empresa.cl"/></div>
+      <button class="remove-btn" onclick="participantes.splice(${i},1);renderParticipantes()">✕</button>
+    `;
+    c.appendChild(div);
+  });
+}
+
+function agregarParticipante() {
+  participantes.push({ nombre: '', rut: '', cargo: '', email: '' });
+  renderParticipantes();
+}
+
+async function guardar() {
+  const alertEl = document.getElementById('alertAsis');
+  alertEl.classList.add('hidden');
+  const btn = document.getElementById('btnGuardar');
+  setLoading(btn, true);
+
+  const datos = {
+    nombre_capacitacion: document.getElementById('nombreCap').value.trim(),
+    tema:               document.getElementById('tema').value.trim(),
+    lugar:              document.getElementById('lugar').value.trim(),
+    fecha_evento:       document.getElementById('fechaEvento').value,
+    nombre_instructor:  document.getElementById('instructor').value.trim(),
+    firma_instructor:   document.getElementById('firmaInstructor').value.trim(),
+    observaciones:      document.getElementById('observaciones').value.trim(),
+    emailAdicional:     document.getElementById('emailAdicional').value.trim(),
+    participantes:      participantes,
+  };
+
+  try {
+    const res = await Asistencias.guardar(datos);
+    if (res.success) {
+      ultimaAsistencia = { ...datos, idAsistencia: res.id, sheetUrl: res.sheetUrl };
+      toast('Asistencia registrada ✓', 'success');
+      if (res.pdfUrl) window.open(res.pdfUrl, '_blank');
+      document.getElementById('resultadoMsg').textContent =
+        `ID: ${res.id} | Participantes: ${participantes.length}`;
+      document.getElementById('linkSheet').href = res.sheetUrl || '#';
+      document.getElementById('resultadoCard').classList.remove('hidden');
+      document.getElementById('resultadoCard').scrollIntoView({ behavior: 'smooth' });
+    } else {
+      alertEl.textContent = res.message || 'Error';
+      alertEl.classList.remove('hidden');
+    }
+  } catch(e) {
+    alertEl.textContent = 'Error: ' + e.message;
+    alertEl.classList.remove('hidden');
+  }
+  setLoading(btn, false);
+}
+
+async function enviarConfirmaciones() {
+  if (!ultimaAsistencia) { toast('Guarda una asistencia primero', 'error'); return; }
+  const btn = document.getElementById('btnEnviarConfirm');
+  setLoading(btn, true);
+  const res = await Asistencias.enviarConfirmaciones({
+    idAsistencia: ultimaAsistencia.idAsistencia,
+    empresa:      ultimaAsistencia.empresa || '',
+    capacitacion: { nombre: ultimaAsistencia.nombre_capacitacion },
+    participantes: participantes.filter(p => p.email),
+  }).catch(e => ({ success: false, message: e.message }));
+
+  const div = document.getElementById('confirmResult');
+  if (res.success) {
+    div.innerHTML = `<div class="alert alert-success">✓ ${res.message}</div>`;
+  } else {
+    div.innerHTML = `<div class="alert alert-error">${res.message}</div>`;
+  }
+  setLoading(btn, false);
+}
+
+async function generarPDFFirmas() {
+  if (!ultimaAsistencia) { toast('Guarda una asistencia primero', 'error'); return; }
+  const btn = document.getElementById('btnPDFFirmas');
+  setLoading(btn, true);
+  const res = await Asistencias.generarPDFConFirmas({
+    idAsistencia:        ultimaAsistencia.idAsistencia,
+    nombre_capacitacion: ultimaAsistencia.nombre_capacitacion,
+    tema:                ultimaAsistencia.tema,
+    empresa:             ultimaAsistencia.empresa || '',
+    lugar:               ultimaAsistencia.lugar,
+    fecha_evento:        ultimaAsistencia.fecha_evento,
+    nombre_instructor:   ultimaAsistencia.nombre_instructor,
+    participantes:       participantes,
+  }).catch(e => ({ success: false, message: e.message }));
+
+  if (res.success && res.pdfUrl) window.open(res.pdfUrl, '_blank');
+  else toast(res.message || 'Error al generar PDF', 'error');
+  setLoading(btn, false);
+}
+
+function limpiar() {
+  participantes = [];
+  ultimaAsistencia = null;
+  renderParticipantes();
+  document.getElementById('resultadoCard').classList.add('hidden');
+  document.querySelectorAll('input,textarea,select').forEach(el => { el.value = ''; });
+  document.getElementById('fechaEvento').value = new Date().toISOString().split('T')[0];
+}
+
+async function doLogout() { await Auth.logout(); window.location.href = 'index.html'; }
+</script>
+</body>
+</html>
