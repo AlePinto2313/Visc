@@ -1,206 +1,834 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>VISC — Visitas</title>
-  <link rel="stylesheet" href="css/visc.css"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Registro de Visitas — VISC</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy: #1B2D6B;
+      --navy-dark: #152359;
+      --orange: #E87722;
+      --orange-light: #F0901A;
+      --white: #ffffff;
+      --sidebar-w: 220px;
+      --topbar-h: 60px;
+      --bg: #f4f6fb;
+      --card-bg: #ffffff;
+      --border: #e0e4ef;
+      --text: #1a1a2e;
+      --text-muted: #6b7280;
+      --radius: 10px;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── SIDEBAR ── */
+    #sidebar {
+      width: var(--sidebar-w);
+      background: var(--navy);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      left: 0; top: 0; bottom: 0;
+      z-index: 100;
+      transition: width 0.25s ease;
+      overflow: hidden;
+    }
+    #sidebar.collapsed { width: 56px; }
+    #sidebar.collapsed .sidebar-label,
+    #sidebar.collapsed .sidebar-logo-text { display: none; }
+    #sidebar.collapsed .sidebar-nav a { justify-content: center; }
+    #sidebar.collapsed .sidebar-logo { justify-content: center; padding: 0 12px; }
+
+    .sidebar-logo {
+      display: flex; align-items: center; gap: 10px;
+      padding: 0 20px;
+      height: var(--topbar-h);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      flex-shrink: 0;
+    }
+    .sidebar-logo-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: var(--orange);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .sidebar-logo-icon i { color: #fff; font-size: 18px; }
+    .sidebar-logo-text {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700; font-size: 17px;
+      color: #fff; white-space: nowrap;
+    }
+
+    .sidebar-nav {
+      flex: 1; padding: 16px 0; overflow-y: auto;
+    }
+    .sidebar-nav a {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 20px;
+      color: rgba(255,255,255,0.7);
+      text-decoration: none;
+      font-size: 14px; font-weight: 500;
+      border-radius: 0;
+      transition: background 0.15s, color 0.15s;
+      white-space: nowrap;
+      position: relative;
+    }
+    .sidebar-nav a:hover { background: rgba(255,255,255,0.08); color: #fff; }
+    .sidebar-nav a.active {
+      background: rgba(232,119,34,0.18);
+      color: var(--orange-light);
+      border-right: 3px solid var(--orange);
+    }
+    .sidebar-nav a i { font-size: 18px; flex-shrink: 0; }
+    .sidebar-label { white-space: nowrap; }
+
+    .sidebar-footer {
+      padding: 16px 20px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .sidebar-footer a {
+      display: flex; align-items: center; gap: 10px;
+      color: rgba(255,255,255,0.5);
+      font-size: 13px; text-decoration: none;
+    }
+    .sidebar-footer a:hover { color: rgba(255,255,255,0.8); }
+
+    /* ── TOPBAR ── */
+    #topbar {
+      position: fixed;
+      left: var(--sidebar-w); right: 0; top: 0;
+      height: var(--topbar-h);
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center;
+      padding: 0 24px;
+      gap: 16px;
+      z-index: 90;
+      transition: left 0.25s ease;
+    }
+    #topbar.shifted { left: 56px; }
+
+    .topbar-toggle {
+      background: none; border: none; cursor: pointer;
+      color: var(--navy); font-size: 20px; padding: 4px;
+      display: flex; align-items: center;
+    }
+    .topbar-greeting { flex: 1; }
+    .topbar-greeting .greeting-text {
+      font-family: 'Syne', sans-serif;
+      font-size: 15px; font-weight: 600; color: var(--navy);
+    }
+    .topbar-greeting .greeting-sub {
+      font-size: 12px; color: var(--text-muted);
+    }
+    .topbar-company {
+      font-size: 13px; font-weight: 500;
+      color: var(--navy); background: #eef1fb;
+      padding: 4px 12px; border-radius: 20px;
+    }
+    .topbar-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--navy-dark);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-size: 13px; font-weight: 700; color: #fff;
+      cursor: pointer;
+    }
+
+    /* ── MAIN CONTENT ── */
+    #main {
+      margin-left: var(--sidebar-w);
+      margin-top: var(--topbar-h);
+      padding: 28px 32px;
+      flex: 1;
+      transition: margin-left 0.25s ease;
+      min-height: calc(100vh - var(--topbar-h));
+    }
+    #main.shifted { margin-left: 56px; }
+
+    .page-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px; font-weight: 700;
+      color: var(--navy); margin-bottom: 4px;
+    }
+    .page-subtitle { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; }
+
+    /* ── TABS ── */
+    .tabs {
+      display: flex; gap: 4px;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 28px;
+    }
+    .tab-btn {
+      background: none; border: none;
+      padding: 10px 22px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px; font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .tab-btn.active { color: var(--navy); border-bottom-color: var(--orange); }
+    .tab-btn:hover:not(.active) { color: var(--navy); }
+
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 22px 24px;
+      margin-bottom: 18px;
+    }
+    .card-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 14px; font-weight: 700;
+      color: var(--navy); margin-bottom: 18px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-title i { color: var(--orange); font-size: 16px; }
+
+    /* ── FORM ── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group.full { grid-column: 1 / -1; }
+    label {
+      font-size: 12px; font-weight: 500;
+      color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    input, select, textarea {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 12px;
+      color: var(--text);
+      background: #fff;
+      transition: border-color 0.15s;
+      outline: none;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--navy); }
+    input[readonly] { background: #f8f9fc; color: var(--text-muted); }
+    textarea { resize: vertical; min-height: 90px; }
+
+    /* ── SIGNATURE ── */
+    .sig-wrap { position: relative; }
+    .sig-canvas {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      width: 100%; height: 100px;
+      cursor: crosshair;
+      background: #fafbff;
+      display: block;
+    }
+    .sig-clear {
+      position: absolute; top: 6px; right: 6px;
+      background: rgba(255,255,255,0.9);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 11px; padding: 2px 8px;
+      cursor: pointer; color: var(--text-muted);
+    }
+    .sig-clear:hover { color: var(--orange); border-color: var(--orange); }
+
+    /* ── PILL RADIOS ── */
+    .pill-group { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .pill-group .pill-label { font-size: 13px; color: var(--text); min-width: 160px; }
+    .pill-opt { display: none; }
+    .pill-opt + label {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 5px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      font-size: 13px; font-weight: 500;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.15s;
+      text-transform: none; letter-spacing: 0;
+    }
+    .pill-opt:checked + label {
+      border-color: var(--navy);
+      background: var(--navy);
+      color: #fff;
+    }
+    .pill-opt + label:hover { border-color: var(--navy); color: var(--navy); }
+
+    /* ── EDITABLE TABLE ── */
+    .obs-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+    .obs-table th {
+      font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em;
+      color: var(--text-muted); font-weight: 500;
+      padding: 8px 10px; border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+    .obs-table td { padding: 6px 6px; border-bottom: 1px solid #f0f2f8; vertical-align: middle; }
+    .obs-table td input { border-radius: 6px; padding: 6px 10px; font-size: 13px; width: 100%; }
+    .btn-del {
+      background: none; border: none; cursor: pointer;
+      color: #d1d5db; font-size: 16px; padding: 4px;
+      transition: color 0.15s;
+    }
+    .btn-del:hover { color: #ef4444; }
+    .btn-add-row {
+      background: none;
+      border: 1.5px dashed var(--border);
+      border-radius: var(--radius);
+      color: var(--navy); font-size: 13px; font-weight: 500;
+      padding: 8px 18px; cursor: pointer;
+      display: flex; align-items: center; gap: 6px;
+      transition: border-color 0.15s, background 0.15s;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .btn-add-row:hover { border-color: var(--navy); background: #f0f3fc; }
+
+    /* ── BUTTONS ── */
+    .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 24px; border-radius: var(--radius);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px; font-weight: 500;
+      cursor: pointer; border: none; transition: all 0.15s;
+    }
+    .btn-primary {
+      background: var(--navy); color: #fff;
+    }
+    .btn-primary:hover { background: var(--navy-dark); }
+    .btn-secondary {
+      background: #fff; color: var(--navy);
+      border: 1.5px solid var(--border);
+    }
+    .btn-secondary:hover { border-color: var(--navy); background: #f0f3fc; }
+
+    /* ── BUSCAR TAB ── */
+    .search-bar { display: flex; gap: 10px; margin-bottom: 20px; }
+    .search-bar input { flex: 1; }
+    .pdf-list { display: flex; flex-direction: column; gap: 10px; }
+    .pdf-item {
+      display: flex; align-items: center; gap: 14px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 18px;
+      transition: border-color 0.15s;
+    }
+    .pdf-item:hover { border-color: var(--navy); }
+    .pdf-item i { color: var(--orange); font-size: 22px; }
+    .pdf-item .pdf-info { flex: 1; }
+    .pdf-item .pdf-name { font-size: 14px; font-weight: 500; color: var(--navy); }
+    .pdf-item .pdf-meta { font-size: 12px; color: var(--text-muted); }
+    .pdf-item .pdf-dl {
+      background: none; border: none; cursor: pointer;
+      color: var(--text-muted); font-size: 18px;
+      transition: color 0.15s;
+    }
+    .pdf-item .pdf-dl:hover { color: var(--navy); }
+    .empty-state {
+      text-align: center; padding: 48px 20px;
+      color: var(--text-muted); font-size: 14px;
+    }
+    .empty-state i { font-size: 36px; display: block; margin-bottom: 10px; }
+
+    /* ── SPINNER ── */
+    .spinner {
+      display: inline-block; width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed; bottom: 28px; right: 28px;
+      background: var(--navy); color: #fff;
+      padding: 12px 22px; border-radius: var(--radius);
+      font-size: 14px; font-weight: 500;
+      box-shadow: 0 4px 20px rgba(27,45,107,0.25);
+      z-index: 9999;
+      opacity: 0; transform: translateY(10px);
+      transition: all 0.3s ease;
+      pointer-events: none;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.error { background: #dc2626; }
+
+    @media (max-width: 700px) {
+      #sidebar { width: 56px; }
+      #topbar { left: 56px; }
+      #main { margin-left: 56px; padding: 16px; }
+      .form-grid { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
-<nav class="topbar">
-  <div class="topbar-brand">
-    <div class="logo-circle">V</div>
-    <a href="dashboard.html" style="color:#fff;font-weight:700;">← VISC</a>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-icon"><i class="bi bi-building"></i></div>
+    <span class="sidebar-logo-text">VISC</span>
   </div>
-  <div class="topbar-right">
-    <span class="topbar-user" id="topUser"></span>
-    <button class="btn-logout" onclick="doLogout()">Salir</button>
+  <div class="sidebar-nav">
+    <a href="dashboard.html" onclick="go(event,'dashboard.html')">
+      <i class="bi bi-grid-1x2"></i><span class="sidebar-label">Inicio</span>
+    </a>
+    <a href="visitas.html" class="active">
+      <i class="bi bi-clipboard-check"></i><span class="sidebar-label">Visitas</span>
+    </a>
+    <a href="asistencia.html" onclick="go(event,'asistencia.html')">
+      <i class="bi bi-person-check"></i><span class="sidebar-label">Asistencia</span>
+    </a>
+    <a href="reportes.html" onclick="go(event,'reportes.html')">
+      <i class="bi bi-bar-chart-line"></i><span class="sidebar-label">Reportes</span>
+    </a>
+    <a href="configuracion.html" onclick="go(event,'configuracion.html')">
+      <i class="bi bi-gear"></i><span class="sidebar-label">Configuración</span>
+    </a>
+  </div>
+  <div class="sidebar-footer">
+    <a href="#" id="logout-btn"><i class="bi bi-box-arrow-left"></i><span class="sidebar-label">Cerrar sesión</span></a>
   </div>
 </nav>
 
-<div class="container">
-  <div class="page-header">
-    <div><h1>🏢 Visitas a Terreno</h1><p>Registra visitas de inspección y sus acuerdos</p></div>
-    <button class="btn btn-secondary" onclick="toggleBuscar()">🔍 Buscar PDFs</button>
+<!-- TOPBAR -->
+<header id="topbar">
+  <button class="topbar-toggle" id="toggle-sidebar" aria-label="Colapsar sidebar">
+    <i class="bi bi-list"></i>
+  </button>
+  <div class="topbar-greeting">
+    <div class="greeting-text" id="greeting-text">Hola</div>
+    <div class="greeting-sub" id="greeting-date"></div>
+  </div>
+  <div class="topbar-company" id="topbar-company">—</div>
+  <div class="topbar-avatar" id="topbar-avatar">—</div>
+</header>
+
+<!-- MAIN -->
+<main id="main">
+  <div class="page-title"><i class="bi bi-clipboard-check" style="color:var(--orange);margin-right:8px"></i>Registro de Visitas</div>
+  <div class="page-subtitle">Documentación de visitas a empresas y acuerdos establecidos</div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('nueva')">Nueva visita</button>
+    <button class="tab-btn" onclick="switchTab('buscar')">Buscar</button>
   </div>
 
-  <!-- Buscar -->
-  <div id="buscarSection" class="card hidden">
-    <div class="card-header"><span class="card-title">Buscar visitas por empresa</span></div>
-    <div style="display:flex;gap:10px;align-items:end;">
-      <div class="form-group" style="flex:1;"><label>Nombre empresa</label><input id="empBuscar" placeholder="Empresa S.A."/></div>
-      <button class="btn btn-primary" onclick="buscarPDFs()">Buscar</button>
+  <!-- TAB: NUEVA VISITA -->
+  <div id="tab-nueva" class="tab-pane active">
+
+    <!-- Card 1: Datos generales -->
+    <div class="card">
+      <div class="card-title"><i class="bi bi-info-circle"></i>Datos generales</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Nombre experto</label>
+          <input type="text" id="nombre-experto" value="Enrique Díaz Venegas" />
+        </div>
+        <div class="form-group">
+          <label>Fecha evento</label>
+          <input type="date" id="fecha-evento" />
+        </div>
+        <div class="form-group full">
+          <label>Firma experto</label>
+          <div class="sig-wrap">
+            <canvas class="sig-canvas" id="sig-experto" width="600" height="100"></canvas>
+            <button class="sig-clear" onclick="clearCanvas('sig-experto')">Limpiar</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Empresa visitada</label>
+          <input type="text" id="empresa-visitada" readonly />
+        </div>
+        <div class="form-group">
+          <label>Socio estratégico</label>
+          <input type="text" id="socio" placeholder="Nombre del socio" />
+        </div>
+        <div class="form-group">
+          <label>Ciudad destino</label>
+          <input type="text" id="ciudad" placeholder="Ej: Santiago" />
+        </div>
+        <div class="form-group">
+          <label>Fecha y hora de visita</label>
+          <input type="datetime-local" id="fecha-visita" />
+        </div>
+      </div>
     </div>
-    <div id="resultadosBuscar" class="mt-4"></div>
+
+    <!-- Card I: Motivo -->
+    <div class="card">
+      <div class="card-title"><i class="bi bi-chat-left-text"></i>I. Motivo u objetivo</div>
+      <textarea id="motivo" placeholder="Describa el motivo u objetivo de la visita..."></textarea>
+    </div>
+
+    <!-- Card II: Actividades -->
+    <div class="card">
+      <div class="card-title"><i class="bi bi-list-task"></i>II. Actividades realizadas</div>
+      <textarea id="actividades" placeholder="Detalle las actividades realizadas durante la visita..."></textarea>
+    </div>
+
+    <!-- Card III: Observaciones -->
+    <div class="card">
+      <div class="card-title"><i class="bi bi-table"></i>III. Observaciones y acuerdos</div>
+      <table class="obs-table" id="obs-table">
+        <thead>
+          <tr>
+            <th style="width:60%">Descripción</th>
+            <th style="width:30%">Fecha de cumplimiento</th>
+            <th style="width:10%"></th>
+          </tr>
+        </thead>
+        <tbody id="obs-body">
+          <tr>
+            <td><input type="text" placeholder="Descripción del acuerdo..." /></td>
+            <td><input type="date" /></td>
+            <td><button class="btn-del" onclick="delRow(this)" title="Eliminar"><i class="bi bi-trash3"></i></button></td>
+          </tr>
+        </tbody>
+      </table>
+      <button class="btn-add-row" onclick="addObsRow()"><i class="bi bi-plus-lg"></i>Agregar fila</button>
+    </div>
+
+    <!-- Card IV: Información relevante -->
+    <div class="card">
+      <div class="card-title"><i class="bi bi-toggles"></i>IV. Información relevante</div>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+
+        <div class="pill-group">
+          <span class="pill-label">DS40</span>
+          <input class="pill-opt" type="radio" name="ds40" id="ds40-si" value="si" />
+          <label for="ds40-si"><i class="bi bi-check-circle"></i>Sí</label>
+          <input class="pill-opt" type="radio" name="ds40" id="ds40-no" value="no" />
+          <label for="ds40-no"><i class="bi bi-x-circle"></i>No</label>
+        </div>
+
+        <div class="pill-group">
+          <span class="pill-label">EPP</span>
+          <input class="pill-opt" type="radio" name="epp" id="epp-si" value="si" />
+          <label for="epp-si"><i class="bi bi-check-circle"></i>Sí</label>
+          <input class="pill-opt" type="radio" name="epp" id="epp-no" value="no" />
+          <label for="epp-no"><i class="bi bi-x-circle"></i>No</label>
+        </div>
+
+        <div class="pill-group">
+          <span class="pill-label">Actividades</span>
+          <input class="pill-opt" type="radio" name="actividades-rel" id="act-si" value="si" />
+          <label for="act-si"><i class="bi bi-check-circle"></i>Sí</label>
+          <input class="pill-opt" type="radio" name="actividades-rel" id="act-no" value="no" />
+          <label for="act-no"><i class="bi bi-x-circle"></i>No</label>
+        </div>
+
+        <div class="pill-group">
+          <span class="pill-label">Listado trabajadores</span>
+          <input class="pill-opt" type="radio" name="listado" id="lst-si" value="si" />
+          <label for="lst-si"><i class="bi bi-check-circle"></i>Sí</label>
+          <input class="pill-opt" type="radio" name="listado" id="lst-no" value="no" />
+          <label for="lst-no"><i class="bi bi-x-circle"></i>No</label>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Card V: Revisión -->
+    <div class="card">
+      <div class="card-title"><i class="bi bi-eye"></i>V. Revisión</div>
+      <div class="pill-group">
+        <span class="pill-label">¿Revisión completada?</span>
+        <input class="pill-opt" type="radio" name="revision" id="rev-si" value="si" />
+        <label for="rev-si"><i class="bi bi-check-circle"></i>Sí</label>
+        <input class="pill-opt" type="radio" name="revision" id="rev-no" value="no" />
+        <label for="rev-no"><i class="bi bi-x-circle"></i>No</label>
+      </div>
+    </div>
+
+    <!-- Card: Firma y visado -->
+    <div class="card">
+      <div class="card-title"><i class="bi bi-pen"></i>Firma y visado</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Nombre visado</label>
+          <input type="text" id="nombre-visado" placeholder="Nombre de quien visa" />
+        </div>
+        <div class="form-group">
+          <label>Fecha de visado</label>
+          <input type="date" id="fecha-visado" />
+        </div>
+        <div class="form-group full">
+          <label>Firma visado</label>
+          <div class="sig-wrap">
+            <canvas class="sig-canvas" id="sig-visado" width="600" height="100"></canvas>
+            <button class="sig-clear" onclick="clearCanvas('sig-visado')">Limpiar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card: Email adicional -->
+    <div class="card">
+      <div class="card-title"><i class="bi bi-envelope"></i>Email adicional (opcional)</div>
+      <div class="form-group">
+        <label>Correo adicional para notificaciones</label>
+        <input type="email" id="email-extra" placeholder="correo@ejemplo.com" />
+      </div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="actions">
+      <button class="btn btn-primary" id="btn-guardar" onclick="guardarVisita()">
+        <i class="bi bi-save"></i>Guardar visita
+      </button>
+      <button class="btn btn-secondary" onclick="limpiarFormulario()">
+        <i class="bi bi-arrow-counterclockwise"></i>Limpiar
+      </button>
+    </div>
+
+  </div><!-- /tab-nueva -->
+
+  <!-- TAB: BUSCAR -->
+  <div id="tab-buscar" class="tab-pane">
+    <div class="card">
+      <div class="card-title"><i class="bi bi-search"></i>Buscar visitas por empresa</div>
+      <div class="search-bar">
+        <input type="text" id="buscar-empresa" placeholder="Nombre de la empresa..." />
+        <button class="btn btn-primary" onclick="buscarVisitas()">
+          <i class="bi bi-search"></i>Buscar
+        </button>
+      </div>
+      <div id="pdf-list" class="pdf-list">
+        <div class="empty-state">
+          <i class="bi bi-folder2-open"></i>
+          Ingrese el nombre de una empresa para buscar sus visitas
+        </div>
+      </div>
+    </div>
   </div>
 
-  <!-- Formulario -->
-  <div class="card">
-    <div class="card-header"><span class="card-title">Nueva visita</span></div>
-    <div id="alertVis" class="alert alert-error hidden"></div>
+</main>
 
-    <div class="section-title">I. Información general</div>
-    <div class="form-grid">
-      <div class="form-group"><label>Nombre experto *</label><input id="nombreExperto" placeholder="Juan Pérez"/></div>
-      <div class="form-group"><label>Firma experto</label><input id="firmaExperto" placeholder="Nombre"/></div>
-      <div class="form-group"><label>Empresa visitada *</label><input id="empresaVisitada" placeholder="Empresa S.A."/></div>
-      <div class="form-group"><label>Socio estratégico</label><input id="socioEstrategico" placeholder="Nombre socio"/></div>
-      <div class="form-group"><label>Ciudad destino</label><input id="ciudadDestino" placeholder="Santiago"/></div>
-      <div class="form-group"><label>Fecha del evento *</label><input type="date" id="fechaEvento"/></div>
-      <div class="form-group"><label>Fecha y hora visita</label><input type="datetime-local" id="fechaHoraVisita"/></div>
-      <div class="form-group"><label>Email adicional</label><input type="email" id="emailAdicional" placeholder="cc@email.com"/></div>
-    </div>
-
-    <div class="section-title">II. Motivo u objetivo</div>
-    <div class="form-group full"><textarea id="motivoObjetivo" placeholder="Describa el motivo de la visita…"></textarea></div>
-
-    <div class="section-title">III. Actividades realizadas</div>
-    <div class="form-group full"><textarea id="actividadesRealizadas" placeholder="Actividades realizadas durante la visita…"></textarea></div>
-
-    <div class="section-title">IV. Observaciones y acuerdos</div>
-    <div id="observacionesList"></div>
-    <button class="btn btn-secondary btn-sm" onclick="agregarObservacion()">+ Agregar observación</button>
-
-    <div class="section-title">V. Información relevante</div>
-    <div class="form-grid">
-      <div class="form-group">
-        <label>Obligación de informar (DS40)</label>
-        <select id="ds40"><option value="No">No</option><option value="Sí">Sí</option></select>
-      </div>
-      <div class="form-group">
-        <label>Uso de EPP en faena</label>
-        <select id="epp"><option value="No">No</option><option value="Sí">Sí</option></select>
-      </div>
-      <div class="form-group">
-        <label>Actividades preventivas al día</label>
-        <select id="actividades"><option value="No">No</option><option value="Sí">Sí</option></select>
-      </div>
-      <div class="form-group">
-        <label>Listado trabajadores actualizado</label>
-        <select id="trabajadores"><option value="No">No</option><option value="Sí">Sí</option></select>
-      </div>
-      <div class="form-group">
-        <label>Revisión completada</label>
-        <select id="revision"><option value="No">No</option><option value="Sí">Sí</option></select>
-      </div>
-    </div>
-
-    <div class="section-title">VI. Visado</div>
-    <div class="form-grid">
-      <div class="form-group"><label>Nombre / Cargo visado</label><input id="nombreVisado" placeholder="Carlos Martínez - Gerente"/></div>
-      <div class="form-group"><label>Firma / Fecha visado</label><input id="firmaFecha" placeholder="CMartínez - 01/01/2025"/></div>
-    </div>
-
-    <div class="mt-6 btn-group">
-      <button class="btn btn-primary" id="btnGuardar" onclick="guardar()">💾 Guardar visita</button>
-      <button class="btn btn-ghost" onclick="limpiar()">Limpiar</button>
-    </div>
-  </div>
-</div>
+<div id="toast"></div>
 
 <script src="js/api.js"></script>
 <script>
-let observacionesList = [];
+  // ── Auth ──
+  requireAuth();
 
-(async () => {
-  const sess = requireAuth();
-  if (!sess) return;
-  document.getElementById('topUser').textContent = sess.nombre || sess.correo;
-  document.getElementById('fechaEvento').value = new Date().toISOString().split('T')[0];
-  document.getElementById('nombreExperto').value = sess.nombre || '';
-})();
+  // ── Session info ──
+  const session = typeof getSession === 'function' ? getSession() : {};
+  const empresa = session.empresa || session.company || 'Mi Empresa';
+  const userName = session.nombre || session.name || 'Usuario';
+  const userInitials = userName.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
 
-function renderObservaciones() {
-  const c = document.getElementById('observacionesList');
-  c.innerHTML = '';
-  observacionesList.forEach((obs, i) => {
-    const div = document.createElement('div');
-    div.style.cssText = 'display:grid;grid-template-columns:1fr 180px auto;gap:8px;align-items:end;margin-bottom:8px;padding:10px;background:var(--orange-lt);border-radius:8px;';
-    div.innerHTML = `
-      <div class="form-group"><label>Observación / Acuerdo</label><input value="${obs.observacion||''}" oninput="observacionesList[${i}].observacion=this.value" placeholder="Descripción…"/></div>
-      <div class="form-group"><label>Fecha cumplimiento</label><input type="date" value="${obs.fecha_cumplimiento||''}" oninput="observacionesList[${i}].fecha_cumplimiento=this.value"/></div>
-      <button onclick="observacionesList.splice(${i},1);renderObservaciones()" style="background:#fee2e2;color:#991b1b;border:none;border-radius:6px;padding:8px 12px;cursor:pointer;align-self:flex-end;">✕</button>
-    `;
-    c.appendChild(div);
+  document.getElementById('empresa-visitada').value = empresa;
+  document.getElementById('topbar-company').textContent = empresa;
+  document.getElementById('topbar-avatar').textContent = userInitials;
+  document.getElementById('greeting-text').textContent = 'Hola, ' + userName.split(' ')[0];
+
+  const now = new Date();
+  document.getElementById('greeting-date').textContent = now.toLocaleDateString('es-CL', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+
+  // ── Sidebar toggle ──
+  const sidebar = document.getElementById('sidebar');
+  const topbar  = document.getElementById('topbar');
+  const mainEl  = document.getElementById('main');
+  let collapsed = false;
+  document.getElementById('toggle-sidebar').addEventListener('click', () => {
+    collapsed = !collapsed;
+    sidebar.classList.toggle('collapsed', collapsed);
+    topbar.classList.toggle('shifted', collapsed);
+    mainEl.classList.toggle('shifted', collapsed);
   });
-}
 
-function agregarObservacion() {
-  observacionesList.push({ observacion: '', fecha_cumplimiento: '' });
-  renderObservaciones();
-}
+  // ── Navigation ──
+  function go(e, href) { e.preventDefault(); window.location.href = href; }
+  document.getElementById('logout-btn').addEventListener('click', e => {
+    e.preventDefault();
+    if (typeof logout === 'function') logout();
+    else { sessionStorage.clear(); localStorage.clear(); window.location.href = 'index.html'; }
+  });
 
-async function guardar() {
-  const alert = document.getElementById('alertVis');
-  alert.classList.add('hidden');
-  const btn = document.getElementById('btnGuardar');
-  setLoading(btn, true);
+  // ── Tabs ──
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    document.querySelectorAll('.tab-btn')[tab === 'nueva' ? 0 : 1].classList.add('active');
+  }
 
-  const datos = {
-    nombre_experto:       document.getElementById('nombreExperto').value.trim(),
-    firma_experto:        document.getElementById('firmaExperto').value.trim(),
-    empresa_visitada:     document.getElementById('empresaVisitada').value.trim(),
-    socio_estrategico:    document.getElementById('socioEstrategico').value.trim(),
-    ciudad_destino:       document.getElementById('ciudadDestino').value.trim(),
-    fecha_evento:         document.getElementById('fechaEvento').value,
-    fecha_hora_visita:    document.getElementById('fechaHoraVisita').value || new Date().toISOString(),
-    emailAdicional:       document.getElementById('emailAdicional').value.trim(),
-    motivo_objetivo:      document.getElementById('motivoObjetivo').value.trim(),
-    actividades_realizadas: document.getElementById('actividadesRealizadas').value.trim(),
-    observaciones:        observacionesList,
-    ds40:                 document.getElementById('ds40').value,
-    epp:                  document.getElementById('epp').value,
-    actividades:          document.getElementById('actividades').value,
-    trabajadores:         document.getElementById('trabajadores').value,
-    revision:             document.getElementById('revision').value,
-    nombre_visado:        document.getElementById('nombreVisado').value.trim(),
-    firma_fecha:          document.getElementById('firmaFecha').value.trim(),
-  };
+  // ── Canvas signatures ──
+  function initCanvas(id) {
+    const canvas = document.getElementById(id);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let drawing = false;
+    canvas.addEventListener('mousedown', e => { drawing = true; ctx.beginPath(); ctx.moveTo(...pos(e, canvas)); });
+    canvas.addEventListener('mousemove', e => { if (!drawing) return; ctx.lineTo(...pos(e, canvas)); ctx.strokeStyle = '#1B2D6B'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.stroke(); });
+    canvas.addEventListener('mouseup', () => drawing = false);
+    canvas.addEventListener('mouseleave', () => drawing = false);
+    canvas.addEventListener('touchstart', e => { e.preventDefault(); drawing = true; ctx.beginPath(); ctx.moveTo(...pos(e.touches[0], canvas)); }, {passive:false});
+    canvas.addEventListener('touchmove', e => { e.preventDefault(); if (!drawing) return; ctx.lineTo(...pos(e.touches[0], canvas)); ctx.strokeStyle = '#1B2D6B'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.stroke(); }, {passive:false});
+    canvas.addEventListener('touchend', () => drawing = false);
+  }
+  function pos(e, canvas) {
+    const r = canvas.getBoundingClientRect();
+    return [(e.clientX - r.left) * (canvas.width / r.width), (e.clientY - r.top) * (canvas.height / r.height)];
+  }
+  function clearCanvas(id) {
+    const c = document.getElementById(id);
+    c.getContext('2d').clearRect(0, 0, c.width, c.height);
+  }
+  initCanvas('sig-experto');
+  initCanvas('sig-visado');
 
-  try {
-    const res = await Visitas.guardar(datos);
-    if (res.success) {
-      toast('Visita guardada ✓', 'success');
-      if (res.pdfUrl) window.open(res.pdfUrl, '_blank');
-      limpiar();
-    } else {
-      alert.textContent = res.message || 'Error';
-      alert.classList.remove('hidden');
+  // ── Obs table ──
+  function addObsRow() {
+    const tbody = document.getElementById('obs-body');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" placeholder="Descripción del acuerdo..." /></td>
+      <td><input type="date" /></td>
+      <td><button class="btn-del" onclick="delRow(this)" title="Eliminar"><i class="bi bi-trash3"></i></button></td>
+    `;
+    tbody.appendChild(tr);
+  }
+  function delRow(btn) {
+    const tbody = document.getElementById('obs-body');
+    if (tbody.rows.length > 1) btn.closest('tr').remove();
+    else { btn.closest('tr').querySelectorAll('input').forEach(i => i.value = ''); }
+  }
+
+  // ── Toast ──
+  function showToast(msg, type='ok') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = type === 'error' ? 'error' : '';
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3200);
+  }
+
+  // ── Guardar visita ──
+  async function guardarVisita() {
+    const btn = document.getElementById('btn-guardar');
+    const sigExperto = document.getElementById('sig-experto').toDataURL();
+    const sigVisado  = document.getElementById('sig-visado').toDataURL();
+
+    const obsRows = [...document.querySelectorAll('#obs-body tr')].map(tr => {
+      const inputs = tr.querySelectorAll('input');
+      return { descripcion: inputs[0]?.value || '', fechaCumplimiento: inputs[1]?.value || '' };
+    });
+
+    const datos = {
+      nombreExperto:    document.getElementById('nombre-experto').value,
+      fechaEvento:      document.getElementById('fecha-evento').value,
+      firmaExperto:     sigExperto,
+      empresaVisitada:  document.getElementById('empresa-visitada').value,
+      socio:            document.getElementById('socio').value,
+      ciudad:           document.getElementById('ciudad').value,
+      fechaVisita:      document.getElementById('fecha-visita').value,
+      motivo:           document.getElementById('motivo').value,
+      actividades:      document.getElementById('actividades').value,
+      observaciones:    obsRows,
+      ds40:             document.querySelector('input[name="ds40"]:checked')?.value || '',
+      epp:              document.querySelector('input[name="epp"]:checked')?.value || '',
+      actividadesRel:   document.querySelector('input[name="actividades-rel"]:checked')?.value || '',
+      listadoTrabajadores: document.querySelector('input[name="listado"]:checked')?.value || '',
+      revision:         document.querySelector('input[name="revision"]:checked')?.value || '',
+      nombreVisado:     document.getElementById('nombre-visado').value,
+      fechaVisado:      document.getElementById('fecha-visado').value,
+      firmaVisado:      sigVisado,
+      emailExtra:       document.getElementById('email-extra').value,
+    };
+
+    btn.innerHTML = '<span class="spinner"></span>Guardando...';
+    btn.disabled = true;
+
+    try {
+      await callAPI('guardarVisita', datos);
+      showToast('Visita guardada correctamente');
+      limpiarFormulario();
+    } catch(e) {
+      showToast('Error al guardar: ' + (e.message || 'intente nuevamente'), 'error');
+    } finally {
+      btn.innerHTML = '<i class="bi bi-save"></i>Guardar visita';
+      btn.disabled = false;
     }
-  } catch(e) {
-    alert.textContent = 'Error: ' + e.message;
-    alert.classList.remove('hidden');
   }
-  setLoading(btn, false);
-}
 
-async function buscarPDFs() {
-  const emp = document.getElementById('empBuscar').value.trim();
-  if (!emp) { toast('Ingresa nombre de empresa', 'error'); return; }
-  const res = await Visitas.buscarPDFs(emp).catch(e => ({ success: false }));
-  const div = document.getElementById('resultadosBuscar');
-  if (!res.success || !res.pdfs || !res.pdfs.length) {
-    div.innerHTML = '<p style="color:#888;">Sin resultados.</p>';
-    return;
+  // ── Limpiar formulario ──
+  function limpiarFormulario() {
+    document.getElementById('nombre-experto').value = 'Enrique Díaz Venegas';
+    ['fecha-evento','socio','ciudad','fecha-visita','motivo','actividades',
+     'nombre-visado','fecha-visado','email-extra'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    clearCanvas('sig-experto');
+    clearCanvas('sig-visado');
+    document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+    const tbody = document.getElementById('obs-body');
+    tbody.innerHTML = `
+      <tr>
+        <td><input type="text" placeholder="Descripción del acuerdo..." /></td>
+        <td><input type="date" /></td>
+        <td><button class="btn-del" onclick="delRow(this)" title="Eliminar"><i class="bi bi-trash3"></i></button></td>
+      </tr>`;
   }
-  div.innerHTML = res.pdfs.map(p =>
-    `<div style="padding:8px 0;border-bottom:1px solid #eee;">
-      <a class="pdf-link" href="${p.url}" target="_blank">📄 ${p.name}</a>
-      <span style="font-size:11px;color:#aaa;margin-left:8px;">${p.fecha}</span>
-    </div>`
-  ).join('');
-}
 
-function toggleBuscar() { document.getElementById('buscarSection').classList.toggle('hidden'); }
+  // ── Buscar visitas ──
+  async function buscarVisitas() {
+    const empresa = document.getElementById('buscar-empresa').value.trim();
+    if (!empresa) { showToast('Ingrese el nombre de una empresa', 'error'); return; }
+    const list = document.getElementById('pdf-list');
+    list.innerHTML = '<div class="empty-state"><span class="spinner" style="border-color:rgba(27,45,107,.2);border-top-color:var(--navy)"></span></div>';
+    try {
+      const res = await callAPI('buscarVisitasPorEmpresaConToken', { empresa });
+      const items = Array.isArray(res) ? res : (res.data || res.items || []);
+      if (!items.length) {
+        list.innerHTML = '<div class="empty-state"><i class="bi bi-file-earmark-x"></i>No se encontraron visitas para esta empresa</div>';
+        return;
+      }
+      list.innerHTML = items.map(item => `
+        <div class="pdf-item">
+          <i class="bi bi-file-earmark-pdf"></i>
+          <div class="pdf-info">
+            <div class="pdf-name">${item.nombre || item.title || 'Visita'}</div>
+            <div class="pdf-meta">${item.fecha || item.date || ''} ${item.ciudad ? '· ' + item.ciudad : ''}</div>
+          </div>
+          <button class="pdf-dl" title="Descargar" onclick="window.open('${item.url || '#'}','_blank')">
+            <i class="bi bi-download"></i>
+          </button>
+        </div>
+      `).join('');
+    } catch(e) {
+      list.innerHTML = '<div class="empty-state"><i class="bi bi-exclamation-triangle"></i>Error al buscar: ' + (e.message || 'intente nuevamente') + '</div>';
+    }
+  }
 
-function limpiar() {
-  observacionesList = [];
-  renderObservaciones();
-  document.querySelectorAll('input,textarea,select').forEach(el => { if (el.type !== 'date') el.value = ''; });
-  document.getElementById('fechaEvento').value = new Date().toISOString().split('T')[0];
-}
-
-async function doLogout() { await Auth.logout(); window.location.href = 'index.html'; }
+  document.getElementById('buscar-empresa').addEventListener('keydown', e => {
+    if (e.key === 'Enter') buscarVisitas();
+  });
 </script>
 </body>
 </html>
