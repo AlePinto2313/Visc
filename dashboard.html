@@ -1,178 +1,701 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>VISC — Dashboard</title>
-  <link rel="stylesheet" href="css/visc.css"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VISC · Panel de Control</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      /* VISC Brand Colors */
+      --navy: #1B2D6B;      /* azul marino VISC */
+      --navy2: #152359;     /* navy más oscuro */
+      --navy3: #0f1a40;     /* navy más oscuro aún */
+      --o1: #F0901A;        /* naranja VISC claro */
+      --o2: #E87722;        /* naranja VISC principal */
+      --o3: #C4601A;        /* naranja VISC oscuro */
+      --o-light: #FFF3E6;
+      --o-mid: #FFD9AE;
+      --white: #ffffff; --off: #fafaf9; --surface: #f0f2f8;
+      --border: #e4e7f0; --border2: #d4d9e8;
+      --text: #0f1a40; --muted: #6b7aa0; --light: #b0bbd4;
+      --sidebar-w: 220px;
+      --sidebar-collapsed: 68px;
+    }
+    html, body { height: 100%; background: var(--surface); font-family: 'DM Sans', sans-serif; color: var(--text); overflow: hidden; }
+
+    /* ── LAYOUT ── */
+    .app { display: flex; height: 100vh; width: 100vw; }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--navy);
+      display: flex;
+      flex-direction: column;
+      flex: 0 0 var(--sidebar-w);
+      transition: width 0.28s cubic-bezier(.4,0,.2,1);
+      overflow: hidden;
+      z-index: 50;
+    }
+    .sidebar.collapsed { width: var(--sidebar-collapsed); }
+
+    .sidebar-top {
+      padding: 20px 16px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+    .sidebar-logo {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      overflow: hidden;
+      flex: 0 0 36px;
+      border: 1.5px solid rgba(255,255,255,0.12);
+      background: var(--o2);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .sidebar-logo img { width: 100%; height: 100%; object-fit: cover; }
+    .sidebar-brand { overflow: hidden; }
+    .sidebar-name { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 13px; color: #fff; white-space: nowrap; }
+    .sidebar-sub  { font-size: 10px; color: rgba(255,255,255,0.35); white-space: nowrap; margin-top: 1px; }
+
+    .sidebar-section { padding: 8px 10px 4px; font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.2); white-space: nowrap; overflow: hidden; }
+    .sidebar.collapsed .sidebar-section { opacity: 0; }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      margin: 2px 8px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.15s;
+      text-decoration: none;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.06); }
+    .nav-item.active { background: var(--o2); }
+    .nav-item i { font-size: 18px; color: rgba(255,255,255,0.45); flex: 0 0 20px; text-align: center; transition: color 0.15s; }
+    .nav-item.active i { color: #fff; }
+    .nav-item:hover i { color: rgba(255,255,255,0.8); }
+    .nav-label { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.55); overflow: hidden; }
+    .nav-item.active .nav-label { color: #fff; font-weight: 600; }
+    .nav-item:hover .nav-label { color: rgba(255,255,255,0.9); }
+    .nav-badge { margin-left: auto; font-size: 10px; font-weight: 700; background: var(--o2); color: #fff; border-radius: 999px; padding: 2px 7px; flex: 0 0 auto; }
+    .sidebar.collapsed .nav-label, .sidebar.collapsed .nav-badge, .sidebar.collapsed .sidebar-name, .sidebar.collapsed .sidebar-sub { opacity: 0; pointer-events: none; }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 12px 8px;
+      border-top: 1px solid rgba(255,255,255,0.07);
+    }
+    .user-mini {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 10px; border-radius: 10px;
+      cursor: pointer; transition: background 0.15s;
+      overflow: hidden;
+    }
+    .user-mini:hover { background: rgba(255,255,255,0.06); }
+    .user-av { width: 32px; height: 32px; border-radius: 50%; background: var(--o2); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: #fff; flex: 0 0 32px; }
+    .user-info { overflow: hidden; }
+    .user-name  { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.85); white-space: nowrap; }
+    .user-role  { font-size: 10px; color: rgba(255,255,255,0.35); white-space: nowrap; }
+    .sidebar.collapsed .user-info { opacity: 0; }
+
+    /* Collapse button */
+    .sidebar-toggle {
+      position: absolute; left: calc(var(--sidebar-w) - 14px); top: 24px;
+      width: 28px; height: 28px;
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--muted);
+      z-index: 60;
+      transition: left 0.28s cubic-bezier(.4,0,.2,1), transform 0.2s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .sidebar-toggle:hover { color: var(--o2); border-color: var(--o1); }
+    .collapsed ~ .sidebar-toggle,
+    .app.collapsed .sidebar-toggle { left: calc(var(--sidebar-collapsed) - 14px); }
+
+    /* ── MAIN ── */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 0 28px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex: 0 0 64px;
+    }
+    .topbar-left { display: flex; flex-direction: column; }
+    .greeting { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 900; color: var(--text); letter-spacing: -0.03em; line-height: 1.1; }
+    .greeting span { color: var(--o2); }
+    .topbar { border-bottom: 2px solid var(--border); }
+    .topbar-date { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+    .topbar-empresa { font-size: 11.5px; color: var(--muted); background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 5px 14px; white-space: nowrap; }
+    .topbar-empresa i { color: var(--o2); margin-right: 4px; }
+    .notif-btn { width: 38px; height: 38px; border-radius: 10px; border: 1.5px solid var(--border); background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--muted); font-size: 16px; transition: all 0.15s; position: relative; }
+    .notif-btn:hover { border-color: var(--o1); color: var(--o2); background: var(--o-light); }
+    .notif-dot { position: absolute; top: 7px; right: 7px; width: 7px; height: 7px; border-radius: 50%; background: var(--o2); border: 1.5px solid var(--white); }
+    .topbar-user { display: flex; align-items: center; gap: 9px; padding: 6px 10px; border-radius: 12px; border: 1.5px solid var(--border); cursor: pointer; transition: all 0.15s; }
+    .topbar-user:hover { border-color: var(--o1); background: var(--o-light); }
+    .topbar-av { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--navy), var(--o2)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: #fff; flex: 0 0 32px; }
+    .topbar-uname { font-size: 12.5px; font-weight: 600; color: var(--text); }
+    .topbar-urole { font-size: 10.5px; color: var(--muted); }
+    .logout-btn { width: 38px; height: 38px; border-radius: 10px; border: 1.5px solid #fecaca; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #e53e3e; font-size: 16px; transition: all 0.15s; }
+    .logout-btn:hover { background: #fff5f5; }
+
+    /* ── CONTENT ── */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 28px 32px;
+    }
+
+    /* ── STAT STRIP ── */
+    .stat-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+    .stat-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 18px;
+      display: flex; align-items: center; gap: 14px;
+      opacity: 0; animation: fadeUp 0.5s ease forwards;
+    }
+    .stat-card:nth-child(1){animation-delay:0.10s} .stat-card:nth-child(2){animation-delay:0.16s}
+    .stat-card:nth-child(3){animation-delay:0.22s} .stat-card:nth-child(4){animation-delay:0.28s}
+    .stat-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex: 0 0 44px; }
+    .stat-icon.obs   { background: var(--o-light); color: var(--o2); }
+    .stat-icon.vis   { background: #e8edfa; color: var(--navy); }
+    .stat-icon.asis  { background: #dcfce7; color: #16a34a; }
+    .stat-icon.insp  { background: #f0f2f8; color: var(--navy2); }
+    .stat-label { font-size: 11.5px; color: var(--muted); }
+    .stat-value { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 900; color: var(--text); letter-spacing: -0.04em; line-height: 1.1; }
+    .stat-trend { font-size: 11px; color: #16a34a; font-weight: 600; margin-top: 2px; }
+    .stat-trend.down { color: #e53e3e; }
+
+    /* ── MAIN GRID ── */
+    .main-grid { display: grid; grid-template-columns: 1fr 340px; gap: 18px; }
+
+    /* ── CHART CARD ── */
+    .card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 20px 22px;
+      opacity: 0; animation: fadeUp 0.5s ease forwards;
+    }
+    .card:nth-child(1){animation-delay:0.32s} .card:nth-child(2){animation-delay:0.38s}
+    .card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
+    .card-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
+    .card-sub   { font-size: 12px; color: var(--muted); margin-top: 3px; font-weight: 300; }
+    .chart-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--muted); }
+    .legend-dot { width: 9px; height: 9px; border-radius: 3px; }
+    .chart-wrap { position: relative; height: 220px; }
+
+    /* ── QUICK ACCESS ── */
+    .quick-card { background: var(--white); border: 1px solid var(--border); border-radius: 20px; padding: 20px 22px; opacity: 0; animation: fadeUp 0.5s ease 0.38s forwards; }
+    .mod-list { display: flex; flex-direction: column; gap: 7px; margin-top: 14px; }
+    .mod-btn {
+      display: flex; align-items: center; gap: 12px;
+      width: 100%; padding: 10px 13px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px; background: transparent;
+      cursor: pointer; text-align: left;
+      transition: all 0.15s; font-family: 'DM Sans', sans-serif;
+    }
+    .mod-btn:hover { border-color: var(--o1); background: var(--o-light); transform: translateX(3px); }
+    .mod-btn.highlight { background: linear-gradient(135deg, var(--navy), var(--navy2)); border-color: transparent; }
+    .mod-btn.highlight:hover { opacity: 0.9; transform: translateX(3px); }
+    .mod-ic { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 16px; background: var(--o-light); color: var(--o2); flex: 0 0 34px; }
+    .mod-btn.highlight .mod-ic { background: rgba(255,255,255,0.2); color: #fff; }
+    .mod-txt { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.2; }
+    .mod-btn.highlight .mod-txt { color: #fff; }
+    .mod-sub { font-size: 11px; color: var(--muted); font-weight: 300; }
+    .mod-btn.highlight .mod-sub { color: rgba(255,255,255,0.7); }
+    .mod-arr { margin-left: auto; font-size: 14px; color: var(--light); }
+    .mod-btn.highlight .mod-arr { color: rgba(255,255,255,0.5); }
+
+    /* ── RECENT ACTIVITY ── */
+    .recent-card { background: var(--white); border: 1px solid var(--border); border-radius: 20px; padding: 20px 22px; margin-top: 18px; opacity: 0; animation: fadeUp 0.5s ease 0.44s forwards; }
+    .activity-list { margin-top: 14px; }
+    .activity-row { display: flex; align-items: center; gap: 13px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .activity-row:last-child { border-bottom: none; }
+    .activity-dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 8px; }
+    .dot-obs   { background: var(--o2); }
+    .dot-vis   { background: var(--navy); }
+    .dot-asis  { background: #3b82f6; }
+    .dot-insp  { background: var(--muted); }
+    .activity-text { font-size: 12.5px; color: var(--text); flex: 1; }
+    .activity-time { font-size: 11px; color: var(--light); white-space: nowrap; }
+
+    /* ── EMPRESA CARD (sidebar right) ── */
+    .empresa-card { background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 60%, var(--o2) 100%); border-radius: 18px; padding: 18px; margin-bottom: 16px; color: #fff; opacity: 0; animation: fadeUp 0.5s ease 0.35s forwards; border: none; position: relative; overflow: hidden; }
+    .empresa-card::before { content: ''; position: absolute; width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,0.05); top: -30px; right: -30px; }
+    .empresa-card::after  { content: ''; position: absolute; width: 80px; height: 80px; border-radius: 50%; background: rgba(232,119,34,0.2); bottom: -20px; left: 20px; }
+    .emp-label  { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.6); margin-bottom: 6px; }
+    .emp-name   { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800; color: #fff; line-height: 1.2; }
+    .emp-run    { font-size: 11.5px; color: rgba(255,255,255,0.7); margin-top: 5px; }
+    .emp-badge  { display: inline-block; margin-top: 10px; background: rgba(255,255,255,0.18); border-radius: 999px; padding: 4px 11px; font-size: 11px; font-weight: 600; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* RESPONSIVE */
+    @media (max-width: 1024px) {
+      .main-grid { grid-template-columns: 1fr; }
+      .stat-strip { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 700px) {
+      .sidebar { display: none; }
+      .topbar { padding: 0 16px; }
+      .content { padding: 16px 16px 24px; }
+      .stat-strip { grid-template-columns: 1fr 1fr; gap: 10px; }
+    }
+  </style>
 </head>
 <body>
-<nav class="topbar">
-  <div class="topbar-brand">
-    <div class="logo-circle">V</div>
-    <span>VISC</span>
-  </div>
-  <div class="topbar-right">
-    <span class="topbar-user" id="topUser"></span>
-    <span class="topbar-empresa" id="topEmpresa" style="cursor:pointer;" title="Click para cambiar empresa" onclick="openEmpresaModal()">Sin empresa</span>
-    <button class="btn-logout" onclick="doLogout()">Salir</button>
-  </div>
-</nav>
+<div class="app" id="app">
 
-<div class="container">
-  <!-- Cabecera -->
-  <div class="page-header" style="margin-top:8px;">
-    <div>
-      <h1>Dashboard</h1>
-      <p id="welcomeMsg">Bienvenido al sistema VISC</p>
-    </div>
-  </div>
-
-  <!-- Stats -->
-  <div class="stats-grid" id="statsGrid">
-    <div class="stat-card"><div class="num" id="sObs">—</div><div class="lbl">Observaciones</div></div>
-    <div class="stat-card"><div class="num" id="sVis">—</div><div class="lbl">Visitas</div></div>
-    <div class="stat-card"><div class="num" id="sAsis">—</div><div class="lbl">Asistencias</div></div>
-    <div class="stat-card"><div class="num" id="sInsp">—</div><div class="lbl">Inspecciones</div></div>
-  </div>
-
-  <!-- Módulos -->
-  <div class="section-title">Módulos</div>
-  <div class="modules-grid" id="modulesGrid"></div>
-</div>
-
-<!-- Modal selector empresa -->
-<div id="empresaModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:center;justify-content:center;">
-  <div class="card" style="width:400px;margin:0;max-height:80vh;overflow-y:auto;">
-    <div class="card-header">
-      <span class="card-title">Seleccionar empresa activa</span>
-      <button class="btn btn-ghost btn-sm" onclick="closeEmpresaModal()">✕</button>
-    </div>
-    <div id="empresaList" style="display:flex;flex-direction:column;gap:8px;"></div>
-    <hr class="divider"/>
-    <div id="crearEmpresaForm" class="hidden">
-      <div class="section-title">Nueva empresa</div>
-      <div class="form-group" style="margin-bottom:10px;"><label>RUN empresa</label><input id="newRun" placeholder="12345678-9"/></div>
-      <div class="form-group" style="margin-bottom:14px;"><label>Razón Social</label><input id="newRazon" placeholder="Empresa S.A."/></div>
-      <div class="btn-group">
-        <button class="btn btn-primary btn-sm" onclick="crearEmpresa()">Crear</button>
-        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('crearEmpresaForm').classList.add('hidden')">Cancelar</button>
+  <!-- ═══ SIDEBAR ═══ -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-logo">
+        <img src="https://drive.google.com/thumbnail?id=1cQzpSYj8YwSBqhaOmo53kI9wdVQmgWOZ&sz=200" alt="VISC"
+             onerror="this.style.display='none';this.parentElement.textContent='V'">
+      </div>
+      <div class="sidebar-brand">
+        <div class="sidebar-name">VISC</div>
+        <div class="sidebar-sub">Sistema de Seguridad</div>
       </div>
     </div>
-    <button class="btn btn-secondary btn-sm mt-4" id="btnNuevaEmpresa" onclick="document.getElementById('crearEmpresaForm').classList.remove('hidden');this.classList.add('hidden')">+ Nueva empresa</button>
+
+    <div style="flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 0;">
+      <div class="sidebar-section">Principal</div>
+      <a class="nav-item active" href="dashboard.html">
+        <i class="bi bi-grid-1x2"></i>
+        <span class="nav-label">Dashboard</span>
+      </a>
+      <a class="nav-item" href="observaciones.html">
+        <i class="bi bi-clipboard-check"></i>
+        <span class="nav-label">Observaciones</span>
+      </a>
+      <a class="nav-item" href="visitas.html">
+        <i class="bi bi-person-check"></i>
+        <span class="nav-label">Visitas</span>
+      </a>
+      <a class="nav-item" href="asistencia.html">
+        <i class="bi bi-calendar-check"></i>
+        <span class="nav-label">Asistencia</span>
+      </a>
+      <div class="sidebar-section">Análisis</div>
+      <a class="nav-item" href="inspecciones.html">
+        <i class="bi bi-search"></i>
+        <span class="nav-label">Inspecciones</span>
+      </a>
+      <a class="nav-item" href="tiempo_dedicado.html">
+        <i class="bi bi-clock"></i>
+        <span class="nav-label">Tiempo Dedicado</span>
+      </a>
+      <div class="sidebar-section" id="adminSection" style="display:none;">Admin</div>
+      <a class="nav-item" href="usuarios.html" id="navUsuarios" style="display:none;">
+        <i class="bi bi-people"></i>
+        <span class="nav-label">Usuarios</span>
+      </a>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="nav-item" onclick="doLogout()" style="margin:0;">
+        <i class="bi bi-box-arrow-left" style="color:#f87171;"></i>
+        <span class="nav-label" style="color:rgba(255,255,255,0.4);">Cerrar sesión</span>
+      </div>
+      <div class="user-mini" style="margin-top:6px;">
+        <div class="user-av" id="sidebarAv">?</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebarName">—</div>
+          <div class="user-role" id="sidebarRole">—</div>
+        </div>
+      </div>
+    </div>
   </div>
-</div>
+
+  <!-- Toggle sidebar -->
+  <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" title="Colapsar">
+    <i class="bi bi-chevron-left" id="toggleIcon"></i>
+  </button>
+
+  <!-- ═══ MAIN ═══ -->
+  <div class="main">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="greeting">Hola, <span id="greetName">bienvenido</span> 👋</div>
+        <div class="topbar-date" id="topDate">Cargando fecha...</div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-empresa" id="topEmpresa"><i class="bi bi-building"></i> Cargando...</div>
+        <button class="notif-btn" title="Notificaciones">
+          <i class="bi bi-bell"></i>
+          <span class="notif-dot"></span>
+        </button>
+        <div class="topbar-user">
+          <div class="topbar-av" id="topAv">?</div>
+          <div>
+            <div class="topbar-uname" id="topName">—</div>
+            <div class="topbar-urole" id="topRole">—</div>
+          </div>
+        </div>
+        <button class="logout-btn" onclick="doLogout()" title="Salir"><i class="bi bi-box-arrow-right"></i></button>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- STAT STRIP -->
+      <div class="stat-strip">
+        <div class="stat-card">
+          <div class="stat-icon obs"><i class="bi bi-clipboard-check"></i></div>
+          <div>
+            <div class="stat-label">Observaciones</div>
+            <div class="stat-value" id="stObs">—</div>
+            <div class="stat-trend" id="stObsTrend"></div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon vis"><i class="bi bi-person-check"></i></div>
+          <div>
+            <div class="stat-label">Visitas</div>
+            <div class="stat-value" id="stVis">—</div>
+            <div class="stat-trend" id="stVisTrend"></div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon asis"><i class="bi bi-calendar-check"></i></div>
+          <div>
+            <div class="stat-label">Asistencias</div>
+            <div class="stat-value" id="stAsis">—</div>
+            <div class="stat-trend" id="stAsisTrend"></div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon insp"><i class="bi bi-search"></i></div>
+          <div>
+            <div class="stat-label">Inspecciones</div>
+            <div class="stat-value" id="stInsp">—</div>
+            <div class="stat-trend" id="stInspTrend"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MAIN GRID -->
+      <div class="main-grid">
+
+        <!-- LEFT: CHART -->
+        <div>
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Actividad mensual</div>
+                <div class="card-sub">Registros de los últimos 6 meses por módulo</div>
+              </div>
+              <div style="background:var(--o-light);color:var(--o3);border-radius:999px;padding:5px 12px;font-size:11.5px;font-weight:600;" id="chartBadge">Cargando...</div>
+            </div>
+            <div class="chart-legend">
+              <div class="legend-item"><span class="legend-dot" style="background:#E87722;"></span>Observaciones</div>
+              <div class="legend-item"><span class="legend-dot" style="background:#1B2D6B;"></span>Visitas</div>
+              <div class="legend-item"><span class="legend-dot" style="background:#3b82f6;"></span>Asistencias</div>
+              <div class="legend-item"><span class="legend-dot" style="background:#6b7aa0;"></span>Inspecciones</div>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="actChart"></canvas>
+            </div>
+          </div>
+
+          <!-- RECENT ACTIVITY -->
+          <div class="recent-card">
+            <div class="card-header" style="margin-bottom:0;">
+              <div>
+                <div class="card-title">Actividad reciente</div>
+                <div class="card-sub">Últimos registros del sistema</div>
+              </div>
+            </div>
+            <div class="activity-list" id="activityList">
+              <div style="color:var(--light);font-size:13px;padding:16px 0;text-align:center;">Cargando actividad...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: EMPRESA + QUICK ACCESS -->
+        <div>
+          <div class="empresa-card">
+            <div class="emp-label"><i class="bi bi-building"></i> &nbsp;Empresa activa</div>
+            <div class="emp-name" id="empName">Cargando...</div>
+            <div class="emp-run"  id="empRun"></div>
+            <div class="emp-badge"><i class="bi bi-shield-check"></i> Activa</div>
+          </div>
+
+          <div class="quick-card">
+            <div class="card-title">Accesos rápidos</div>
+            <div class="card-sub">Módulos disponibles para tu perfil</div>
+            <div class="mod-list" id="modList">
+              <div style="color:var(--light);font-size:13px;padding:12px 0;text-align:center;">Cargando...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
 
 <script src="js/api.js"></script>
 <script>
-const MODULOS = [
-  { key:'observaciones',   href:'observaciones.html',   icon:'📋', name:'Observaciones',   desc:'Observaciones preventivas de seguridad' },
-  { key:'visitas',         href:'visitas.html',         icon:'🏢', name:'Visitas',          desc:'Registros de visitas a terreno' },
-  { key:'asistencia',      href:'asistencia.html',      icon:'📚', name:'Asistencias',      desc:'Capacitaciones y listas de participantes' },
-  { key:'inspecciones',    href:'inspecciones.html',    icon:'🔍', name:'Inspecciones',     desc:'Inspecciones de seguridad con plantillas' },
-  { key:'tiempo_dedicado', href:'tiempo_dedicado.html', icon:'⏱️', name:'Tiempo Dedicado',  desc:'Registro de horas por consultor' },
-  { key:'usuarios',        href:'usuarios.html',         icon:'👤', name:'Mi cuenta',        desc:'Perfil, firma y gestión de usuarios' },
-];
+  var _sess = null;
+  var _chart = null;
+  var _collapsed = false;
 
-(async () => {
-  const sess = requireAuth();
-  if (!sess) return;
-
-  document.getElementById('topUser').textContent = sess.nombre || sess.correo;
-  document.getElementById('welcomeMsg').textContent = 'Bienvenido/a, ' + (sess.nombre || sess.correo);
-
-  // Empresa activa
-  await refreshEmpresaDisplay();
-
-  // Módulos visibles
-  const grid = document.getElementById('modulesGrid');
-  MODULOS.forEach(m => {
-    if (!tienePermiso(m.key, 'leer') && m.key !== 'usuarios') return;
-    const a = document.createElement('a');
-    a.className = 'module-card';
-    a.href = m.href;
-    a.innerHTML = `<div class="icon">${m.icon}</div><div class="name">${m.name}</div><div class="desc">${m.desc}</div>`;
-    grid.appendChild(a);
-  });
-
-  // Estadísticas
-  try {
-    const r = await Empresas.estadisticas();
-    if (r.success && r.stats) {
-      document.getElementById('sObs').textContent  = r.stats.observaciones;
-      document.getElementById('sVis').textContent  = r.stats.visitas;
-      document.getElementById('sAsis').textContent = r.stats.asistencias;
-      document.getElementById('sInsp').textContent = r.stats.inspecciones;
+  /* ── Sidebar toggle ── */
+  function toggleSidebar() {
+    _collapsed = !_collapsed;
+    var sb = document.getElementById('sidebar');
+    var ic = document.getElementById('toggleIcon');
+    var btn = document.getElementById('sidebarToggle');
+    if (_collapsed) {
+      sb.classList.add('collapsed');
+      ic.className = 'bi bi-chevron-right';
+      btn.style.left = 'calc(' + getComputedStyle(sb).width + ' - 14px)';
+    } else {
+      sb.classList.remove('collapsed');
+      ic.className = 'bi bi-chevron-left';
+      btn.style.left = '';
     }
-  } catch(e) {}
-})();
-
-async function refreshEmpresaDisplay() {
-  const r = await Empresas.activa().catch(() => ({ success: false }));
-  if (r.success && r.empresa) {
-    const label = r.empresa.run + ' — ' + r.empresa.razonSocial;
-    document.getElementById('topEmpresa').textContent = label;
-    localStorage.setItem('visc_empresa', JSON.stringify(r.empresa));
-  } else {
-    document.getElementById('topEmpresa').textContent = 'Sin empresa';
   }
-}
 
-async function openEmpresaModal() {
-  document.getElementById('empresaModal').classList.remove('hidden');
-  const sess = Auth.getSessionLocal();
-  const list = document.getElementById('empresaList');
-  list.innerHTML = '<p style="color:#888;font-size:13px;">Cargando…</p>';
+  /* ── Date ── */
+  (function() {
+    var dias  = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+    var meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+    var d = new Date();
+    var el = document.getElementById('topDate');
+    if (el) el.textContent = dias[d.getDay()] + ' ' + d.getDate() + ' de ' + meses[d.getMonth()] + ' de ' + d.getFullYear();
+  })();
 
-  const r = await Empresas.listar().catch(() => ({ success: false, empresas: [] }));
-  list.innerHTML = '';
-  if (!r.success || !r.empresas.length) {
-    list.innerHTML = '<p style="color:#888;font-size:13px;">No hay empresas registradas.</p>';
-    return;
+  /* ── Initials ── */
+  function initials(name) {
+    return (name || '?').split(' ').map(function(w){ return (w[0]||''); }).join('').substring(0,2).toUpperCase() || '?';
   }
-  const empresaActiva = Empresas.getEmpresaLocal();
-  r.empresas.forEach(emp => {
-    const isActive = empresaActiva && empresaActiva.run === emp.run;
-    const btn = document.createElement('button');
-    btn.className = 'btn btn-secondary';
-    btn.style.justifyContent = 'space-between';
-    btn.innerHTML = `<span>${emp.run} — ${emp.razonSocial}</span>${isActive ? '<span>✓ Activa</span>' : ''}`;
-    btn.onclick = async () => {
-      await Empresas.seleccionar(emp.run);
-      await refreshEmpresaDisplay();
-      closeEmpresaModal();
-      toast('Empresa seleccionada', 'success');
-    };
-    list.appendChild(btn);
-  });
 
-  // Solo SUPER_ADMIN puede crear empresas
-  if (sess && sess.role === 'SUPER_ADMIN') {
-    document.getElementById('btnNuevaEmpresa').classList.remove('hidden');
-  } else {
-    document.getElementById('btnNuevaEmpresa').classList.add('hidden');
+  /* ── Init ── */
+  (async function() {
+    var sess = requireAuth();
+    if (!sess) return;
+    _sess = sess;
+
+    // Populate user info
+    var nombre = sess.nombre || sess.correo || 'Usuario';
+    var primerNombre = nombre.split(' ')[0];
+    document.getElementById('greetName').textContent = primerNombre;
+    document.getElementById('topName').textContent   = nombre;
+    document.getElementById('topRole').textContent   = sess.role || '';
+    document.getElementById('topAv').textContent     = initials(nombre);
+    document.getElementById('sidebarAv').textContent = initials(nombre);
+    document.getElementById('sidebarName').textContent = nombre;
+    document.getElementById('sidebarRole').textContent = sess.role || '';
+
+    // Admin nav
+    var isAdmin = (sess.role || '').toUpperCase() === 'SUPER_ADMIN';
+    if (isAdmin) {
+      document.getElementById('adminSection').style.display = '';
+      document.getElementById('navUsuarios').style.display = '';
+    }
+
+    // Load empresa
+    try {
+      var er = await callAPI('obtenerEmpresaActiva', {});
+      if (er && er.success && er.empresa) {
+        document.getElementById('empName').textContent = er.empresa.razonSocial || '—';
+        document.getElementById('empRun').textContent  = 'RUT: ' + (er.empresa.run || '—');
+        document.getElementById('topEmpresa').innerHTML = '<i class="bi bi-building"></i> ' + (er.empresa.razonSocial || '—');
+      } else {
+        document.getElementById('empName').textContent = 'Sin empresa activa';
+        document.getElementById('topEmpresa').innerHTML = '<i class="bi bi-building"></i> Sin empresa';
+      }
+    } catch(e) { document.getElementById('empName').textContent = 'Sin empresa'; }
+
+    // Build quick access modules
+    buildModules(sess);
+
+    // Load stats + chart
+    loadStats();
+  })();
+
+  /* ── Build Modules ── */
+  var MODULOS = [
+    { key:'observaciones',   label:'Observaciones', sub:'Registro y seguimiento', icon:'bi-clipboard-check', href:'observaciones.html', highlight:true },
+    { key:'visitas',         label:'Visitas',        sub:'Control de ingreso',     icon:'bi-person-check',   href:'visitas.html' },
+    { key:'asistencia',      label:'Asistencia',     sub:'Control de personal',    icon:'bi-calendar-check', href:'asistencia.html' },
+    { key:'inspecciones',    label:'Inspecciones',   sub:'Auditoría y control',    icon:'bi-search',         href:'inspecciones.html' },
+    { key:'tiempo_dedicado', label:'Tiempo Dedicado',sub:'Horas por actividad',    icon:'bi-clock',          href:'tiempo_dedicado.html' },
+  ];
+
+  function buildModules(sess) {
+    var modulos = sess.modulos || {};
+    var list    = document.getElementById('modList');
+    list.innerHTML = '';
+    var first   = true;
+    MODULOS.forEach(function(m) {
+      if (!modulos[m.key] && (sess.role||'').toUpperCase() !== 'SUPER_ADMIN') return;
+      var btn = document.createElement('a');
+      btn.href = m.href;
+      btn.className = 'mod-btn' + (first && m.highlight ? ' highlight' : '');
+      btn.innerHTML =
+        '<div class="mod-ic"><i class="bi ' + m.icon + '"></i></div>' +
+        '<div style="flex:1;"><div class="mod-txt">' + m.label + '</div><div class="mod-sub">' + m.sub + '</div></div>' +
+        '<i class="bi bi-arrow-right mod-arr"></i>';
+      list.appendChild(btn);
+      first = false;
+    });
+    if (!list.children.length) {
+      list.innerHTML = '<div style="color:var(--light);font-size:12.5px;padding:12px 0;">Sin módulos habilitados</div>';
+    }
   }
-}
 
-function closeEmpresaModal() {
-  document.getElementById('empresaModal').classList.add('hidden');
-  document.getElementById('crearEmpresaForm').classList.add('hidden');
-  document.getElementById('btnNuevaEmpresa').classList.remove('hidden');
-}
+  /* ── Load Stats + Chart ── */
+  async function loadStats() {
+    try {
+      var res = await callAPI('obtenerEstadisticas', {});
+      if (!res || !res.success) { setPlaceholderStats(); renderDemoChart(); return; }
 
-async function crearEmpresa() {
-  const run   = document.getElementById('newRun').value.trim();
-  const razon = document.getElementById('newRazon').value.trim();
-  if (!run || !razon) { toast('RUN y Razón Social obligatorios', 'error'); return; }
-  const r = await Empresas.crear(run, razon).catch(e => ({ success: false, message: e.message }));
-  if (r.success) { toast('Empresa creada', 'success'); closeEmpresaModal(); openEmpresaModal(); }
-  else toast(r.message || 'Error', 'error');
-}
+      animStat('stObs',  res.stats ? res.stats.observaciones : 0);
+      animStat('stVis',  res.stats ? res.stats.visitas : 0);
+      animStat('stAsis', res.stats ? res.stats.asistencias : 0);
+      animStat('stInsp', res.stats ? res.stats.inspecciones : 0);
 
-async function doLogout() {
-  await Auth.logout();
-  window.location.href = 'index.html';
-}
+      var total = (res.stats ? (res.stats.observaciones + res.stats.visitas + res.stats.asistencias + res.stats.inspecciones) : 0);
+      document.getElementById('chartBadge').textContent = total + ' registros totales';
+
+      var meses = Array.isArray(res.meses) ? res.meses : [];
+      if (meses.length) renderChart(meses);
+      else renderDemoChart();
+
+      // Recent activity (mock from stats)
+      buildRecentActivity(res);
+
+    } catch(e) {
+      setPlaceholderStats();
+      renderDemoChart();
+    }
+  }
+
+  function setPlaceholderStats() {
+    ['stObs','stVis','stAsis','stInsp'].forEach(function(id){
+      document.getElementById(id).textContent = '0';
+    });
+    document.getElementById('chartBadge').textContent = 'Sin datos';
+    buildRecentActivity(null);
+  }
+
+  function animStat(id, val) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var start = 0; var end = val; var dur = 800; var t0 = performance.now();
+    function step(now) {
+      var prog = Math.min((now - t0) / dur, 1);
+      el.textContent = Math.round(start + (end - start) * prog);
+      if (prog < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  function renderChart(meses) {
+    var ctx = document.getElementById('actChart');
+    if (!ctx) return;
+    if (_chart) _chart.destroy();
+    _chart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: meses.map(function(m){ return m.label; }),
+        datasets: [
+          { label:'Observaciones', data: meses.map(function(m){ return m.obs||0; }),  backgroundColor:'#E87722', borderRadius:5, borderSkipped:false },
+          { label:'Visitas',       data: meses.map(function(m){ return m.vis||0; }),  backgroundColor:'#1B2D6B', borderRadius:5, borderSkipped:false },
+          { label:'Asistencias',   data: meses.map(function(m){ return m.asis||0; }), backgroundColor:'#3b82f6', borderRadius:5, borderSkipped:false },
+          { label:'Inspecciones',  data: meses.map(function(m){ return m.insp||0; }), backgroundColor:'#6b7aa0', borderRadius:5, borderSkipped:false },
+        ]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:function(c){ return '  '+c.dataset.label+': '+c.parsed.y; }}}},
+        scales:{
+          x:{ grid:{ display:false }, ticks:{ font:{ size:11 }, maxRotation:0 }},
+          y:{ grid:{ color:'rgba(0,0,0,0.04)' }, ticks:{ font:{ size:11 }, stepSize:1 }, beginAtZero:true }
+        }
+      }
+    });
+  }
+
+  function renderDemoChart() {
+    var labels = ['Mar','Abr','May','Jun','Jul','Ago'];
+    var demoMeses = labels.map(function(l){ return { label:l, obs:Math.round(Math.random()*8+1), vis:Math.round(Math.random()*5+1), asis:Math.round(Math.random()*6+1), insp:Math.round(Math.random()*4+1) }; });
+    renderChart(demoMeses);
+    document.getElementById('chartBadge').textContent = 'Datos de ejemplo';
+  }
+
+  function buildRecentActivity(res) {
+    var list = document.getElementById('activityList');
+    var items = [];
+    if (res && res.recientes && Array.isArray(res.recientes)) {
+      items = res.recientes;
+    } else {
+      items = [
+        { tipo:'obs',  texto:'Nueva observación preventiva registrada', hora:'Hace 2h' },
+        { tipo:'vis',  texto:'Visita a terreno completada',              hora:'Hace 4h' },
+        { tipo:'asis', texto:'Capacitación de asistencia guardada',      hora:'Ayer' },
+        { tipo:'insp', texto:'Inspección de seguridad generada',         hora:'Ayer' },
+      ];
+    }
+    if (!items.length) { list.innerHTML = '<div style="color:var(--light);font-size:12.5px;padding:16px 0;text-align:center;">Sin actividad reciente</div>'; return; }
+    list.innerHTML = '';
+    items.forEach(function(a) {
+      var row = document.createElement('div');
+      row.className = 'activity-row';
+      row.innerHTML =
+        '<div class="activity-dot dot-' + (a.tipo||'obs') + '"></div>' +
+        '<span class="activity-text">' + (a.texto||'Registro del sistema') + '</span>' +
+        '<span class="activity-time">' + (a.hora||'—') + '</span>';
+      list.appendChild(row);
+    });
+  }
+
+  async function doLogout() {
+    try { await Auth.logout(); } catch(e) {}
+    window.location.href = 'index.html';
+  }
 </script>
 </body>
 </html>
