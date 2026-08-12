@@ -1,256 +1,787 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>VISC — Tiempo Dedicado</title>
-  <link rel="stylesheet" href="css/visc.css"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VISC · Tiempo Dedicado</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #1B2D6B;
+      --navy2: #152359;
+      --navy3: #0f1a40;
+      --o1: #F0901A;
+      --o2: #E87722;
+      --o3: #C4601A;
+      --o-light: #FFF3E6;
+      --o-mid: #FFD9AE;
+      --white: #ffffff; --off: #fafaf9; --surface: #f0f2f8;
+      --border: #e4e7f0; --border2: #d4d9e8;
+      --text: #0f1a40; --muted: #6b7aa0; --light: #b0bbd4;
+      --sidebar-w: 220px;
+      --sidebar-collapsed: 68px;
+      --danger: #e53e3e; --danger-light: #fff5f5;
+      --success: #16a34a; --success-light: #dcfce7;
+    }
+    html, body { height: 100%; background: var(--surface); font-family: 'DM Sans', sans-serif; color: var(--text); overflow: hidden; }
+
+    /* ── LAYOUT ── */
+    .app { display: flex; height: 100vh; width: 100vw; position: relative; }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--navy);
+      display: flex; flex-direction: column;
+      flex: 0 0 var(--sidebar-w);
+      transition: width 0.28s cubic-bezier(.4,0,.2,1);
+      overflow: hidden; z-index: 50;
+    }
+    .sidebar.collapsed { width: var(--sidebar-collapsed); }
+    .sidebar-top {
+      padding: 20px 16px 16px;
+      display: flex; align-items: center; gap: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+    .sidebar-logo {
+      width: 36px; height: 36px; border-radius: 10px; overflow: hidden;
+      flex: 0 0 36px; border: 1.5px solid rgba(255,255,255,0.12);
+      background: var(--o2); display: flex; align-items: center; justify-content: center;
+    }
+    .sidebar-logo img { width: 100%; height: 100%; object-fit: cover; }
+    .sidebar-brand { overflow: hidden; }
+    .sidebar-name { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 13px; color: #fff; white-space: nowrap; }
+    .sidebar-sub  { font-size: 10px; color: rgba(255,255,255,0.35); white-space: nowrap; margin-top: 1px; }
+    .sidebar-section { padding: 8px 10px 4px; font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.2); white-space: nowrap; overflow: hidden; }
+    .sidebar.collapsed .sidebar-section { opacity: 0; }
+    .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 14px; margin: 2px 8px; border-radius: 10px;
+      cursor: pointer; transition: background 0.15s;
+      text-decoration: none; white-space: nowrap; overflow: hidden;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.06); }
+    .nav-item.active { background: var(--o2); }
+    .nav-item i { font-size: 18px; color: rgba(255,255,255,0.45); flex: 0 0 20px; text-align: center; transition: color 0.15s; }
+    .nav-item.active i { color: #fff; }
+    .nav-item:hover i { color: rgba(255,255,255,0.8); }
+    .nav-label { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.55); overflow: hidden; }
+    .nav-item.active .nav-label { color: #fff; font-weight: 600; }
+    .nav-item:hover .nav-label { color: rgba(255,255,255,0.9); }
+    .sidebar.collapsed .nav-label, .sidebar.collapsed .sidebar-name, .sidebar.collapsed .sidebar-sub { opacity: 0; pointer-events: none; }
+    .sidebar-footer { margin-top: auto; padding: 12px 8px; border-top: 1px solid rgba(255,255,255,0.07); }
+    .user-mini { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; cursor: pointer; transition: background 0.15s; overflow: hidden; }
+    .user-mini:hover { background: rgba(255,255,255,0.06); }
+    .user-av { width: 32px; height: 32px; border-radius: 50%; background: var(--o2); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: #fff; flex: 0 0 32px; }
+    .user-info { overflow: hidden; }
+    .user-name  { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.85); white-space: nowrap; }
+    .user-role  { font-size: 10px; color: rgba(255,255,255,0.35); white-space: nowrap; }
+    .sidebar.collapsed .user-info { opacity: 0; }
+    .sidebar-toggle {
+      position: absolute; left: calc(var(--sidebar-w) - 14px); top: 24px;
+      width: 28px; height: 28px; background: var(--white);
+      border: 1.5px solid var(--border); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 12px; color: var(--muted); z-index: 60;
+      transition: left 0.28s cubic-bezier(.4,0,.2,1); box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .sidebar-toggle:hover { color: var(--o2); border-color: var(--o1); }
+
+    /* ── MAIN ── */
+    .main { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      background: var(--white); border-bottom: 2px solid var(--border);
+      padding: 0 28px; height: 64px;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      flex: 0 0 64px;
+    }
+    .topbar-left { display: flex; flex-direction: column; }
+    .greeting { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 900; color: var(--text); letter-spacing: -0.03em; line-height: 1.1; }
+    .greeting span { color: var(--o2); }
+    .topbar-date { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+    .topbar-empresa { font-size: 11.5px; color: var(--muted); background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 5px 14px; white-space: nowrap; }
+    .topbar-empresa i { color: var(--o2); margin-right: 4px; }
+    .topbar-user { display: flex; align-items: center; gap: 9px; padding: 6px 10px; border-radius: 12px; border: 1.5px solid var(--border); cursor: pointer; transition: all 0.15s; }
+    .topbar-user:hover { border-color: var(--o1); background: var(--o-light); }
+    .topbar-av { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--navy), var(--o2)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: #fff; flex: 0 0 32px; }
+    .topbar-uname { font-size: 12.5px; font-weight: 600; color: var(--text); }
+    .topbar-urole  { font-size: 10.5px; color: var(--muted); }
+    .logout-btn { width: 38px; height: 38px; border-radius: 10px; border: 1.5px solid #fecaca; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #e53e3e; font-size: 16px; transition: all 0.15s; }
+    .logout-btn:hover { background: #fff5f5; }
+
+    /* ── CONTENT ── */
+    .content { flex: 1; overflow-y: auto; padding: 24px 28px 32px; }
+
+    /* ── PAGE HEADER ── */
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 22px; gap: 16px; }
+    .page-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 900; color: var(--text); letter-spacing: -0.03em; }
+    .page-sub   { font-size: 13px; color: var(--muted); margin-top: 3px; font-weight: 300; }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: 20px; padding: 20px 22px; margin-bottom: 18px;
+      opacity: 0; animation: fadeUp 0.45s ease forwards;
+    }
+    .card:nth-child(1){animation-delay:0.08s} .card:nth-child(2){animation-delay:0.14s}
+    .card:nth-child(3){animation-delay:0.20s} .card:nth-child(4){animation-delay:0.26s}
+    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; gap: 12px; }
+    .card-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
+    .card-sub   { font-size: 12px; color: var(--muted); margin-top: 2px; font-weight: 300; }
+
+    /* ── FORM ── */
+    .form-row { display: grid; gap: 14px; margin-bottom: 14px; }
+    .form-row.col2 { grid-template-columns: 1fr 1fr; }
+    .form-row.col4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group label { font-size: 11.5px; font-weight: 600; color: var(--muted); letter-spacing: 0.02em; text-transform: uppercase; }
+    .form-group input, .form-group select, .form-group textarea {
+      border: 1.5px solid var(--border); border-radius: 10px;
+      padding: 9px 13px; font-size: 13.5px; font-family: 'DM Sans', sans-serif;
+      color: var(--text); background: var(--white);
+      transition: border-color 0.15s, box-shadow 0.15s; outline: none;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      border-color: var(--o2); box-shadow: 0 0 0 3px rgba(232,119,34,0.12);
+    }
+    .form-group input[readonly] { background: var(--surface); color: var(--muted); cursor: default; }
+    .form-group textarea { resize: vertical; min-height: 72px; }
+    .form-group select { cursor: pointer; }
+
+    /* ── REGISTRO ACTIVO ── */
+    .reg-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .reg-select { flex: 1; min-width: 220px; border: 1.5px solid var(--border); border-radius: 10px; padding: 9px 13px; font-size: 13.5px; font-family: 'DM Sans', sans-serif; color: var(--text); background: var(--white); outline: none; cursor: pointer; transition: border-color 0.15s; }
+    .reg-select:focus { border-color: var(--o2); box-shadow: 0 0 0 3px rgba(232,119,34,0.12); }
+
+    /* ── BUTTONS ── */
+    .btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; font-family: 'DM Sans', sans-serif; cursor: pointer; border: none; transition: all 0.15s; text-decoration: none; white-space: nowrap; }
+    .btn-primary  { background: var(--o2); color: #fff; }
+    .btn-primary:hover  { background: var(--o3); }
+    .btn-secondary { background: var(--surface); color: var(--text); border: 1.5px solid var(--border); }
+    .btn-secondary:hover { border-color: var(--o1); background: var(--o-light); color: var(--o3); }
+    .btn-ghost { background: transparent; color: var(--muted); border: 1.5px solid var(--border); }
+    .btn-ghost:hover { background: var(--surface); }
+    .btn-danger { background: var(--danger-light); color: var(--danger); border: 1.5px solid #fecaca; }
+    .btn-danger:hover { background: #fee2e2; }
+    .btn-navy  { background: var(--navy); color: #fff; }
+    .btn-navy:hover { background: var(--navy2); }
+    .btn-sm { padding: 6px 13px; font-size: 12px; border-radius: 8px; }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .btn-group { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+    /* ── TAREAS TABLE ── */
+    .tareas-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+    .tareas-table th { text-align: left; padding: 8px 12px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); border-bottom: 2px solid var(--border); }
+    .tareas-table td { padding: 8px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .tareas-table tr:last-child td { border-bottom: none; }
+    .tareas-table input { width: 100%; border: 1.5px solid var(--border); border-radius: 8px; padding: 7px 11px; font-size: 13px; font-family: 'DM Sans', sans-serif; color: var(--text); outline: none; transition: border-color 0.15s; }
+    .tareas-table input:focus { border-color: var(--o2); box-shadow: 0 0 0 3px rgba(232,119,34,0.12); }
+    .tareas-table .col-desc { width: 65%; }
+    .tareas-table .col-tiempo { width: 25%; }
+    .tareas-table .col-del { width: 10%; text-align: center; }
+    .del-btn { background: var(--danger-light); color: var(--danger); border: none; border-radius: 7px; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; transition: background 0.15s; }
+    .del-btn:hover { background: #fee2e2; }
+
+    /* ── TOTAL TIEMPO BADGE ── */
+    .total-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--o-light); color: var(--o3); border-radius: 999px; padding: 4px 13px; font-size: 12.5px; font-weight: 700; margin-left: 10px; }
+
+    /* ── ADJUNTO ── */
+    .adjunto-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .adjunto-row input[type=file] { flex: 1; min-width: 200px; font-size: 12.5px; color: var(--muted); }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+      background: var(--navy2); color: #fff; border-radius: 12px;
+      padding: 12px 20px; font-size: 13.5px; font-weight: 500;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      opacity: 0; transform: translateY(10px);
+      transition: opacity 0.25s, transform 0.25s; pointer-events: none;
+      display: flex; align-items: center; gap: 10px; max-width: 340px;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.success { background: #15803d; }
+    #toast.error   { background: #b91c1c; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      .form-row.col4 { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 600px) {
+      .form-row.col2, .form-row.col4 { grid-template-columns: 1fr; }
+      .sidebar { display: none; } .content { padding: 16px 14px 24px; } .topbar { padding: 0 16px; }
+    }
+  </style>
 </head>
 <body>
-<nav class="topbar">
-  <div class="topbar-brand">
-    <div class="logo-circle">V</div>
-    <a href="dashboard.html" style="color:#fff;font-weight:700;">← VISC</a>
-  </div>
-  <div class="topbar-right">
-    <span class="topbar-user" id="topUser"></span>
-    <button class="btn-logout" onclick="doLogout()">Salir</button>
-  </div>
-</nav>
+<div class="app" id="app">
 
-<div class="container">
-  <div class="page-header">
-    <div><h1>⏱️ Tiempo Dedicado</h1><p>Registro de horas por consultor y proyecto</p></div>
-    <button class="btn btn-primary" onclick="openNuevo()">+ Nuevo registro</button>
-  </div>
-
-  <!-- Lista de registros -->
-  <div class="card">
-    <div class="card-header"><span class="card-title">Mis registros</span></div>
-    <div id="listaRegistros"><p style="color:#888;font-size:13px;">Cargando…</p></div>
-  </div>
-
-  <!-- Editor de registro -->
-  <div id="editorCard" class="card hidden">
-    <div class="card-header">
-      <span class="card-title" id="editorTitle">Nuevo registro</span>
-      <button class="btn btn-ghost btn-sm" onclick="cerrarEditor()">✕ Cerrar</button>
-    </div>
-    <div id="alertTD" class="alert alert-error hidden"></div>
-
-    <div class="section-title">Datos del consultor</div>
-    <div class="form-grid">
-      <div class="form-group"><label>Nombre consultor</label><input id="tdNombre" placeholder="Juan Pérez"/></div>
-      <div class="form-group"><label>RUT consultor</label><input id="tdRut" placeholder="12345678-9"/></div>
-      <div class="form-group"><label>Cargo</label><input id="tdCargo" placeholder="Prevencionista"/></div>
-      <div class="form-group"><label>Correo</label><input type="email" id="tdCorreo" placeholder="juan@visc.cl"/></div>
-      <div class="form-group"><label>Proyecto / Área</label><input id="tdProyecto" placeholder="Empresa XYZ"/></div>
-      <div class="form-group"><label>Fecha</label><input type="date" id="tdFecha"/></div>
-      <div class="form-group full"><label>Observaciones</label><textarea id="tdObs" placeholder="Notas adicionales…"></textarea></div>
+  <!-- ═══ SIDEBAR ═══ -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-logo">
+        <img src="https://drive.google.com/thumbnail?id=1cQzpSYj8YwSBqhaOmo53kI9wdVQmgWOZ&sz=200" alt="VISC"
+             onerror="this.style.display='none';this.parentElement.textContent='V'">
+      </div>
+      <div class="sidebar-brand">
+        <div class="sidebar-name">VISC</div>
+        <div class="sidebar-sub">Sistema de Seguridad</div>
+      </div>
     </div>
 
-    <div class="section-title">Detalle de tareas <span id="totalTiempo" style="color:var(--orange);font-size:14px;margin-left:8px;"></span></div>
-    <div id="tareasList"></div>
-    <button class="btn btn-secondary btn-sm" onclick="agregarTarea()">+ Tarea</button>
-
-    <div class="mt-6 btn-group">
-      <button class="btn btn-primary" id="btnGuardarTD" onclick="guardar()">💾 Guardar</button>
-      <button class="btn btn-secondary" id="btnPDFTD" onclick="generarPDF()">📄 Generar PDF</button>
-      <button class="btn btn-secondary" id="btnCorreoTD" onclick="enviarCorreo()">📧 Enviar correo</button>
+    <div style="flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 0;">
+      <div class="sidebar-section">Principal</div>
+      <a class="nav-item" href="dashboard.html"><i class="bi bi-grid-1x2"></i><span class="nav-label">Dashboard</span></a>
+      <a class="nav-item" href="observaciones.html"><i class="bi bi-clipboard-check"></i><span class="nav-label">Observaciones</span></a>
+      <a class="nav-item" href="visitas.html"><i class="bi bi-person-check"></i><span class="nav-label">Visitas</span></a>
+      <a class="nav-item" href="asistencia.html"><i class="bi bi-calendar-check"></i><span class="nav-label">Asistencia</span></a>
+      <div class="sidebar-section">Análisis</div>
+      <a class="nav-item" href="inspecciones.html"><i class="bi bi-search"></i><span class="nav-label">Inspecciones</span></a>
+      <a class="nav-item active" href="tiempo_dedicado.html"><i class="bi bi-clock"></i><span class="nav-label">Tiempo Dedicado</span></a>
+      <div class="sidebar-section" id="adminSection" style="display:none;">Admin</div>
+      <a class="nav-item" href="usuarios.html" id="navUsuarios" style="display:none;"><i class="bi bi-people"></i><span class="nav-label">Usuarios</span></a>
     </div>
 
-    <!-- Adjuntar archivo -->
-    <div class="mt-4" style="border-top:1px solid var(--border);padding-top:16px;">
-      <label style="font-size:12px;color:#888;">Adjuntar archivo adicional al correo (opcional)</label>
-      <div style="display:flex;gap:10px;align-items:center;margin-top:6px;">
-        <input type="file" id="adjunto" style="flex:1;font-size:12px;"/>
-        <button class="btn btn-secondary btn-sm" onclick="enviarCorreoConAdjunto()">📎 Enviar con adjunto</button>
+    <div class="sidebar-footer">
+      <div class="nav-item" onclick="doLogout()" style="margin:0;">
+        <i class="bi bi-box-arrow-left" style="color:#f87171;"></i>
+        <span class="nav-label" style="color:rgba(255,255,255,0.4);">Cerrar sesión</span>
+      </div>
+      <div class="user-mini" style="margin-top:6px;">
+        <div class="user-av" id="sidebarAv">?</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebarName">—</div>
+          <div class="user-role" id="sidebarRole">—</div>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- Modal nuevo registro -->
-<div id="nuevoModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:center;justify-content:center;">
-  <div class="card" style="width:380px;margin:0;">
-    <div class="card-header"><span class="card-title">Nuevo registro</span></div>
-    <div class="form-group" style="margin-bottom:16px;"><label>Nombre del registro *</label><input id="nuevoNombre" placeholder="Enero 2025 — Empresa XYZ"/></div>
+  <!-- Toggle sidebar -->
+  <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" title="Colapsar">
+    <i class="bi bi-chevron-left" id="toggleIcon"></i>
+  </button>
+
+  <!-- ═══ MAIN ═══ -->
+  <div class="main">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="greeting">Tiempo <span>Dedicado</span></div>
+        <div class="topbar-date" id="topDate">—</div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-empresa" id="topEmpresa"><i class="bi bi-building"></i> Cargando...</div>
+        <div class="topbar-user">
+          <div class="topbar-av" id="topAv">?</div>
+          <div>
+            <div class="topbar-uname" id="topName">—</div>
+            <div class="topbar-urole" id="topRole">—</div>
+          </div>
+        </div>
+        <button class="logout-btn" onclick="doLogout()" title="Salir"><i class="bi bi-box-arrow-right"></i></button>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- CARD 1: Registro activo -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title"><i class="bi bi-folder2-open" style="color:var(--o2);margin-right:7px;"></i>Registro activo</div>
+            <div class="card-sub">Selecciona, actualiza o crea un registro de tiempo</div>
+          </div>
+        </div>
+        <div class="reg-controls">
+          <select class="reg-select" id="regSelect">
+            <option value="">— Selecciona un registro —</option>
+          </select>
+          <button class="btn btn-secondary" onclick="actualizarLista()"><i class="bi bi-arrow-clockwise"></i> Actualizar</button>
+          <button class="btn btn-navy"      onclick="cargarRegistro()"><i class="bi bi-download"></i> Cargar</button>
+          <button class="btn btn-primary"   onclick="abrirModalNuevo()"><i class="bi bi-plus-lg"></i> Nuevo</button>
+        </div>
+        <div id="regMsg" style="margin-top:10px;font-size:12.5px;color:var(--muted);"></div>
+      </div>
+
+      <!-- CARD 2: Información consultor -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title"><i class="bi bi-person-badge" style="color:var(--o2);margin-right:7px;"></i>Información consultor</div>
+            <div class="card-sub">Datos asociados a este período de tiempo dedicado</div>
+          </div>
+        </div>
+
+        <!-- Fila 1: empresa (readonly) + fecha — 2 columnas -->
+        <div class="form-row col2">
+          <div class="form-group">
+            <label>Empresa</label>
+            <input type="text" id="tdEmpresa" readonly placeholder="Se carga automáticamente">
+          </div>
+          <div class="form-group">
+            <label>Fecha</label>
+            <input type="date" id="tdFecha">
+          </div>
+        </div>
+
+        <!-- Fila 2: nombre, rut, cargo, correo — 4 columnas -->
+        <div class="form-row col4">
+          <div class="form-group">
+            <label>Nombre consultor</label>
+            <input type="text" id="tdNombre" placeholder="Juan Pérez">
+          </div>
+          <div class="form-group">
+            <label>RUT</label>
+            <input type="text" id="tdRut" placeholder="12.345.678-9">
+          </div>
+          <div class="form-group">
+            <label>Cargo</label>
+            <input type="text" id="tdCargo" placeholder="Prevencionista">
+          </div>
+          <div class="form-group">
+            <label>Correo</label>
+            <input type="email" id="tdCorreo" placeholder="consultor@visc.cl">
+          </div>
+        </div>
+
+        <!-- Fila 3: proyecto, observaciones — 2 columnas -->
+        <div class="form-row col2">
+          <div class="form-group">
+            <label>Proyecto / Área</label>
+            <input type="text" id="tdProyecto" placeholder="Seguridad en faena norte">
+          </div>
+          <div class="form-group">
+            <label>Observaciones generales</label>
+            <textarea id="tdObs" placeholder="Notas adicionales sobre el período…"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 3: Tareas -->
+      <div class="card">
+        <div class="card-header">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <div>
+              <div class="card-title"><i class="bi bi-list-task" style="color:var(--o2);margin-right:7px;"></i>Tareas realizadas</div>
+              <div class="card-sub">Detalla cada actividad con su tiempo en formato hh:mm</div>
+            </div>
+            <span class="total-badge" id="totalBadge"><i class="bi bi-clock-history"></i> 00:00</span>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="agregarTarea()">
+            <i class="bi bi-plus-circle"></i> Agregar tarea
+          </button>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table class="tareas-table" id="tareasTable">
+            <thead>
+              <tr>
+                <th class="col-desc">Descripción</th>
+                <th class="col-tiempo">Tiempo (hh:mm)</th>
+                <th class="col-del"></th>
+              </tr>
+            </thead>
+            <tbody id="tareasBody">
+              <!-- dinámico -->
+            </tbody>
+          </table>
+        </div>
+
+        <div style="text-align:center;padding:8px 0 4px;" id="tareasEmpty" style="display:none;">
+          <span style="font-size:13px;color:var(--light);">Sin tareas aún. Haz clic en "+ Agregar tarea".</span>
+        </div>
+      </div>
+
+      <!-- CARD 4: Acciones -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title"><i class="bi bi-send" style="color:var(--o2);margin-right:7px;"></i>Acciones</div>
+            <div class="card-sub">Guarda, exporta o envía el registro actual</div>
+          </div>
+        </div>
+
+        <div class="btn-group" style="margin-bottom:18px;">
+          <button class="btn btn-primary" id="btnGuardar" onclick="guardar()">
+            <i class="bi bi-floppy"></i> Guardar
+          </button>
+          <button class="btn btn-navy" id="btnPDF" onclick="generarPDF()">
+            <i class="bi bi-file-earmark-pdf"></i> Generar PDF
+          </button>
+          <button class="btn btn-secondary" id="btnCorreo" onclick="enviarCorreo()">
+            <i class="bi bi-envelope"></i> Enviar correo
+          </button>
+        </div>
+
+        <div style="border-top:1px solid var(--border);padding-top:16px;">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;">
+            <i class="bi bi-paperclip" style="margin-right:4px;"></i>Adjunto al correo (opcional)
+          </div>
+          <div class="adjunto-row">
+            <input type="file" id="adjunto">
+            <button class="btn btn-ghost" onclick="enviarConAdjunto()">
+              <i class="bi bi-send-plus"></i> Enviar con adjunto
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- MODAL: Nuevo registro -->
+<div id="modalNuevo" style="display:none;position:fixed;inset:0;background:rgba(15,26,64,0.45);z-index:200;align-items:center;justify-content:center;">
+  <div style="background:var(--white);border-radius:20px;padding:28px;width:420px;max-width:calc(100vw - 32px);box-shadow:0 24px 64px rgba(0,0,0,0.2);">
+    <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:var(--text);margin-bottom:6px;">Nuevo registro</div>
+    <div style="font-size:12.5px;color:var(--muted);margin-bottom:20px;">Asigna un nombre descriptivo a este período</div>
+    <div class="form-group" style="margin-bottom:18px;">
+      <label>Nombre del registro</label>
+      <input type="text" id="nuevoNombre" placeholder="Ej: Agosto 2025 — Empresa XYZ">
+    </div>
     <div class="btn-group">
-      <button class="btn btn-primary" onclick="crearRegistro()">Crear</button>
-      <button class="btn btn-ghost" onclick="document.getElementById('nuevoModal').classList.add('hidden')">Cancelar</button>
+      <button class="btn btn-primary" onclick="crearRegistro()"><i class="bi bi-plus-lg"></i> Crear</button>
+      <button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button>
     </div>
   </div>
 </div>
+
+<!-- TOAST -->
+<div id="toast"></div>
 
 <script src="js/api.js"></script>
 <script>
-let registroActual = null;
-let tareas = [];
+  var _sess = null;
+  var _sheetId = null;
+  var _tareas = [];
+  var _collapsed = false;
 
-(async () => {
-  const sess = requireAuth();
-  if (!sess) return;
-  document.getElementById('topUser').textContent = sess.nombre || sess.correo;
-  document.getElementById('tdNombre').value = sess.nombre || '';
-  document.getElementById('tdCorreo').value = sess.correo || '';
-  document.getElementById('tdFecha').value  = new Date().toISOString().split('T')[0];
-  await cargarLista();
-})();
-
-async function cargarLista() {
-  const r = await TiempoDedicado.listar().catch(() => ({ success: false, items: [] }));
-  const c = document.getElementById('listaRegistros');
-  if (!r.success || !r.items.length) {
-    c.innerHTML = '<div class="empty-state"><div class="icon">⏱️</div><p>No hay registros. Crea uno nuevo.</p></div>';
-    return;
+  /* ── Sidebar ── */
+  function toggleSidebar() {
+    _collapsed = !_collapsed;
+    var sb  = document.getElementById('sidebar');
+    var ic  = document.getElementById('toggleIcon');
+    var btn = document.getElementById('sidebarToggle');
+    sb.classList.toggle('collapsed', _collapsed);
+    ic.className = _collapsed ? 'bi bi-chevron-right' : 'bi bi-chevron-left';
+    btn.style.left = _collapsed
+      ? 'calc(var(--sidebar-collapsed) - 14px)'
+      : 'calc(var(--sidebar-w) - 14px)';
   }
-  c.innerHTML = r.items.map(it => `
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;">
-      <div><strong style="font-size:13px;">${it.name}</strong></div>
-      <div class="btn-group">
-        <button class="btn btn-secondary btn-sm" onclick="abrirRegistro('${it.id}','${it.name}')">Editar</button>
-        <a class="btn btn-ghost btn-sm" href="${it.url}" target="_blank">📊</a>
-      </div>
-    </div>
-  `).join('');
-}
 
-async function abrirRegistro(sheetId, name) {
-  registroActual = sheetId;
-  document.getElementById('editorTitle').textContent = name;
-  const r = await TiempoDedicado.obtener(sheetId).catch(() => ({ success: false }));
-  if (r.success) {
-    const res = r.resumen || {};
-    document.getElementById('tdNombre').value  = res.nombre || '';
-    document.getElementById('tdRut').value     = res.rut    || '';
-    document.getElementById('tdCargo').value   = res.cargo  || '';
-    document.getElementById('tdCorreo').value  = res.correo || '';
-    document.getElementById('tdProyecto').value= res.proyecto || '';
-    document.getElementById('tdFecha').value   = res.fecha  || new Date().toISOString().split('T')[0];
-    document.getElementById('tdObs').value     = res.observaciones || '';
-    tareas = (r.tareas || []).length ? r.tareas : [{ descripcion: '', tiempo: '' }];
-  } else {
-    tareas = [{ descripcion: '', tiempo: '' }];
+  /* ── Date ── */
+  (function() {
+    var dias  = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+    var meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+    var d = new Date();
+    var el = document.getElementById('topDate');
+    if (el) el.textContent = dias[d.getDay()] + ' ' + d.getDate() + ' de ' + meses[d.getMonth()] + ' de ' + d.getFullYear();
+  })();
+
+  /* ── Initials ── */
+  function initials(n) {
+    return (n||'?').split(' ').map(function(w){ return w[0]||''; }).join('').substring(0,2).toUpperCase()||'?';
   }
-  renderTareas();
-  document.getElementById('editorCard').classList.remove('hidden');
-  document.getElementById('editorCard').scrollIntoView({ behavior: 'smooth' });
-}
 
-function cerrarEditor() {
-  registroActual = null;
-  document.getElementById('editorCard').classList.add('hidden');
-}
+  /* ── Toast ── */
+  var _toastTimer = null;
+  function showToast(msg, type) {
+    var el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'show ' + (type||'');
+    if (_toastTimer) clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(function(){ el.className = ''; }, 3200);
+  }
 
-function renderTareas() {
-  const c = document.getElementById('tareasList');
-  c.innerHTML = '';
-  tareas.forEach((t, i) => {
-    const div = document.createElement('div');
-    div.className = 'tarea-row';
-    div.innerHTML = `
-      <div class="form-group"><label>Descripción</label><input value="${t.descripcion||''}" oninput="tareas[${i}].descripcion=this.value" placeholder="Capacitación en EPP"/></div>
-      <div class="form-group"><label>Tiempo (hh:mm)</label><input value="${t.tiempo||''}" oninput="tareas[${i}].tiempo=this.value;calcTotal()" placeholder="01:30"/></div>
-      <button onclick="tareas.splice(${i},1);renderTareas();calcTotal()" style="background:#fee2e2;color:#991b1b;border:none;border-radius:6px;padding:8px 12px;cursor:pointer;align-self:flex-end;">✕</button>
-    `;
-    c.appendChild(div);
-  });
-  calcTotal();
-}
+  /* ── Loading state ── */
+  function setLoading(btn, on) {
+    btn.disabled = on;
+    btn.dataset.orig = btn.dataset.orig || btn.innerHTML;
+    if (on) btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Cargando…';
+    else    btn.innerHTML = btn.dataset.orig;
+  }
 
-function calcTotal() {
-  let totalMin = 0;
-  tareas.forEach(t => {
-    const parts = (t.tiempo || '').split(':');
-    if (parts.length === 2) totalMin += (parseInt(parts[0])||0)*60 + (parseInt(parts[1])||0);
-  });
-  const h = Math.floor(totalMin/60);
-  const m = totalMin % 60;
-  document.getElementById('totalTiempo').textContent = `Total: ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
-}
+  /* ── Init ── */
+  (async function() {
+    var sess = requireAuth();
+    if (!sess) return;
+    _sess = sess;
 
-function agregarTarea() {
-  tareas.push({ descripcion: '', tiempo: '' });
-  renderTareas();
-}
+    var nombre = sess.nombre || sess.correo || 'Consultor';
+    document.getElementById('topName').textContent     = nombre;
+    document.getElementById('topRole').textContent     = sess.role || '';
+    document.getElementById('topAv').textContent       = initials(nombre);
+    document.getElementById('sidebarAv').textContent   = initials(nombre);
+    document.getElementById('sidebarName').textContent = nombre;
+    document.getElementById('sidebarRole').textContent = sess.role || '';
 
-function getResumen() {
-  return {
-    nombre:       document.getElementById('tdNombre').value.trim(),
-    rut:          document.getElementById('tdRut').value.trim(),
-    cargo:        document.getElementById('tdCargo').value.trim(),
-    correo:       document.getElementById('tdCorreo').value.trim(),
-    proyecto:     document.getElementById('tdProyecto').value.trim(),
-    fecha:        document.getElementById('tdFecha').value,
-    observaciones: document.getElementById('tdObs').value.trim(),
-  };
-}
+    if ((sess.role||'').toUpperCase() === 'SUPER_ADMIN') {
+      document.getElementById('adminSection').style.display = '';
+      document.getElementById('navUsuarios').style.display  = '';
+    }
 
-async function guardar() {
-  if (!registroActual) { toast('Abre un registro primero', 'error'); return; }
-  const btn = document.getElementById('btnGuardarTD');
-  setLoading(btn, true);
-  const r = await TiempoDedicado.guardar(registroActual, getResumen(), tareas).catch(e => ({ success: false, message: e.message }));
-  if (r.success) toast('Guardado ✓', 'success');
-  else toast(r.message || 'Error', 'error');
-  setLoading(btn, false);
-}
+    // Pre-fill consultor fields from session
+    document.getElementById('tdNombre').value = sess.nombre || '';
+    document.getElementById('tdCorreo').value = sess.correo || '';
+    document.getElementById('tdFecha').value  = new Date().toISOString().split('T')[0];
 
-async function generarPDF() {
-  if (!registroActual) { toast('Abre un registro primero', 'error'); return; }
-  await guardar(); // guardar primero
-  const btn = document.getElementById('btnPDFTD');
-  setLoading(btn, true);
-  const r = await TiempoDedicado.generarPDF(registroActual).catch(e => ({ success: false, message: e.message }));
-  if (r.success && r.pdfUrl) window.open(r.pdfUrl, '_blank');
-  else toast(r.message || 'Error', 'error');
-  setLoading(btn, false);
-}
+    // Load empresa
+    try {
+      var er = await callAPI('obtenerEmpresaActiva', {});
+      if (er && er.success && er.empresa) {
+        var emp = er.empresa.razonSocial || '—';
+        document.getElementById('tdEmpresa').value = emp;
+        document.getElementById('topEmpresa').innerHTML = '<i class="bi bi-building"></i> ' + emp;
+      } else {
+        document.getElementById('tdEmpresa').value = 'Sin empresa activa';
+        document.getElementById('topEmpresa').innerHTML = '<i class="bi bi-building"></i> Sin empresa';
+      }
+    } catch(e) {
+      document.getElementById('tdEmpresa').value = 'Sin empresa';
+    }
 
-async function enviarCorreo() {
-  if (!registroActual) { toast('Abre un registro primero', 'error'); return; }
-  await guardar();
-  const btn = document.getElementById('btnCorreoTD');
-  setLoading(btn, true);
-  const r = await TiempoDedicado.enviarCorreo(registroActual).catch(e => ({ success: false, message: e.message }));
-  if (r.success) toast('Correo enviado ✓', 'success');
-  else toast(r.message || 'Error', 'error');
-  setLoading(btn, false);
-}
-
-async function enviarCorreoConAdjunto() {
-  if (!registroActual) { toast('Abre un registro primero', 'error'); return; }
-  const file = document.getElementById('adjunto').files[0];
-  if (!file) { toast('Selecciona un archivo primero', 'error'); return; }
-  await guardar();
-  const reader = new FileReader();
-  reader.onload = async e => {
-    const b64 = e.target.result.split(',')[1];
-    const r = await TiempoDedicado.enviarCorreoConAdjunto(registroActual, { name: file.name, mimeType: file.type, bytesBase64: b64 })
-      .catch(err => ({ success: false, message: err.message }));
-    if (r.success) toast('Correo con adjunto enviado ✓', 'success');
-    else toast(r.message || 'Error', 'error');
-  };
-  reader.readAsDataURL(file);
-}
-
-function openNuevo() { document.getElementById('nuevoNombre').value = ''; document.getElementById('nuevoModal').classList.remove('hidden'); }
-
-async function crearRegistro() {
-  const nombre = document.getElementById('nuevoNombre').value.trim();
-  if (!nombre) { toast('Nombre obligatorio', 'error'); return; }
-  const r = await TiempoDedicado.crear(nombre).catch(e => ({ success: false, message: e.message }));
-  if (r.success) {
-    document.getElementById('nuevoModal').classList.add('hidden');
-    toast('Registro creado ✓', 'success');
+    // Default one empty task
+    _tareas = [{ descripcion: '', tiempo: '' }];
+    renderTareas();
     await cargarLista();
-    await abrirRegistro(r.sheetId, nombre);
-  } else {
-    toast(r.message || 'Error', 'error');
-  }
-}
+  })();
 
-async function doLogout() { await Auth.logout(); window.location.href = 'index.html'; }
+  /* ── Lista de registros ── */
+  async function cargarLista() {
+    var sel = document.getElementById('regSelect');
+    sel.innerHTML = '<option value="">— Cargando… —</option>';
+    try {
+      var r = await callAPI('listarTiemposDedicados', {});
+      sel.innerHTML = '<option value="">— Selecciona un registro —</option>';
+      if (r && r.success && r.items && r.items.length) {
+        r.items.forEach(function(it) {
+          var opt = document.createElement('option');
+          opt.value = it.id;
+          opt.textContent = it.name;
+          sel.appendChild(opt);
+        });
+        document.getElementById('regMsg').textContent = r.items.length + ' registro(s) disponibles';
+      } else {
+        document.getElementById('regMsg').textContent = 'No hay registros. Crea uno nuevo.';
+      }
+    } catch(e) {
+      sel.innerHTML = '<option value="">— Error al cargar —</option>';
+      document.getElementById('regMsg').textContent = 'Error cargando registros.';
+    }
+  }
+
+  async function actualizarLista() {
+    document.getElementById('regMsg').textContent = 'Actualizando…';
+    await cargarLista();
+    showToast('Lista actualizada', 'success');
+  }
+
+  async function cargarRegistro() {
+    var sel = document.getElementById('regSelect');
+    var id  = sel.value;
+    if (!id) { showToast('Selecciona un registro primero', 'error'); return; }
+    _sheetId = id;
+    document.getElementById('regMsg').textContent = 'Cargando datos…';
+    try {
+      var r = await callAPI('obtenerTiempoDedicado', { sheetId: id });
+      if (r && r.success) {
+        var res = r.resumen || {};
+        document.getElementById('tdNombre').value  = res.nombre   || (_sess.nombre || '');
+        document.getElementById('tdRut').value     = res.rut      || '';
+        document.getElementById('tdCargo').value   = res.cargo    || '';
+        document.getElementById('tdCorreo').value  = res.correo   || (_sess.correo || '');
+        document.getElementById('tdProyecto').value= res.proyecto || '';
+        document.getElementById('tdFecha').value   = res.fecha    || new Date().toISOString().split('T')[0];
+        document.getElementById('tdObs').value     = res.observaciones || '';
+        _tareas = (r.tareas && r.tareas.length) ? r.tareas : [{ descripcion: '', tiempo: '' }];
+        renderTareas();
+        document.getElementById('regMsg').textContent = 'Registro cargado: ' + (sel.options[sel.selectedIndex].text);
+        showToast('Registro cargado correctamente', 'success');
+      } else {
+        showToast((r && r.message) || 'Error al cargar el registro', 'error');
+        document.getElementById('regMsg').textContent = '';
+      }
+    } catch(e) {
+      showToast('Error: ' + e.message, 'error');
+      document.getElementById('regMsg').textContent = '';
+    }
+  }
+
+  /* ── Modal nuevo ── */
+  function abrirModalNuevo() {
+    document.getElementById('nuevoNombre').value = '';
+    document.getElementById('modalNuevo').style.display = 'flex';
+  }
+  function cerrarModal() {
+    document.getElementById('modalNuevo').style.display = 'none';
+  }
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') cerrarModal(); });
+
+  async function crearRegistro() {
+    var nombre = document.getElementById('nuevoNombre').value.trim();
+    if (!nombre) { showToast('El nombre es obligatorio', 'error'); return; }
+    try {
+      var r = await callAPI('crearTiempoDedicado', { nombre: nombre });
+      if (r && r.success) {
+        cerrarModal();
+        showToast('Registro creado: ' + nombre, 'success');
+        await cargarLista();
+        // Auto-select new
+        if (r.sheetId) {
+          document.getElementById('regSelect').value = r.sheetId;
+          _sheetId = r.sheetId;
+          document.getElementById('regMsg').textContent = 'Nuevo registro activo: ' + nombre;
+        }
+      } else {
+        showToast((r && r.message) || 'Error al crear', 'error');
+      }
+    } catch(e) {
+      showToast('Error: ' + e.message, 'error');
+    }
+  }
+
+  /* ── Tareas ── */
+  function renderTareas() {
+    var tbody = document.getElementById('tareasBody');
+    tbody.innerHTML = '';
+    _tareas.forEach(function(t, i) {
+      var tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td class="col-desc">' +
+          '<input type="text" value="' + escHtml(t.descripcion||'') + '" placeholder="Descripción de la actividad" ' +
+          'oninput="_tareas['+i+'].descripcion=this.value">' +
+        '</td>' +
+        '<td class="col-tiempo">' +
+          '<input type="text" value="' + escHtml(t.tiempo||'') + '" placeholder="01:30" ' +
+          'oninput="_tareas['+i+'].tiempo=this.value;calcTotal()">' +
+        '</td>' +
+        '<td class="col-del">' +
+          '<button class="del-btn" onclick="eliminarTarea('+i+')" title="Eliminar"><i class="bi bi-x"></i></button>' +
+        '</td>';
+      tbody.appendChild(tr);
+    });
+    calcTotal();
+    document.getElementById('tareasEmpty').style.display = _tareas.length ? 'none' : 'block';
+  }
+
+  function agregarTarea() {
+    _tareas.push({ descripcion: '', tiempo: '' });
+    renderTareas();
+    // Focus last description input
+    setTimeout(function() {
+      var inputs = document.querySelectorAll('#tareasBody input[type=text]');
+      if (inputs.length >= 2) inputs[inputs.length - 2].focus();
+    }, 50);
+  }
+
+  function eliminarTarea(i) {
+    _tareas.splice(i, 1);
+    renderTareas();
+  }
+
+  function calcTotal() {
+    var totalMin = 0;
+    _tareas.forEach(function(t) {
+      var parts = (t.tiempo || '').split(':');
+      if (parts.length === 2) totalMin += (parseInt(parts[0])||0)*60 + (parseInt(parts[1])||0);
+    });
+    var h = Math.floor(totalMin / 60);
+    var m = totalMin % 60;
+    document.getElementById('totalBadge').innerHTML =
+      '<i class="bi bi-clock-history"></i> ' +
+      String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+  }
+
+  function getResumen() {
+    return {
+      nombre:        document.getElementById('tdNombre').value.trim(),
+      rut:           document.getElementById('tdRut').value.trim(),
+      cargo:         document.getElementById('tdCargo').value.trim(),
+      correo:        document.getElementById('tdCorreo').value.trim(),
+      proyecto:      document.getElementById('tdProyecto').value.trim(),
+      fecha:         document.getElementById('tdFecha').value,
+      observaciones: document.getElementById('tdObs').value.trim(),
+    };
+  }
+
+  /* ── Acciones ── */
+  async function guardar() {
+    if (!_sheetId) { showToast('Carga o crea un registro primero', 'error'); return; }
+    var btn = document.getElementById('btnGuardar');
+    setLoading(btn, true);
+    try {
+      var r = await callAPI('guardarTiempoDedicado', { sheetId: _sheetId, resumen: getResumen(), tareas: _tareas });
+      if (r && r.success) showToast('Guardado correctamente', 'success');
+      else showToast((r && r.message) || 'Error al guardar', 'error');
+    } catch(e) { showToast('Error: ' + e.message, 'error'); }
+    setLoading(btn, false);
+  }
+
+  async function generarPDF() {
+    if (!_sheetId) { showToast('Carga o crea un registro primero', 'error'); return; }
+    await guardar();
+    var btn = document.getElementById('btnPDF');
+    setLoading(btn, true);
+    try {
+      var r = await callAPI('generarPDFTiempoDedicado', { sheetId: _sheetId });
+      if (r && r.success && r.pdfUrl) { window.open(r.pdfUrl, '_blank'); showToast('PDF generado', 'success'); }
+      else showToast((r && r.message) || 'Error generando PDF', 'error');
+    } catch(e) { showToast('Error: ' + e.message, 'error'); }
+    setLoading(btn, false);
+  }
+
+  async function enviarCorreo() {
+    if (!_sheetId) { showToast('Carga o crea un registro primero', 'error'); return; }
+    await guardar();
+    var btn = document.getElementById('btnCorreo');
+    setLoading(btn, true);
+    try {
+      var r = await callAPI('enviarCorreoTiempoDedicado', { sheetId: _sheetId });
+      if (r && r.success) showToast('Correo enviado correctamente', 'success');
+      else showToast((r && r.message) || 'Error enviando correo', 'error');
+    } catch(e) { showToast('Error: ' + e.message, 'error'); }
+    setLoading(btn, false);
+  }
+
+  async function enviarConAdjunto() {
+    if (!_sheetId) { showToast('Carga o crea un registro primero', 'error'); return; }
+    var file = document.getElementById('adjunto').files[0];
+    if (!file) { showToast('Selecciona un archivo primero', 'error'); return; }
+    await guardar();
+    var reader = new FileReader();
+    reader.onload = async function(ev) {
+      var b64 = ev.target.result.split(',')[1];
+      try {
+        var r = await callAPI('enviarCorreoTiempoDedicado', {
+          sheetId: _sheetId,
+          adjunto: { name: file.name, mimeType: file.type, bytesBase64: b64 }
+        });
+        if (r && r.success) showToast('Correo con adjunto enviado', 'success');
+        else showToast((r && r.message) || 'Error', 'error');
+      } catch(e) { showToast('Error: ' + e.message, 'error'); }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  /* ── Utils ── */
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  async function doLogout() {
+    try { await Auth.logout(); } catch(e) {}
+    window.location.href = 'index.html';
+  }
 </script>
 </body>
 </html>
