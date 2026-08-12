@@ -1,192 +1,729 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>VISC — Asistencias</title>
-  <link rel="stylesheet" href="css/visc.css"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Registro de Asistencia — VISC</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy: #1B2D6B;
+      --navy-dark: #152359;
+      --orange: #E87722;
+      --orange-light: #F0901A;
+      --white: #ffffff;
+      --sidebar-w: 220px;
+      --topbar-h: 60px;
+      --bg: #f4f6fb;
+      --card-bg: #ffffff;
+      --border: #e0e4ef;
+      --text: #1a1a2e;
+      --text-muted: #6b7280;
+      --radius: 10px;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── SIDEBAR ── */
+    #sidebar {
+      width: var(--sidebar-w);
+      background: var(--navy);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      left: 0; top: 0; bottom: 0;
+      z-index: 100;
+      transition: width 0.25s ease;
+      overflow: hidden;
+    }
+    #sidebar.collapsed { width: 56px; }
+    #sidebar.collapsed .sidebar-label,
+    #sidebar.collapsed .sidebar-logo-text { display: none; }
+    #sidebar.collapsed .sidebar-nav a { justify-content: center; }
+    #sidebar.collapsed .sidebar-logo { justify-content: center; padding: 0 12px; }
+
+    .sidebar-logo {
+      display: flex; align-items: center; gap: 10px;
+      padding: 0 20px;
+      height: var(--topbar-h);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      flex-shrink: 0;
+    }
+    .sidebar-logo-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: var(--orange);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .sidebar-logo-icon i { color: #fff; font-size: 18px; }
+    .sidebar-logo-text {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700; font-size: 17px;
+      color: #fff; white-space: nowrap;
+    }
+
+    .sidebar-nav {
+      flex: 1; padding: 16px 0; overflow-y: auto;
+    }
+    .sidebar-nav a {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 20px;
+      color: rgba(255,255,255,0.7);
+      text-decoration: none;
+      font-size: 14px; font-weight: 500;
+      transition: background 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+    .sidebar-nav a:hover { background: rgba(255,255,255,0.08); color: #fff; }
+    .sidebar-nav a.active {
+      background: rgba(232,119,34,0.18);
+      color: var(--orange-light);
+      border-right: 3px solid var(--orange);
+    }
+    .sidebar-nav a i { font-size: 18px; flex-shrink: 0; }
+    .sidebar-label { white-space: nowrap; }
+
+    .sidebar-footer {
+      padding: 16px 20px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .sidebar-footer a {
+      display: flex; align-items: center; gap: 10px;
+      color: rgba(255,255,255,0.5);
+      font-size: 13px; text-decoration: none;
+    }
+    .sidebar-footer a:hover { color: rgba(255,255,255,0.8); }
+
+    /* ── TOPBAR ── */
+    #topbar {
+      position: fixed;
+      left: var(--sidebar-w); right: 0; top: 0;
+      height: var(--topbar-h);
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center;
+      padding: 0 24px;
+      gap: 16px;
+      z-index: 90;
+      transition: left 0.25s ease;
+    }
+    #topbar.shifted { left: 56px; }
+
+    .topbar-toggle {
+      background: none; border: none; cursor: pointer;
+      color: var(--navy); font-size: 20px; padding: 4px;
+      display: flex; align-items: center;
+    }
+    .topbar-greeting { flex: 1; }
+    .topbar-greeting .greeting-text {
+      font-family: 'Syne', sans-serif;
+      font-size: 15px; font-weight: 600; color: var(--navy);
+    }
+    .topbar-greeting .greeting-sub { font-size: 12px; color: var(--text-muted); }
+    .topbar-company {
+      font-size: 13px; font-weight: 500;
+      color: var(--navy); background: #eef1fb;
+      padding: 4px 12px; border-radius: 20px;
+    }
+    .topbar-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--navy-dark);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-size: 13px; font-weight: 700; color: #fff;
+      cursor: pointer;
+    }
+
+    /* ── MAIN ── */
+    #main {
+      margin-left: var(--sidebar-w);
+      margin-top: var(--topbar-h);
+      padding: 28px 32px;
+      flex: 1;
+      transition: margin-left 0.25s ease;
+      min-height: calc(100vh - var(--topbar-h));
+    }
+    #main.shifted { margin-left: 56px; }
+
+    .page-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px; font-weight: 700;
+      color: var(--navy); margin-bottom: 4px;
+    }
+    .page-subtitle { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 22px 24px;
+      margin-bottom: 18px;
+    }
+    .card-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 14px; font-weight: 700;
+      color: var(--navy); margin-bottom: 18px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-title i { color: var(--orange); font-size: 16px; }
+
+    /* ── FORM ── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group.full { grid-column: 1 / -1; }
+    label {
+      font-size: 12px; font-weight: 500;
+      color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    input, select, textarea {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 12px;
+      color: var(--text);
+      background: #fff;
+      transition: border-color 0.15s;
+      outline: none;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--navy); }
+    textarea { resize: vertical; min-height: 90px; }
+
+    /* ── SIGNATURE ── */
+    .sig-wrap { position: relative; }
+    .sig-canvas {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      width: 100%; height: 100px;
+      cursor: crosshair;
+      background: #fafbff;
+      display: block;
+    }
+    .sig-clear {
+      position: absolute; top: 6px; right: 6px;
+      background: rgba(255,255,255,0.9);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 11px; padding: 2px 8px;
+      cursor: pointer; color: var(--text-muted);
+    }
+    .sig-clear:hover { color: var(--orange); border-color: var(--orange); }
+
+    /* ── PARTICIPANTS ── */
+    .participants-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 16px;
+    }
+    .participants-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 14px;
+    }
+    .participant-card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      position: relative;
+      background: #fafbff;
+      transition: border-color 0.15s;
+    }
+    .participant-card:hover { border-color: #b8c1e0; }
+    .participant-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 11px; font-weight: 700;
+      color: var(--navy); text-transform: uppercase;
+      letter-spacing: 0.06em; margin-bottom: 12px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .participant-num::before {
+      content: '';
+      display: inline-block;
+      width: 20px; height: 20px;
+      background: var(--navy);
+      border-radius: 50%;
+      color: #fff;
+      font-size: 10px;
+      line-height: 20px; text-align: center;
+    }
+    .participant-fields {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    }
+    .participant-fields .form-group { gap: 4px; }
+    .participant-fields input { font-size: 13px; padding: 6px 10px; }
+    .btn-del-participant {
+      position: absolute; top: 10px; right: 10px;
+      background: none; border: none; cursor: pointer;
+      color: #d1d5db; font-size: 16px;
+      transition: color 0.15s;
+    }
+    .btn-del-participant:hover { color: #ef4444; }
+
+    .btn-add-participant {
+      display: flex; align-items: center; gap: 8px;
+      background: none;
+      border: 1.5px dashed var(--border);
+      border-radius: var(--radius);
+      color: var(--navy); font-size: 13px; font-weight: 500;
+      padding: 10px 20px; cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      font-family: 'DM Sans', sans-serif;
+      margin-top: 4px;
+    }
+    .btn-add-participant:hover { border-color: var(--navy); background: #f0f3fc; }
+
+    /* ── BUTTONS ── */
+    .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 22px; border-radius: var(--radius);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px; font-weight: 500;
+      cursor: pointer; border: none; transition: all 0.15s;
+    }
+    .btn-primary { background: var(--navy); color: #fff; }
+    .btn-primary:hover { background: var(--navy-dark); }
+    .btn-secondary { background: #fff; color: var(--navy); border: 1.5px solid var(--border); }
+    .btn-secondary:hover { border-color: var(--navy); background: #f0f3fc; }
+    .btn-orange { background: var(--orange); color: #fff; }
+    .btn-orange:hover { background: var(--orange-light); }
+    .btn-outline-navy { background: #fff; color: var(--navy); border: 1.5px solid var(--navy); }
+    .btn-outline-navy:hover { background: var(--navy); color: #fff; }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* ── SPINNER ── */
+    .spinner {
+      display: inline-block; width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+    }
+    .spinner.dark {
+      border-color: rgba(27,45,107,0.2);
+      border-top-color: var(--navy);
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed; bottom: 28px; right: 28px;
+      background: var(--navy); color: #fff;
+      padding: 12px 22px; border-radius: var(--radius);
+      font-size: 14px; font-weight: 500;
+      box-shadow: 0 4px 20px rgba(27,45,107,0.25);
+      z-index: 9999;
+      opacity: 0; transform: translateY(10px);
+      transition: all 0.3s ease;
+      pointer-events: none;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.error { background: #dc2626; }
+    #toast.success { background: #16a34a; }
+
+    /* ── COUNTER BADGE ── */
+    .count-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--orange); color: #fff;
+      border-radius: 20px;
+      font-size: 11px; font-weight: 700;
+      padding: 1px 8px; margin-left: 6px;
+    }
+
+    @media (max-width: 700px) {
+      #sidebar { width: 56px; }
+      #topbar { left: 56px; }
+      #main { margin-left: 56px; padding: 16px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .participant-fields { grid-template-columns: 1fr; }
+      .actions { flex-direction: column; }
+      .btn { justify-content: center; }
+    }
+  </style>
 </head>
 <body>
-<nav class="topbar">
-  <div class="topbar-brand">
-    <div class="logo-circle">V</div>
-    <a href="dashboard.html" style="color:#fff;font-weight:700;">← VISC</a>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-icon"><i class="bi bi-building"></i></div>
+    <span class="sidebar-logo-text">VISC</span>
   </div>
-  <div class="topbar-right">
-    <span class="topbar-user" id="topUser"></span>
-    <button class="btn-logout" onclick="doLogout()">Salir</button>
+  <div class="sidebar-nav">
+    <a href="dashboard.html" onclick="go(event,'dashboard.html')">
+      <i class="bi bi-grid-1x2"></i><span class="sidebar-label">Inicio</span>
+    </a>
+    <a href="visitas.html" onclick="go(event,'visitas.html')">
+      <i class="bi bi-clipboard-check"></i><span class="sidebar-label">Visitas</span>
+    </a>
+    <a href="asistencia.html" class="active">
+      <i class="bi bi-person-check"></i><span class="sidebar-label">Asistencia</span>
+    </a>
+    <a href="reportes.html" onclick="go(event,'reportes.html')">
+      <i class="bi bi-bar-chart-line"></i><span class="sidebar-label">Reportes</span>
+    </a>
+    <a href="configuracion.html" onclick="go(event,'configuracion.html')">
+      <i class="bi bi-gear"></i><span class="sidebar-label">Configuración</span>
+    </a>
+  </div>
+  <div class="sidebar-footer">
+    <a href="#" id="logout-btn"><i class="bi bi-box-arrow-left"></i><span class="sidebar-label">Cerrar sesión</span></a>
   </div>
 </nav>
 
-<div class="container">
-  <div class="page-header">
-    <div><h1>📚 Registro de Asistencias</h1><p>Capacitaciones y confirmación de participantes</p></div>
+<!-- TOPBAR -->
+<header id="topbar">
+  <button class="topbar-toggle" id="toggle-sidebar" aria-label="Colapsar sidebar">
+    <i class="bi bi-list"></i>
+  </button>
+  <div class="topbar-greeting">
+    <div class="greeting-text" id="greeting-text">Hola</div>
+    <div class="greeting-sub" id="greeting-date"></div>
   </div>
+  <div class="topbar-company" id="topbar-company">—</div>
+  <div class="topbar-avatar" id="topbar-avatar">—</div>
+</header>
 
+<!-- MAIN -->
+<main id="main">
+  <div class="page-title"><i class="bi bi-person-check" style="color:var(--orange);margin-right:8px"></i>Registro de Asistencia</div>
+  <div class="page-subtitle">Control de asistencia a capacitaciones y eventos de formación</div>
+
+  <!-- Card: Información capacitación -->
   <div class="card">
-    <div class="card-header"><span class="card-title">Nueva capacitación</span></div>
-    <div id="alertAsis" class="alert alert-error hidden"></div>
-
-    <div class="section-title">I. Datos de la capacitación</div>
+    <div class="card-title"><i class="bi bi-mortarboard"></i>Información de la capacitación</div>
     <div class="form-grid">
-      <div class="form-group"><label>Nombre capacitación *</label><input id="nombreCap" placeholder="Inducción de seguridad"/></div>
-      <div class="form-group"><label>Tema</label><input id="tema" placeholder="EPP y riesgos generales"/></div>
-      <div class="form-group"><label>Lugar</label><input id="lugar" placeholder="Sala 1 — Planta"/></div>
-      <div class="form-group"><label>Fecha del evento</label><input type="date" id="fechaEvento"/></div>
-      <div class="form-group"><label>Nombre instructor</label><input id="instructor" placeholder="Juan Pérez"/></div>
-      <div class="form-group"><label>Firma instructor</label><input id="firmaInstructor" placeholder="Nombre"/></div>
-      <div class="form-group full"><label>Observaciones</label><textarea id="observaciones" placeholder="Notas generales…"></textarea></div>
-      <div class="form-group"><label>Email adicional (CC)</label><input type="email" id="emailAdicional" placeholder="cc@email.com"/></div>
-    </div>
-
-    <div class="section-title">II. Participantes</div>
-    <div id="participantesList"></div>
-    <button class="btn btn-secondary btn-sm" onclick="agregarParticipante()">+ Agregar participante</button>
-
-    <div class="mt-6 btn-group">
-      <button class="btn btn-primary" id="btnGuardar" onclick="guardar()">💾 Guardar asistencia</button>
-      <button class="btn btn-ghost" onclick="limpiar()">Limpiar</button>
+      <div class="form-group">
+        <label>Nombre capacitación</label>
+        <input type="text" id="cap-nombre" placeholder="Ej: Seguridad en el trabajo" />
+      </div>
+      <div class="form-group">
+        <label>Tema</label>
+        <input type="text" id="cap-tema" placeholder="Tema principal de la capacitación" />
+      </div>
+      <div class="form-group">
+        <label>Lugar</label>
+        <input type="text" id="cap-lugar" placeholder="Ej: Sala de reuniones B" />
+      </div>
+      <div class="form-group">
+        <label>Fecha</label>
+        <input type="date" id="cap-fecha" />
+      </div>
+      <div class="form-group full">
+        <label>Email CC (copia)</label>
+        <input type="email" id="cap-email-cc" placeholder="correo@ejemplo.com" />
+      </div>
     </div>
   </div>
 
-  <!-- Resultado con opciones post-guardado -->
-  <div id="resultadoCard" class="card hidden">
-    <div class="card-header"><span class="card-title">✓ Asistencia guardada</span></div>
-    <p id="resultadoMsg" style="margin-bottom:14px;"></p>
-    <div class="btn-group">
-      <button class="btn btn-primary" id="btnEnviarConfirm" onclick="enviarConfirmaciones()">📧 Enviar emails de confirmación</button>
-      <button class="btn btn-secondary" id="btnPDFFirmas" onclick="generarPDFFirmas()">📄 PDF con estado firmas</button>
-      <a class="btn btn-ghost" id="linkSheet" href="#" target="_blank">📊 Ver Sheet</a>
+  <!-- Card: Información instructor -->
+  <div class="card">
+    <div class="card-title"><i class="bi bi-person-badge"></i>Información del instructor</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Nombre instructor</label>
+        <input type="text" id="inst-nombre" placeholder="Nombre completo del instructor" />
+      </div>
+      <div class="form-group full">
+        <label>Firma instructor</label>
+        <div class="sig-wrap">
+          <canvas class="sig-canvas" id="sig-instructor" width="800" height="100"></canvas>
+          <button class="sig-clear" onclick="clearCanvas('sig-instructor')">Limpiar</button>
+        </div>
+      </div>
     </div>
-    <div id="confirmResult" class="mt-4"></div>
   </div>
-</div>
+
+  <!-- Card: Participantes -->
+  <div class="card">
+    <div class="participants-header">
+      <div class="card-title" style="margin-bottom:0">
+        <i class="bi bi-people"></i>Participantes
+        <span class="count-badge" id="participant-count">1</span>
+      </div>
+    </div>
+
+    <div class="participants-grid" id="participants-grid">
+      <!-- Se genera dinámicamente -->
+    </div>
+
+    <button class="btn-add-participant" onclick="addParticipant()" style="margin-top:16px">
+      <i class="bi bi-plus-lg"></i>Agregar participante
+    </button>
+  </div>
+
+  <!-- Card: Observaciones -->
+  <div class="card">
+    <div class="card-title"><i class="bi bi-chat-square-text"></i>Observaciones (opcional)</div>
+    <textarea id="observaciones" placeholder="Ingrese cualquier observación relevante sobre la capacitación..."></textarea>
+  </div>
+
+  <!-- Acciones -->
+  <div class="card">
+    <div class="card-title"><i class="bi bi-send"></i>Acciones</div>
+    <div class="actions">
+      <button class="btn btn-primary" id="btn-guardar" onclick="guardarAsistencia()">
+        <i class="bi bi-save"></i>Guardar
+      </button>
+      <button class="btn btn-orange" id="btn-confirmaciones" onclick="enviarConfirmaciones()">
+        <i class="bi bi-envelope-check"></i>Enviar confirmaciones
+      </button>
+      <button class="btn btn-outline-navy" id="btn-pdf" onclick="generarPDF()">
+        <i class="bi bi-file-earmark-pdf"></i>Generar PDF
+      </button>
+      <button class="btn btn-secondary" onclick="limpiarFormulario()">
+        <i class="bi bi-arrow-counterclockwise"></i>Limpiar
+      </button>
+    </div>
+  </div>
+
+</main>
+
+<div id="toast"></div>
 
 <script src="js/api.js"></script>
 <script>
-let participantes = [];
-let ultimaAsistencia = null;
+  // ── Auth ──
+  requireAuth();
 
-(async () => {
-  const sess = requireAuth();
-  if (!sess) return;
-  document.getElementById('topUser').textContent = sess.nombre || sess.correo;
-  document.getElementById('fechaEvento').value = new Date().toISOString().split('T')[0];
-  document.getElementById('instructor').value = sess.nombre || '';
-})();
+  // ── Session ──
+  const session = typeof getSession === 'function' ? getSession() : {};
+  const empresa  = session.empresa || session.company || 'Mi Empresa';
+  const userName = session.nombre || session.name || 'Usuario';
+  const userInitials = userName.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
 
-function renderParticipantes() {
-  const c = document.getElementById('participantesList');
-  c.innerHTML = '';
-  participantes.forEach((p, i) => {
-    const div = document.createElement('div');
-    div.className = 'participant-row';
-    div.innerHTML = `
-      <div class="form-group"><label>Nombre</label><input value="${p.nombre||''}" oninput="participantes[${i}].nombre=this.value" placeholder="Juan Pérez"/></div>
-      <div class="form-group"><label>RUT</label><input value="${p.rut||''}" oninput="participantes[${i}].rut=this.value" placeholder="12345678-9"/></div>
-      <div class="form-group"><label>Cargo</label><input value="${p.cargo||''}" oninput="participantes[${i}].cargo=this.value" placeholder="Operario"/></div>
-      <div class="form-group"><label>Email</label><input type="email" value="${p.email||''}" oninput="participantes[${i}].email=this.value" placeholder="juan@empresa.cl"/></div>
-      <button class="remove-btn" onclick="participantes.splice(${i},1);renderParticipantes()">✕</button>
-    `;
-    c.appendChild(div);
+  document.getElementById('topbar-company').textContent = empresa;
+  document.getElementById('topbar-avatar').textContent  = userInitials;
+  document.getElementById('greeting-text').textContent  = 'Hola, ' + userName.split(' ')[0];
+
+  const now = new Date();
+  document.getElementById('greeting-date').textContent = now.toLocaleDateString('es-CL', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+
+  // ── Sidebar toggle ──
+  const sidebar = document.getElementById('sidebar');
+  const topbar  = document.getElementById('topbar');
+  const mainEl  = document.getElementById('main');
+  let collapsed = false;
+  document.getElementById('toggle-sidebar').addEventListener('click', () => {
+    collapsed = !collapsed;
+    sidebar.classList.toggle('collapsed', collapsed);
+    topbar.classList.toggle('shifted', collapsed);
+    mainEl.classList.toggle('shifted', collapsed);
   });
-}
 
-function agregarParticipante() {
-  participantes.push({ nombre: '', rut: '', cargo: '', email: '' });
-  renderParticipantes();
-}
+  // ── Navigation ──
+  function go(e, href) { e.preventDefault(); window.location.href = href; }
+  document.getElementById('logout-btn').addEventListener('click', e => {
+    e.preventDefault();
+    if (typeof logout === 'function') logout();
+    else { sessionStorage.clear(); localStorage.clear(); window.location.href = 'index.html'; }
+  });
 
-async function guardar() {
-  const alertEl = document.getElementById('alertAsis');
-  alertEl.classList.add('hidden');
-  const btn = document.getElementById('btnGuardar');
-  setLoading(btn, true);
+  // ── Canvas ──
+  function initCanvas(id) {
+    const canvas = document.getElementById(id);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let drawing = false;
+    canvas.addEventListener('mousedown', e => { drawing = true; ctx.beginPath(); ctx.moveTo(...pos(e, canvas)); });
+    canvas.addEventListener('mousemove', e => { if (!drawing) return; ctx.lineTo(...pos(e, canvas)); ctx.strokeStyle = '#1B2D6B'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.stroke(); });
+    canvas.addEventListener('mouseup', () => drawing = false);
+    canvas.addEventListener('mouseleave', () => drawing = false);
+    canvas.addEventListener('touchstart', e => { e.preventDefault(); drawing = true; ctx.beginPath(); ctx.moveTo(...pos(e.touches[0], canvas)); }, {passive:false});
+    canvas.addEventListener('touchmove', e => { e.preventDefault(); if (!drawing) return; ctx.lineTo(...pos(e.touches[0], canvas)); ctx.strokeStyle = '#1B2D6B'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.stroke(); }, {passive:false});
+    canvas.addEventListener('touchend', () => drawing = false);
+  }
+  function pos(e, canvas) {
+    const r = canvas.getBoundingClientRect();
+    return [(e.clientX - r.left) * (canvas.width / r.width), (e.clientY - r.top) * (canvas.height / r.height)];
+  }
+  function clearCanvas(id) {
+    const c = document.getElementById(id);
+    c.getContext('2d').clearRect(0, 0, c.width, c.height);
+  }
+  initCanvas('sig-instructor');
 
-  const datos = {
-    nombre_capacitacion: document.getElementById('nombreCap').value.trim(),
-    tema:               document.getElementById('tema').value.trim(),
-    lugar:              document.getElementById('lugar').value.trim(),
-    fecha_evento:       document.getElementById('fechaEvento').value,
-    nombre_instructor:  document.getElementById('instructor').value.trim(),
-    firma_instructor:   document.getElementById('firmaInstructor').value.trim(),
-    observaciones:      document.getElementById('observaciones').value.trim(),
-    emailAdicional:     document.getElementById('emailAdicional').value.trim(),
-    participantes:      participantes,
-  };
+  // ── Participants ──
+  let pCount = 0;
+  const grid = document.getElementById('participants-grid');
 
-  try {
-    const res = await Asistencias.guardar(datos);
-    if (res.success) {
-      ultimaAsistencia = { ...datos, idAsistencia: res.id, sheetUrl: res.sheetUrl };
-      toast('Asistencia registrada ✓', 'success');
-      if (res.pdfUrl) window.open(res.pdfUrl, '_blank');
-      document.getElementById('resultadoMsg').textContent =
-        `ID: ${res.id} | Participantes: ${participantes.length}`;
-      document.getElementById('linkSheet').href = res.sheetUrl || '#';
-      document.getElementById('resultadoCard').classList.remove('hidden');
-      document.getElementById('resultadoCard').scrollIntoView({ behavior: 'smooth' });
-    } else {
-      alertEl.textContent = res.message || 'Error';
-      alertEl.classList.remove('hidden');
+  function addParticipant() {
+    pCount++;
+    const div = document.createElement('div');
+    div.className = 'participant-card';
+    div.dataset.pid = pCount;
+    div.innerHTML = `
+      <div class="participant-num">Participante ${pCount}</div>
+      <button class="btn-del-participant" onclick="removeParticipant(this)" title="Eliminar participante">
+        <i class="bi bi-x-lg"></i>
+      </button>
+      <div class="participant-fields">
+        <div class="form-group full">
+          <label>Nombre completo</label>
+          <input type="text" placeholder="Nombre del participante" data-field="nombre" />
+        </div>
+        <div class="form-group">
+          <label>RUT</label>
+          <input type="text" placeholder="12.345.678-9" data-field="rut" />
+        </div>
+        <div class="form-group">
+          <label>Cargo</label>
+          <input type="text" placeholder="Cargo o función" data-field="cargo" />
+        </div>
+        <div class="form-group full">
+          <label>Email</label>
+          <input type="email" placeholder="correo@empresa.com" data-field="email" />
+        </div>
+      </div>
+    `;
+    grid.appendChild(div);
+    updateCount();
+    div.querySelector('input').focus();
+  }
+
+  function removeParticipant(btn) {
+    const card = btn.closest('.participant-card');
+    if (grid.children.length <= 1) {
+      showToast('Debe haber al menos un participante', 'error');
+      return;
     }
-  } catch(e) {
-    alertEl.textContent = 'Error: ' + e.message;
-    alertEl.classList.remove('hidden');
+    card.remove();
+    renumberParticipants();
+    updateCount();
   }
-  setLoading(btn, false);
-}
 
-async function enviarConfirmaciones() {
-  if (!ultimaAsistencia) { toast('Guarda una asistencia primero', 'error'); return; }
-  const btn = document.getElementById('btnEnviarConfirm');
-  setLoading(btn, true);
-  const res = await Asistencias.enviarConfirmaciones({
-    idAsistencia: ultimaAsistencia.idAsistencia,
-    empresa:      ultimaAsistencia.empresa || '',
-    capacitacion: { nombre: ultimaAsistencia.nombre_capacitacion },
-    participantes: participantes.filter(p => p.email),
-  }).catch(e => ({ success: false, message: e.message }));
-
-  const div = document.getElementById('confirmResult');
-  if (res.success) {
-    div.innerHTML = `<div class="alert alert-success">✓ ${res.message}</div>`;
-  } else {
-    div.innerHTML = `<div class="alert alert-error">${res.message}</div>`;
+  function renumberParticipants() {
+    [...grid.children].forEach((card, i) => {
+      card.querySelector('.participant-num').textContent = `Participante ${i + 1}`;
+    });
+    pCount = grid.children.length;
   }
-  setLoading(btn, false);
-}
 
-async function generarPDFFirmas() {
-  if (!ultimaAsistencia) { toast('Guarda una asistencia primero', 'error'); return; }
-  const btn = document.getElementById('btnPDFFirmas');
-  setLoading(btn, true);
-  const res = await Asistencias.generarPDFConFirmas({
-    idAsistencia:        ultimaAsistencia.idAsistencia,
-    nombre_capacitacion: ultimaAsistencia.nombre_capacitacion,
-    tema:                ultimaAsistencia.tema,
-    empresa:             ultimaAsistencia.empresa || '',
-    lugar:               ultimaAsistencia.lugar,
-    fecha_evento:        ultimaAsistencia.fecha_evento,
-    nombre_instructor:   ultimaAsistencia.nombre_instructor,
-    participantes:       participantes,
-  }).catch(e => ({ success: false, message: e.message }));
+  function updateCount() {
+    document.getElementById('participant-count').textContent = grid.children.length;
+  }
 
-  if (res.success && res.pdfUrl) window.open(res.pdfUrl, '_blank');
-  else toast(res.message || 'Error al generar PDF', 'error');
-  setLoading(btn, false);
-}
+  function getParticipants() {
+    return [...grid.querySelectorAll('.participant-card')].map(card => ({
+      nombre: card.querySelector('[data-field="nombre"]')?.value || '',
+      rut:    card.querySelector('[data-field="rut"]')?.value || '',
+      cargo:  card.querySelector('[data-field="cargo"]')?.value || '',
+      email:  card.querySelector('[data-field="email"]')?.value || '',
+    }));
+  }
 
-function limpiar() {
-  participantes = [];
-  ultimaAsistencia = null;
-  renderParticipantes();
-  document.getElementById('resultadoCard').classList.add('hidden');
-  document.querySelectorAll('input,textarea,select').forEach(el => { el.value = ''; });
-  document.getElementById('fechaEvento').value = new Date().toISOString().split('T')[0];
-}
+  // ── Toast ──
+  function showToast(msg, type='ok') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = '';
+    if (type === 'error') t.classList.add('error');
+    if (type === 'success') t.classList.add('success');
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3500);
+  }
 
-async function doLogout() { await Auth.logout(); window.location.href = 'index.html'; }
+  // ── Build payload ──
+  function buildDatos() {
+    return {
+      capacitacion: {
+        nombre:  document.getElementById('cap-nombre').value,
+        tema:    document.getElementById('cap-tema').value,
+        lugar:   document.getElementById('cap-lugar').value,
+        fecha:   document.getElementById('cap-fecha').value,
+        emailCC: document.getElementById('cap-email-cc').value,
+      },
+      instructor: {
+        nombre: document.getElementById('inst-nombre').value,
+        firma:  document.getElementById('sig-instructor').toDataURL(),
+      },
+      participantes: getParticipants(),
+      observaciones: document.getElementById('observaciones').value,
+      empresa,
+    };
+  }
+
+  // ── Guardar ──
+  async function guardarAsistencia() {
+    const btn = document.getElementById('btn-guardar');
+    btn.innerHTML = '<span class="spinner"></span>Guardando...';
+    btn.disabled = true;
+    try {
+      await callAPI('guardarAsistencia', buildDatos());
+      showToast('Registro guardado correctamente', 'success');
+    } catch(e) {
+      showToast('Error al guardar: ' + (e.message || 'intente nuevamente'), 'error');
+    } finally {
+      btn.innerHTML = '<i class="bi bi-save"></i>Guardar';
+      btn.disabled = false;
+    }
+  }
+
+  // ── Enviar confirmaciones ──
+  async function enviarConfirmaciones() {
+    const btn = document.getElementById('btn-confirmaciones');
+    const participantes = getParticipants();
+    const conEmail = participantes.filter(p => p.email);
+    if (!conEmail.length) { showToast('Ningún participante tiene email registrado', 'error'); return; }
+    btn.innerHTML = '<span class="spinner"></span>Enviando...';
+    btn.disabled = true;
+    try {
+      await callAPI('enviarConfirmacionesAsistencia', buildDatos());
+      showToast(`Confirmaciones enviadas a ${conEmail.length} participante(s)`, 'success');
+    } catch(e) {
+      showToast('Error al enviar: ' + (e.message || 'intente nuevamente'), 'error');
+    } finally {
+      btn.innerHTML = '<i class="bi bi-envelope-check"></i>Enviar confirmaciones';
+      btn.disabled = false;
+    }
+  }
+
+  // ── Generar PDF ──
+  async function generarPDF() {
+    const btn = document.getElementById('btn-pdf');
+    btn.innerHTML = '<span class="spinner dark"></span>Generando PDF...';
+    btn.disabled = true;
+    try {
+      const res = await callAPI('generarPDFAsistencia', buildDatos());
+      if (res && res.url) window.open(res.url, '_blank');
+      showToast('PDF generado correctamente', 'success');
+    } catch(e) {
+      showToast('Error al generar PDF: ' + (e.message || 'intente nuevamente'), 'error');
+    } finally {
+      btn.innerHTML = '<i class="bi bi-file-earmark-pdf"></i>Generar PDF';
+      btn.disabled = false;
+    }
+  }
+
+  // ── Limpiar ──
+  function limpiarFormulario() {
+    ['cap-nombre','cap-tema','cap-lugar','cap-fecha','cap-email-cc','inst-nombre','observaciones'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    clearCanvas('sig-instructor');
+    grid.innerHTML = '';
+    pCount = 0;
+    addParticipant();
+  }
+
+  // ── Init: agregar un participante por defecto ──
+  addParticipant();
 </script>
 </body>
 </html>
