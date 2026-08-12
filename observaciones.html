@@ -1,222 +1,827 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>VISC — Observaciones</title>
-  <link rel="stylesheet" href="css/visc.css"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VISC – Observaciones Preventivas</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+  <style>
+    :root {
+      --navy:   #1B2D6B;
+      --navy-d: #152356;
+      --navy-l: #233a85;
+      --orange: #E87722;
+      --white:  #ffffff;
+      --bg:     #f4f6fb;
+      --text:   #1a1a2e;
+      --muted:  #6b7280;
+      --border: #dde2ef;
+      --sidebar-w: 220px;
+      --radius: 10px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+
+    /* ── SIDEBAR ── */
+    #sidebar {
+      width: var(--sidebar-w);
+      background: var(--navy);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      transition: width .25s ease;
+      overflow: hidden;
+      position: relative;
+      z-index: 10;
+    }
+    #sidebar.collapsed { width: 56px; }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 20px 16px 16px;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      min-height: 68px;
+    }
+    .logo-icon {
+      width: 32px; height: 32px;
+      background: var(--orange);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700; font-size: 14px; color: var(--white);
+    }
+    .logo-text {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700; font-size: 18px; color: var(--white);
+      white-space: nowrap; overflow: hidden;
+    }
+    #sidebar.collapsed .logo-text,
+    #sidebar.collapsed .nav-label,
+    #sidebar.collapsed .user-info { display: none; }
+
+    .sidebar-toggle {
+      position: absolute; top: 20px; right: -12px;
+      width: 24px; height: 24px;
+      background: var(--orange); border: none; border-radius: 50%;
+      color: var(--white); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; box-shadow: 0 2px 6px rgba(0,0,0,.25);
+      z-index: 20;
+    }
+
+    .sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+    .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 16px;
+      color: rgba(255,255,255,.72);
+      cursor: pointer; border-radius: 0;
+      transition: background .15s, color .15s;
+      text-decoration: none; white-space: nowrap;
+    }
+    .nav-item:hover { background: rgba(255,255,255,.08); color: var(--white); }
+    .nav-item.active { background: var(--orange); color: var(--white); }
+    .nav-item i { font-size: 18px; flex-shrink: 0; }
+    .nav-label { font-size: 13.5px; font-weight: 500; }
+
+    .sidebar-user {
+      display: flex; align-items: center; gap: 10px;
+      padding: 14px 16px;
+      border-top: 1px solid rgba(255,255,255,.1);
+    }
+    .user-avatar {
+      width: 34px; height: 34px;
+      background: var(--orange); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 13px; color: var(--white); flex-shrink: 0;
+    }
+    .user-info { overflow: hidden; }
+    .user-name { font-size: 12.5px; font-weight: 600; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-role { font-size: 11px; color: rgba(255,255,255,.55); white-space: nowrap; }
+
+    /* ── MAIN ── */
+    #main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* TOPBAR */
+    .topbar {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 0 28px;
+      height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .topbar-left h1 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: var(--navy); }
+    .topbar-left p { font-size: 13px; color: var(--muted); margin-top: 1px; }
+    .topbar-right { display: flex; align-items: center; gap: 14px; }
+    .empresa-badge {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 20px; padding: 5px 14px;
+      font-size: 12.5px; font-weight: 600; color: var(--navy);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .top-avatar {
+      width: 38px; height: 38px;
+      background: var(--navy); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px; color: var(--white); cursor: pointer;
+    }
+
+    /* CONTENT AREA */
+    .content { flex: 1; overflow-y: auto; padding: 24px 28px; }
+
+    /* TABS */
+    .tabs-bar {
+      display: flex; gap: 4px;
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 5px;
+      width: fit-content; margin-bottom: 22px;
+    }
+    .tab-btn {
+      padding: 8px 22px; border: none; border-radius: 7px;
+      font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+      cursor: pointer; background: transparent; color: var(--muted);
+      transition: all .15s;
+    }
+    .tab-btn.active { background: var(--navy); color: var(--white); }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    /* CARDS */
+    .card {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 22px 24px; margin-bottom: 18px;
+    }
+    .card-title {
+      font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700;
+      color: var(--navy); margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-title i { color: var(--orange); font-size: 16px; }
+
+    /* FORM GRID */
+    .form-grid { display: grid; gap: 14px; }
+    .g2 { grid-template-columns: 1fr 1fr; }
+    .g3 { grid-template-columns: 1fr 1fr 1fr; }
+    .g4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+    .g-full { grid-column: 1 / -1; }
+
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group label { font-size: 12px; font-weight: 600; color: var(--navy); }
+    .form-control {
+      border: 1px solid var(--border); border-radius: 7px;
+      padding: 8px 12px; font-family: 'DM Sans', sans-serif; font-size: 13.5px;
+      color: var(--text); background: var(--white); outline: none;
+      transition: border-color .15s;
+      width: 100%;
+    }
+    .form-control:focus { border-color: var(--navy); box-shadow: 0 0 0 3px rgba(27,45,107,.08); }
+    .form-control[readonly] { background: var(--bg); color: var(--muted); }
+    textarea.form-control { resize: vertical; min-height: 90px; }
+
+    /* REACCIONES GRID */
+    .reacciones-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+
+    /* CHECKBOX VISUAL */
+    .checkbox-group { display: flex; flex-direction: column; gap: 10px; }
+    .check-card {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border: 1.5px solid var(--border);
+      border-radius: 8px; cursor: pointer; transition: all .15s;
+    }
+    .check-card:hover { border-color: var(--orange); background: rgba(232,119,34,.04); }
+    .check-card input[type="checkbox"] { display: none; }
+    .check-card.checked { border-color: var(--orange); background: rgba(232,119,34,.08); }
+    .check-icon {
+      width: 20px; height: 20px; border-radius: 5px;
+      border: 1.5px solid var(--border); display: flex;
+      align-items: center; justify-content: center;
+      font-size: 12px; color: transparent; flex-shrink: 0;
+      transition: all .15s;
+    }
+    .check-card.checked .check-icon { background: var(--orange); border-color: var(--orange); color: var(--white); }
+    .check-label { font-size: 13px; font-weight: 500; }
+
+    /* RISK TABLE */
+    .risk-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    .risk-table th {
+      background: var(--navy); color: var(--white); padding: 8px 10px;
+      text-align: left; font-weight: 600; font-size: 12px;
+    }
+    .risk-table th:first-child { border-radius: 7px 0 0 0; }
+    .risk-table th:last-child { border-radius: 0 7px 0 0; }
+    .risk-table td { padding: 7px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .risk-table tr:hover td { background: rgba(27,45,107,.03); }
+    .risk-table input[type="checkbox"] { accent-color: var(--orange); width: 15px; height: 15px; cursor: pointer; }
+    .risk-table select { border: 1px solid var(--border); border-radius: 5px; padding: 4px 8px; font-size: 12px; width: 100%; }
+
+    /* TOGGLE */
+    .toggle-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px; background: var(--bg); border-radius: 8px;
+      margin-bottom: 14px;
+    }
+    .toggle-switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; inset: 0; border-radius: 22px;
+      background: var(--border); cursor: pointer; transition: .2s;
+    }
+    .toggle-slider::before {
+      content: ''; position: absolute;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: var(--white); top: 3px; left: 3px;
+      transition: .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    }
+    .toggle-switch input:checked + .toggle-slider { background: var(--orange); }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); }
+    .toggle-label { font-size: 13.5px; font-weight: 500; }
+
+    /* BUTTONS */
+    .btn-row { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 10px 22px; border-radius: 8px;
+      font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+      cursor: pointer; border: none; transition: all .15s;
+    }
+    .btn-primary { background: var(--navy); color: var(--white); }
+    .btn-primary:hover { background: var(--navy-d); }
+    .btn-secondary { background: var(--bg); color: var(--muted); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: var(--border); }
+    .btn-orange { background: var(--orange); color: var(--white); }
+    .btn-orange:hover { background: #d06818; }
+
+    /* SEARCH TAB */
+    .search-box { display: flex; gap: 10px; align-items: flex-end; margin-bottom: 20px; }
+    .search-box .form-group { flex: 1; margin: 0; }
+    .pdf-list { display: flex; flex-direction: column; gap: 10px; }
+    .pdf-item {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 18px; background: var(--white);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      transition: border-color .15s;
+    }
+    .pdf-item:hover { border-color: var(--orange); }
+    .pdf-icon { font-size: 22px; color: #e53935; }
+    .pdf-meta { flex: 1; }
+    .pdf-meta strong { font-size: 14px; display: block; }
+    .pdf-meta span { font-size: 12px; color: var(--muted); }
+    .pdf-link {
+      font-size: 13px; font-weight: 600; color: var(--navy);
+      text-decoration: none; display: flex; align-items: center; gap: 5px;
+    }
+    .pdf-link:hover { color: var(--orange); }
+
+    /* TOAST */
+    #toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--navy); color: var(--white);
+      padding: 12px 20px; border-radius: 10px;
+      font-size: 13.5px; font-weight: 500;
+      display: none; align-items: center; gap: 10px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.18); z-index: 1000;
+    }
+    #toast.show { display: flex; }
+    #toast.success { background: #1a7a4a; }
+    #toast.error { background: #c0392b; }
+
+    /* SPINNER */
+    .spinner {
+      width: 16px; height: 16px; border: 2.5px solid rgba(255,255,255,.3);
+      border-top-color: var(--white); border-radius: 50%; animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* EMPTY STATE */
+    .empty-state {
+      text-align: center; padding: 40px 20px; color: var(--muted);
+    }
+    .empty-state i { font-size: 40px; margin-bottom: 10px; display: block; }
+
+    @media (max-width: 900px) {
+      .reacciones-grid { grid-template-columns: 1fr 1fr; }
+      .g4 { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 640px) {
+      .g2, .g3, .reacciones-grid { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
-<nav class="topbar">
-  <div class="topbar-brand">
-    <div class="logo-circle">V</div>
-    <a href="dashboard.html" style="color:#fff;font-weight:700;">← VISC</a>
+
+<!-- ═══════ SIDEBAR ═══════ -->
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">V</div>
+    <span class="logo-text">VISC</span>
   </div>
-  <div class="topbar-right">
-    <span class="topbar-user" id="topUser"></span>
-    <button class="btn-logout" onclick="doLogout()">Salir</button>
+  <button class="sidebar-toggle" id="toggleSidebar" title="Colapsar">
+    <i class="bi bi-chevron-left" id="toggleIcon"></i>
+  </button>
+
+  <div class="sidebar-nav">
+    <a class="nav-item" href="dashboard.html"><i class="bi bi-grid-1x2-fill"></i><span class="nav-label">Dashboard</span></a>
+    <a class="nav-item active" href="observaciones.html"><i class="bi bi-eye-fill"></i><span class="nav-label">Observaciones</span></a>
+    <a class="nav-item" href="visitas.html"><i class="bi bi-calendar-check-fill"></i><span class="nav-label">Visitas</span></a>
+    <a class="nav-item" href="asistencia.html"><i class="bi bi-person-check-fill"></i><span class="nav-label">Asistencia</span></a>
+    <a class="nav-item" href="inspecciones.html"><i class="bi bi-clipboard2-check-fill"></i><span class="nav-label">Inspecciones</span></a>
+    <a class="nav-item" href="tiempo.html"><i class="bi bi-clock-fill"></i><span class="nav-label">Tiempo Dedicado</span></a>
+  </div>
+
+  <div class="sidebar-user">
+    <div class="user-avatar" id="sidebarAvatar">U</div>
+    <div class="user-info">
+      <div class="user-name" id="sidebarName">Usuario</div>
+      <div class="user-role" id="sidebarRole">Profesional</div>
+    </div>
   </div>
 </nav>
 
-<div class="container">
-  <div class="page-header">
-    <div><h1>📋 Observaciones Preventivas</h1><p>Registra observaciones de seguridad en terreno</p></div>
-    <button class="btn btn-secondary" onclick="toggleBuscar()">🔍 Buscar PDFs</button>
-  </div>
+<!-- ═══════ MAIN ═══════ -->
+<div id="main">
 
-  <!-- Buscar PDFs -->
-  <div id="buscarSection" class="card hidden">
-    <div class="card-header"><span class="card-title">Buscar observaciones por RUT</span></div>
-    <div style="display:flex;gap:10px;align-items:end;">
-      <div class="form-group" style="flex:1;"><label>RUT trabajador</label><input id="rutBuscar" placeholder="12345678-9"/></div>
-      <button class="btn btn-primary" onclick="buscarPDFs()">Buscar</button>
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <h1 id="greeting">Hola, Usuario</h1>
+      <p>Registro de Observaciones Preventivas</p>
     </div>
-    <div id="resultadosBuscar" class="mt-4"></div>
-  </div>
+    <div class="topbar-right">
+      <div class="empresa-badge"><i class="bi bi-building"></i><span id="empresaBadge">Empresa</span></div>
+      <div class="top-avatar" id="topAvatar">U</div>
+    </div>
+  </header>
 
-  <!-- Formulario -->
-  <div class="card">
-    <div class="card-header"><span class="card-title">Nueva observación</span></div>
-    <div id="alertObs" class="alert alert-error hidden"></div>
+  <!-- CONTENT -->
+  <div class="content">
 
-    <div class="section-title">I. Información básica</div>
-    <div class="form-grid">
-      <div class="form-group"><label>Procedimiento *</label><input id="procedimiento" placeholder="Trabajo en altura"/></div>
-      <div class="form-group"><label>Empresa *</label><input id="empresa" placeholder="VISC S.A."/></div>
-      <div class="form-group"><label>RUT Trabajador *</label><input id="rutTrabajador" placeholder="12345678-9"/></div>
-      <div class="form-group"><label>Nombre Trabajador *</label><input id="trabajador" placeholder="Juan Pérez"/></div>
-      <div class="form-group"><label>Cargo Trabajador</label><input id="cargoTrabajador" placeholder="Operario"/></div>
-      <div class="form-group"><label>RUT Observador *</label><input id="rutObservador" placeholder="98765432-1"/></div>
-      <div class="form-group"><label>Nombre Observador *</label><input id="observador" placeholder="María González"/></div>
-      <div class="form-group"><label>Cargo Observador</label><input id="cargoObservador" placeholder="Prevencionista"/></div>
-      <div class="form-group"><label>Fecha *</label><input type="date" id="fecha"/></div>
-      <div class="form-group"><label>Duración</label><input id="duracion" placeholder="30 min"/></div>
-      <div class="form-group"><label>Firma</label><input id="firma" placeholder="Nombre completo"/></div>
-      <div class="form-group"><label>Email adicional</label><input type="email" id="emailAdicional" placeholder="cc@email.com"/></div>
+    <!-- TABS BAR -->
+    <div class="tabs-bar">
+      <button class="tab-btn active" data-tab="nueva">
+        <i class="bi bi-plus-circle"></i> Nueva observación
+      </button>
+      <button class="tab-btn" data-tab="buscar">
+        <i class="bi bi-search"></i> Buscar
+      </button>
     </div>
 
-    <div class="section-title">II. Reacciones</div>
-    <div class="form-grid">
-      <div class="form-group">
-        <label>EPP</label>
-        <select id="epp"><option value="">Seleccionar</option><option>Cumple</option><option>No cumple</option><option>N/A</option></select>
+    <!-- ── TAB: NUEVA OBSERVACIÓN ── -->
+    <div class="tab-pane active" id="tab-nueva">
+      <form id="formObs" novalidate>
+
+        <!-- 1. INFO BÁSICA -->
+        <div class="card">
+          <div class="card-title"><i class="bi bi-info-circle-fill"></i> Información Básica</div>
+          <div class="form-grid g3">
+            <div class="form-group">
+              <label>Procedimiento</label>
+              <input type="text" class="form-control" id="procedimiento" placeholder="Nombre del procedimiento" />
+            </div>
+            <div class="form-group">
+              <label>Empresa</label>
+              <input type="text" class="form-control" id="empresa" readonly />
+            </div>
+            <div class="form-group">
+              <label>Fecha</label>
+              <input type="date" class="form-control" id="fecha" />
+            </div>
+
+            <div class="form-group">
+              <label>RUT Trabajador</label>
+              <input type="text" class="form-control" id="rutTrabajador" placeholder="12.345.678-9" />
+            </div>
+            <div class="form-group">
+              <label>Nombre Trabajador</label>
+              <input type="text" class="form-control" id="nombreTrabajador" placeholder="Nombre completo" />
+            </div>
+            <div class="form-group">
+              <label>Cargo Trabajador</label>
+              <input type="text" class="form-control" id="cargoTrabajador" placeholder="Cargo" />
+            </div>
+
+            <div class="form-group">
+              <label>RUT Observador</label>
+              <input type="text" class="form-control" id="rutObservador" placeholder="12.345.678-9" />
+            </div>
+            <div class="form-group">
+              <label>Nombre Observador</label>
+              <input type="text" class="form-control" id="nombreObservador" placeholder="Nombre completo" />
+            </div>
+            <div class="form-group">
+              <label>Cargo Observador</label>
+              <input type="text" class="form-control" id="cargoObservador" placeholder="Cargo" />
+            </div>
+
+            <div class="form-group">
+              <label>Duración (min)</label>
+              <input type="number" class="form-control" id="duracion" placeholder="Ej: 30" min="1" />
+            </div>
+            <div class="form-group">
+              <label>Firma Observador</label>
+              <input type="text" class="form-control" id="firma" placeholder="Firma o iniciales" />
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. REACCIONES -->
+        <div class="card">
+          <div class="card-title"><i class="bi bi-chat-square-text-fill"></i> Reacciones del Trabajador</div>
+          <div class="reacciones-grid">
+            <div class="form-group">
+              <label>EPP</label>
+              <textarea class="form-control" id="reaccionEPP" placeholder="Observaciones sobre EPP…"></textarea>
+            </div>
+            <div class="form-group">
+              <label>Posiciones</label>
+              <textarea class="form-control" id="reaccionPosiciones" placeholder="Observaciones sobre posiciones…"></textarea>
+            </div>
+            <div class="form-group">
+              <label>Herramientas y Equipos</label>
+              <textarea class="form-control" id="reaccionHerramientas" placeholder="Observaciones sobre herramientas…"></textarea>
+            </div>
+            <div class="form-group">
+              <label>Orden y Limpieza</label>
+              <textarea class="form-control" id="reaccionOrden" placeholder="Observaciones sobre orden…"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. AJUSTE EPP -->
+        <div class="card">
+          <div class="card-title"><i class="bi bi-shield-fill-check"></i> Ajuste de EPP / Acción Inmediata</div>
+          <div class="form-grid g4">
+            <div class="check-card" data-check="cambioposicion">
+              <input type="checkbox" id="chkCambioPos" />
+              <div class="check-icon"><i class="bi bi-check2"></i></div>
+              <span class="check-label">Cambio de Posición</span>
+            </div>
+            <div class="check-card" data-check="reacomodar">
+              <input type="checkbox" id="chkReacomodar" />
+              <div class="check-icon"><i class="bi bi-check2"></i></div>
+              <span class="check-label">Reacomodar su trabajo</span>
+            </div>
+            <div class="check-card" data-check="dejartrabajar">
+              <input type="checkbox" id="chkDejar" />
+              <div class="check-icon"><i class="bi bi-check2"></i></div>
+              <span class="check-label">Dejar de Trabajar</span>
+            </div>
+            <div class="check-card" data-check="bloqueos">
+              <input type="checkbox" id="chkBloqueos" />
+              <div class="check-icon"><i class="bi bi-check2"></i></div>
+              <span class="check-label">Colocar tiempo o bloqueos</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. TABLA DE RIESGOS -->
+        <div class="card">
+          <div class="card-title"><i class="bi bi-exclamation-triangle-fill"></i> Tabla de Riesgos</div>
+          <div style="overflow-x:auto">
+            <table class="risk-table" id="riskTable">
+              <thead>
+                <tr>
+                  <th>Parte del cuerpo</th>
+                  <th>Cabeza / Cuerpo</th>
+                  <th>Tipo de contacto</th>
+                  <th>Condición de uso</th>
+                  <th>Estándar</th>
+                </tr>
+              </thead>
+              <tbody id="riskBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 5. DESCRIPCIÓN Y ACCIONES -->
+        <div class="card">
+          <div class="card-title"><i class="bi bi-file-text-fill"></i> Descripción y Acciones</div>
+
+          <div class="toggle-row">
+            <label class="toggle-switch">
+              <input type="checkbox" id="sinActos" />
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="toggle-label">Sin actos inseguros detectados</span>
+          </div>
+
+          <div class="form-grid g2" id="actosSection">
+            <div class="form-group g-full">
+              <label>Descripción del acto / condición insegura</label>
+              <textarea class="form-control" id="descripcion" placeholder="Describa lo observado…"></textarea>
+            </div>
+            <div class="form-group">
+              <label>Acciones tomadas</label>
+              <textarea class="form-control" id="acciones" placeholder="Acciones inmediatas…"></textarea>
+            </div>
+            <div class="form-group">
+              <label>Recomendaciones</label>
+              <textarea class="form-control" id="recomendaciones" placeholder="Recomendaciones preventivas…"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- BOTONES -->
+        <div class="btn-row">
+          <button type="button" class="btn btn-secondary" id="btnLimpiar"><i class="bi bi-arrow-counterclockwise"></i> Limpiar</button>
+          <button type="submit" class="btn btn-primary" id="btnGuardar"><i class="bi bi-floppy-fill"></i> Guardar</button>
+        </div>
+
+      </form>
+    </div><!-- /tab-nueva -->
+
+    <!-- ── TAB: BUSCAR ── -->
+    <div class="tab-pane" id="tab-buscar">
+      <div class="card">
+        <div class="card-title"><i class="bi bi-search"></i> Buscar Observaciones por RUT</div>
+        <div class="search-box">
+          <div class="form-group">
+            <label>RUT del Trabajador</label>
+            <input type="text" class="form-control" id="rutBuscar" placeholder="12.345.678-9" />
+          </div>
+          <button class="btn btn-orange" id="btnBuscar" style="height:38px;padding:0 20px">
+            <i class="bi bi-search"></i> Buscar
+          </button>
+        </div>
+        <div id="pdfResults">
+          <div class="empty-state">
+            <i class="bi bi-file-earmark-pdf"></i>
+            Ingrese un RUT para buscar observaciones
+          </div>
+        </div>
       </div>
-      <div class="form-group">
-        <label>Posiciones</label>
-        <select id="posiciones"><option value="">Seleccionar</option><option>Cumple</option><option>No cumple</option><option>N/A</option></select>
-      </div>
-      <div class="form-group">
-        <label>Herramientas</label>
-        <select id="herramientas"><option value="">Seleccionar</option><option>Cumple</option><option>No cumple</option><option>N/A</option></select>
-      </div>
-      <div class="form-group">
-        <label>Orden / Limpieza</label>
-        <select id="orden"><option value="">Seleccionar</option><option>Cumple</option><option>No cumple</option><option>N/A</option></select>
-      </div>
-    </div>
+    </div><!-- /tab-buscar -->
 
-    <div class="section-title">III. Ajuste EPP</div>
-    <div class="check-list" id="ajustesEPP">
-      <!-- Generado por JS -->
-    </div>
+  </div><!-- /content -->
+</div><!-- /main -->
 
-    <div class="section-title">IV. Identificación de riesgos</div>
-    <div class="check-list" id="riesgosCheck"></div>
-
-    <div class="section-title">V. Clasificación</div>
-    <div class="radio-group">
-      <label><input type="radio" name="sinActos" value="1" id="sinActosSi"/> Sin actos inseguros</label>
-      <label><input type="radio" name="sinActos" value="0" id="sinActosNo" checked/> Con actos subestándar</label>
-    </div>
-
-    <div class="section-title">VI. Descripción</div>
-    <div class="form-group full"><textarea id="descripcion" placeholder="Describa las observaciones realizadas…"></textarea></div>
-
-    <div class="section-title">VII. Acciones tomadas</div>
-    <div class="form-group full"><textarea id="acciones" placeholder="Acciones tomadas por el observador…"></textarea></div>
-
-    <div class="section-title">VIII. Recomendaciones</div>
-    <div class="form-group full"><textarea id="recomendaciones" placeholder="Recomendaciones adicionales…"></textarea></div>
-
-    <div class="mt-6 btn-group">
-      <button class="btn btn-primary" id="btnGuardar" onclick="guardar()">💾 Guardar observación</button>
-      <button class="btn btn-ghost" onclick="limpiar()">Limpiar</button>
-    </div>
-  </div>
-</div>
+<!-- TOAST -->
+<div id="toast"><span id="toastIcon"></span><span id="toastMsg"></span></div>
 
 <script src="js/api.js"></script>
 <script>
-const AJUSTES_EPP = ['Casco','Lentes de seguridad','Protección auditiva','Respirador','Arnés de seguridad',
-  'Guantes','Calzado de seguridad','Ropa de trabajo','Chaleco reflectante','Protección facial'];
-const RIESGOS = ['Ojos','Cara','Oídos','Aparto Respiratorio','Tórax','Brazos','Manos','Piernas','Pies',
-  'Uso inadecuado de E-PP','E.PP en mal estado','Falta de EPP',
-  'Golpeado por','Atrapado por','Cayéndose','Temperatura Extremas','Corriente eléctrica'];
+// ══════════════════════════════════════════════
+//  AUTH
+// ══════════════════════════════════════════════
+(async function init() {
+  const session = await requireAuth();
+  if (!session) { window.location.href = 'index.html'; return; }
 
-function buildChecks(containerId, items) {
-  const c = document.getElementById(containerId);
-  items.forEach(it => {
-    const lbl = document.createElement('label');
-    lbl.innerHTML = `<input type="checkbox" value="${it}"/> ${it}`;
-    c.appendChild(lbl);
-  });
-}
+  // Rellenar UI con datos de sesión
+  const name    = session.nombre || session.email || 'Usuario';
+  const empresa = session.empresa || 'Sin empresa';
+  const initials = name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
 
-(async () => {
-  const sess = requireAuth();
-  if (!sess) return;
-  document.getElementById('topUser').textContent = sess.nombre || sess.correo;
+  document.getElementById('greeting').textContent     = `Hola, ${name.split(' ')[0]}`;
+  document.getElementById('empresaBadge').textContent = empresa;
+  document.getElementById('sidebarName').textContent  = name;
+  document.getElementById('sidebarRole').textContent  = session.cargo || 'Profesional';
+  document.getElementById('topAvatar').textContent    = initials;
+  document.getElementById('sidebarAvatar').textContent= initials;
+
+  // Empresa readonly
+  document.getElementById('empresa').value = empresa;
+
+  // Fecha de hoy
   document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
-  // Pre-rellenar observador con datos del usuario
-  document.getElementById('observador').value = sess.nombre || '';
-
-  buildChecks('ajustesEPP', AJUSTES_EPP);
-  buildChecks('riesgosCheck', RIESGOS);
 })();
 
-function getChecked(containerId) {
-  return Array.from(document.querySelectorAll(`#${containerId} input[type=checkbox]:checked`)).map(c => c.value);
+// ══════════════════════════════════════════════
+//  SIDEBAR TOGGLE
+// ══════════════════════════════════════════════
+const sidebar     = document.getElementById('sidebar');
+const toggleBtn   = document.getElementById('toggleSidebar');
+const toggleIcon  = document.getElementById('toggleIcon');
+
+toggleBtn.addEventListener('click', () => {
+  sidebar.classList.toggle('collapsed');
+  const collapsed = sidebar.classList.contains('collapsed');
+  toggleIcon.className = collapsed ? 'bi bi-chevron-right' : 'bi bi-chevron-left';
+});
+
+// ══════════════════════════════════════════════
+//  TABS
+// ══════════════════════════════════════════════
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ══════════════════════════════════════════════
+//  CHECKBOX CARDS (AJUSTE EPP)
+// ══════════════════════════════════════════════
+document.querySelectorAll('.check-card').forEach(card => {
+  card.addEventListener('click', () => {
+    const cb = card.querySelector('input[type="checkbox"]');
+    cb.checked = !cb.checked;
+    card.classList.toggle('checked', cb.checked);
+  });
+});
+
+// ══════════════════════════════════════════════
+//  TABLA RIESGOS
+// ══════════════════════════════════════════════
+const PARTES = [
+  'Cabeza', 'Ojos', 'Cara', 'Cuello', 'Hombros', 'Brazos',
+  'Manos', 'Tronco', 'Cadera', 'Piernas', 'Pies', 'Cuerpo completo'
+];
+const TIPOS_CONTACTO = ['Golpe', 'Corte', 'Atrapamiento', 'Caída', 'Eléctrico', 'Químico', 'Ergonómico'];
+const CONDICIONES     = ['Adecuado', 'Deteriorado', 'Sin uso', 'No aplica'];
+const ESTANDARES      = ['Cumple', 'No cumple', 'Parcial', 'N/A'];
+
+const tbody = document.getElementById('riskBody');
+PARTES.forEach(parte => {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><strong>${parte}</strong></td>
+    <td><input type="checkbox" class="risk-cb" data-parte="${parte}" /></td>
+    <td>
+      <select class="risk-select">
+        <option value="">-- Seleccione --</option>
+        ${TIPOS_CONTACTO.map(t => `<option>${t}</option>`).join('')}
+      </select>
+    </td>
+    <td>
+      <select class="risk-select">
+        <option value="">-- Seleccione --</option>
+        ${CONDICIONES.map(c => `<option>${c}</option>`).join('')}
+      </select>
+    </td>
+    <td>
+      <select class="risk-select">
+        <option value="">-- Seleccione --</option>
+        ${ESTANDARES.map(e => `<option>${e}</option>`).join('')}
+      </select>
+    </td>`;
+  tbody.appendChild(tr);
+});
+
+// ══════════════════════════════════════════════
+//  TOGGLE SIN ACTOS INSEGUROS
+// ══════════════════════════════════════════════
+document.getElementById('sinActos').addEventListener('change', function() {
+  const section = document.getElementById('actosSection');
+  section.style.opacity  = this.checked ? '.35' : '1';
+  section.style.pointerEvents = this.checked ? 'none' : '';
+});
+
+// ══════════════════════════════════════════════
+//  TOAST HELPER
+// ══════════════════════════════════════════════
+function showToast(msg, type = 'default') {
+  const toast = document.getElementById('toast');
+  const icon  = document.getElementById('toastIcon');
+  document.getElementById('toastMsg').textContent = msg;
+  toast.className = 'show ' + type;
+  icon.innerHTML = type === 'success' ? '<i class="bi bi-check-circle-fill"></i>'
+                 : type === 'error'   ? '<i class="bi bi-x-circle-fill"></i>'
+                 : '<i class="bi bi-info-circle-fill"></i>';
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => toast.classList.remove('show'), 3500);
 }
 
-async function guardar() {
-  const alert = document.getElementById('alertObs');
-  alert.classList.add('hidden');
-  const btn   = document.getElementById('btnGuardar');
-  setLoading(btn, true);
+// ══════════════════════════════════════════════
+//  RECOPILAR RIESGOS
+// ══════════════════════════════════════════════
+function collectRiesgos() {
+  const rows = tbody.querySelectorAll('tr');
+  const riesgos = [];
+  rows.forEach(tr => {
+    const cb       = tr.querySelector('.risk-cb');
+    const selects  = tr.querySelectorAll('.risk-select');
+    if (cb.checked || selects[0].value || selects[1].value || selects[2].value) {
+      riesgos.push({
+        parte:        cb.dataset.parte,
+        cabezaCuerpo: cb.checked,
+        tipoContacto: selects[0].value,
+        condicionUso: selects[1].value,
+        estandar:     selects[2].value,
+      });
+    }
+  });
+  return riesgos;
+}
+
+// ══════════════════════════════════════════════
+//  GUARDAR
+// ══════════════════════════════════════════════
+document.getElementById('formObs').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const btn = document.getElementById('btnGuardar');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Guardando…';
+
+  const ajusteEPP = {};
+  document.querySelectorAll('.check-card').forEach(card => {
+    ajusteEPP[card.dataset.check] = card.querySelector('input').checked;
+  });
 
   const datos = {
-    procedimiento:  document.getElementById('procedimiento').value.trim(),
-    empresa:        document.getElementById('empresa').value.trim(),
-    rut_trabajador: document.getElementById('rutTrabajador').value.trim(),
-    trabajador:     document.getElementById('trabajador').value.trim(),
-    cargo_trabajador: document.getElementById('cargoTrabajador').value.trim(),
-    rut_observador: document.getElementById('rutObservador').value.trim(),
-    observador:     document.getElementById('observador').value.trim(),
-    cargo_observador: document.getElementById('cargoObservador').value.trim(),
-    fecha:          document.getElementById('fecha').value,
-    duracion:       document.getElementById('duracion').value.trim(),
-    firma:          document.getElementById('firma').value.trim(),
-    emailAdicional: document.getElementById('emailAdicional').value.trim(),
-    epp:            document.getElementById('epp').value,
-    posiciones:     document.getElementById('posiciones').value,
-    herramientas:   document.getElementById('herramientas').value,
-    orden:          document.getElementById('orden').value,
-    ajustes_epp:    getChecked('ajustesEPP'),
-    riesgos:        getChecked('riesgosCheck'),
-    sin_actos:      document.getElementById('sinActosSi').checked,
-    descripcion:    document.getElementById('descripcion').value.trim(),
-    acciones:       document.getElementById('acciones').value.trim(),
+    procedimiento:      document.getElementById('procedimiento').value.trim(),
+    empresa:            document.getElementById('empresa').value.trim(),
+    rutTrabajador:      document.getElementById('rutTrabajador').value.trim(),
+    nombreTrabajador:   document.getElementById('nombreTrabajador').value.trim(),
+    cargoTrabajador:    document.getElementById('cargoTrabajador').value.trim(),
+    rutObservador:      document.getElementById('rutObservador').value.trim(),
+    nombreObservador:   document.getElementById('nombreObservador').value.trim(),
+    cargoObservador:    document.getElementById('cargoObservador').value.trim(),
+    fecha:              document.getElementById('fecha').value,
+    duracion:           document.getElementById('duracion').value,
+    firma:              document.getElementById('firma').value.trim(),
+    reacciones: {
+      epp:          document.getElementById('reaccionEPP').value.trim(),
+      posiciones:   document.getElementById('reaccionPosiciones').value.trim(),
+      herramientas: document.getElementById('reaccionHerramientas').value.trim(),
+      orden:        document.getElementById('reaccionOrden').value.trim(),
+    },
+    ajusteEPP,
+    riesgos:      collectRiesgos(),
+    sinActos:     document.getElementById('sinActos').checked,
+    descripcion:  document.getElementById('descripcion').value.trim(),
+    acciones:     document.getElementById('acciones').value.trim(),
     recomendaciones: document.getElementById('recomendaciones').value.trim(),
   };
 
   try {
-    const res = await Observaciones.guardar(datos);
-    if (res.success) {
-      toast('Observación guardada y PDF generado ✓', 'success');
-      if (res.pdfUrl) window.open(res.pdfUrl, '_blank');
-      limpiar();
-    } else {
-      alert.textContent = res.message || res.error || 'Error al guardar';
-      alert.classList.remove('hidden');
-    }
-  } catch(e) {
-    alert.textContent = 'Error: ' + e.message;
-    alert.classList.remove('hidden');
+    await callAPI('guardarDatos', datos);
+    showToast('Observación guardada correctamente', 'success');
+    document.getElementById('formObs').reset();
+    document.querySelectorAll('.check-card').forEach(c => c.classList.remove('checked'));
+    // restaurar fecha
+    document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+  } catch (err) {
+    console.error(err);
+    showToast('Error al guardar: ' + (err.message || err), 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-floppy-fill"></i> Guardar';
   }
-  setLoading(btn, false);
-}
+});
 
-async function buscarPDFs() {
-  const rut = document.getElementById('rutBuscar').value.trim();
-  if (!rut) { toast('Ingresa un RUT', 'error'); return; }
-  const res = await Observaciones.buscarPDFs(rut).catch(e => ({ success: false, message: e.message }));
-  const div = document.getElementById('resultadosBuscar');
-  if (!res.success || !res.pdfs || !res.pdfs.length) {
-    div.innerHTML = '<p style="color:#888;font-size:13px;">Sin resultados para ese RUT.</p>';
-    return;
-  }
-  div.innerHTML = res.pdfs.map(p =>
-    `<div style="padding:8px 0;border-bottom:1px solid #eee;">
-      <a class="pdf-link" href="${p.url}" target="_blank">📄 ${p.name}</a>
-      <span style="font-size:11px;color:#aaa;margin-left:8px;">${p.fecha}</span>
-    </div>`
-  ).join('');
-}
-
-function toggleBuscar() {
-  document.getElementById('buscarSection').classList.toggle('hidden');
-}
-
-function limpiar() {
-  document.querySelectorAll('input[type=text],input[type=email],input[type=date],textarea,select').forEach(el => {
-    if (el.id !== 'fecha') el.value = '';
-  });
-  document.querySelectorAll('input[type=checkbox]').forEach(c => c.checked = false);
+// ══════════════════════════════════════════════
+//  LIMPIAR
+// ══════════════════════════════════════════════
+document.getElementById('btnLimpiar').addEventListener('click', () => {
+  document.getElementById('formObs').reset();
+  document.querySelectorAll('.check-card').forEach(c => c.classList.remove('checked'));
+  tbody.querySelectorAll('.risk-cb').forEach(cb => cb.checked = false);
+  tbody.querySelectorAll('.risk-select').forEach(s => s.value = '');
   document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
-  document.getElementById('sinActosNo').checked = true;
-}
+  document.getElementById('actosSection').style.opacity = '1';
+  document.getElementById('actosSection').style.pointerEvents = '';
+});
 
-async function doLogout() { await Auth.logout(); window.location.href = 'index.html'; }
+// ══════════════════════════════════════════════
+//  BUSCAR PDFs
+// ══════════════════════════════════════════════
+document.getElementById('btnBuscar').addEventListener('click', async () => {
+  const rut = document.getElementById('rutBuscar').value.trim();
+  if (!rut) { showToast('Ingrese un RUT para buscar', 'default'); return; }
+
+  const btn = document.getElementById('btnBuscar');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div>';
+  const container = document.getElementById('pdfResults');
+  container.innerHTML = '<div class="empty-state"><i class="bi bi-hourglass-split"></i>Buscando…</div>';
+
+  try {
+    const result = await callAPI('buscarPdfsPorRutConToken', { rut });
+    const pdfs   = Array.isArray(result) ? result : (result.pdfs || []);
+
+    if (!pdfs.length) {
+      container.innerHTML = '<div class="empty-state"><i class="bi bi-file-earmark-x"></i>No se encontraron observaciones para este RUT</div>';
+      return;
+    }
+
+    container.innerHTML = `<div class="pdf-list">${pdfs.map(pdf => `
+      <div class="pdf-item">
+        <i class="bi bi-file-earmark-pdf-fill pdf-icon"></i>
+        <div class="pdf-meta">
+          <strong>${pdf.nombre || 'Observación'}</strong>
+          <span>${pdf.fecha || ''} ${pdf.empresa ? '· ' + pdf.empresa : ''}</span>
+        </div>
+        <a href="${pdf.url}" target="_blank" class="pdf-link">
+          <i class="bi bi-download"></i> Descargar
+        </a>
+      </div>`).join('')}
+    </div>`;
+
+  } catch (err) {
+    console.error(err);
+    container.innerHTML = '<div class="empty-state"><i class="bi bi-exclamation-circle"></i>Error al buscar: ' + (err.message || err) + '</div>';
+    showToast('Error en la búsqueda', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-search"></i> Buscar';
+  }
+});
 </script>
 </body>
 </html>
