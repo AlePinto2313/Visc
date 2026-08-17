@@ -91,6 +91,9 @@ const Empresas = {
   async crear(run, razonSocial) {
     return callAPI('crearEmpresa', { token: Auth.getToken(), run, razonSocial });
   },
+  async guardarConfiguracion(run, estado, modulos) {
+    return callAPI('guardarConfiguracionEmpresa', { token: Auth.getToken(), run, estado, modulos });
+  },
   async seleccionar(run) {
     const res = await callAPI('seleccionarEmpresaActiva', { token: Auth.getToken(), run });
     if (res.success && res.empresa) {
@@ -224,7 +227,7 @@ function setLoading(btn, loading) {
 
 function requireAuth() {
   const token = Auth.getToken();
-  if (!token) { window.location.href = 'index.html'; return null; }
+  if (!token) { window.location.href = 'login.html'; return null; }
   return Auth.getSessionLocal();
 }
 

@@ -321,11 +321,7 @@
         <i class="bi bi-clock"></i>
         <span class="nav-label">Tiempo Dedicado</span>
       </a>
-      <div class="sidebar-section" id="adminSection" style="display:none;">Admin</div>
-      <a class="nav-item" href="usuarios.html" id="navUsuarios" style="display:none;">
-        <i class="bi bi-people"></i>
-        <span class="nav-label">Usuarios</span>
-      </a>
+
     </div>
 
     <div class="sidebar-footer">
@@ -333,7 +329,7 @@
         <i class="bi bi-box-arrow-left" style="color:#f87171;"></i>
         <span class="nav-label" style="color:rgba(255,255,255,0.4);">Cerrar sesión</span>
       </div>
-      <div class="user-mini" style="margin-top:6px;">
+      <div class="user-mini" onclick="window.location.href='usuarios.html'" style="margin-top:6px; cursor:pointer;" title="Ver mi perfil">
         <div class="user-av" id="sidebarAv">?</div>
         <div class="user-info">
           <div class="user-name" id="sidebarName">—</div>
@@ -359,18 +355,6 @@
       </div>
       <div class="topbar-right">
         <div class="topbar-empresa" id="topEmpresa"><i class="bi bi-building"></i> Cargando...</div>
-        <button class="notif-btn" title="Notificaciones">
-          <i class="bi bi-bell"></i>
-          <span class="notif-dot"></span>
-        </button>
-        <div class="topbar-user">
-          <div class="topbar-av" id="topAv">?</div>
-          <div>
-            <div class="topbar-uname" id="topName">—</div>
-            <div class="topbar-urole" id="topRole">—</div>
-          </div>
-        </div>
-        <button class="logout-btn" onclick="doLogout()" title="Salir"><i class="bi bi-box-arrow-right"></i></button>
       </div>
     </div>
 
@@ -521,9 +505,9 @@
     var nombre = sess.nombre || sess.correo || 'Usuario';
     var primerNombre = nombre.split(' ')[0];
     document.getElementById('greetName').textContent = primerNombre;
-    document.getElementById('topName').textContent   = nombre;
-    document.getElementById('topRole').textContent   = sess.role || '';
-    document.getElementById('topAv').textContent     = initials(nombre);
+    var tName = document.getElementById('topName'); if (tName) tName.textContent = nombre;
+    var tRole = document.getElementById('topRole'); if (tRole) tRole.textContent = sess.role || '';
+    var tAv = document.getElementById('topAv'); if (tAv) tAv.textContent = initials(nombre);
     document.getElementById('sidebarAv').textContent = initials(nombre);
     document.getElementById('sidebarName').textContent = nombre;
     document.getElementById('sidebarRole').textContent = sess.role || '';
@@ -531,13 +515,13 @@
     // Admin nav
     var isAdmin = (sess.role || '').toUpperCase() === 'SUPER_ADMIN';
     if (isAdmin) {
-      document.getElementById('adminSection').style.display = '';
-      document.getElementById('navUsuarios').style.display = '';
+      var adminSec = document.getElementById('adminSection'); if (adminSec) adminSec.style.display = '';
+      var navUser = document.getElementById('navUsuarios'); if (navUser) navUser.style.display = '';
     }
 
     // Load empresa
     try {
-      var er = await callAPI('obtenerEmpresaActiva', {});
+      var er = await Empresas.activa();
       if (er && er.success && er.empresa) {
         document.getElementById('empName').textContent = er.empresa.razonSocial || '—';
         document.getElementById('empRun').textContent  = 'RUT: ' + (er.empresa.run || '—');
@@ -589,7 +573,7 @@
   /* ── Load Stats + Chart ── */
   async function loadStats() {
     try {
-      var res = await callAPI('obtenerEstadisticas', {});
+      var res = await Empresas.estadisticas();
       if (!res || !res.success) { setPlaceholderStats(); renderDemoChart(); return; }
 
       animStat('stObs',  res.stats ? res.stats.observaciones : 0);
@@ -694,7 +678,7 @@
 
   async function doLogout() {
     try { await Auth.logout(); } catch(e) {}
-    window.location.href = 'index.html';
+    window.location.href = 'login.html';
   }
 </script>
 </body>

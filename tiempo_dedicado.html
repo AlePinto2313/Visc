@@ -245,8 +245,7 @@
       <div class="sidebar-section">Análisis</div>
       <a class="nav-item" href="inspecciones.html"><i class="bi bi-search"></i><span class="nav-label">Inspecciones</span></a>
       <a class="nav-item active" href="tiempo_dedicado.html"><i class="bi bi-clock"></i><span class="nav-label">Tiempo Dedicado</span></a>
-      <div class="sidebar-section" id="adminSection" style="display:none;">Admin</div>
-      <a class="nav-item" href="usuarios.html" id="navUsuarios" style="display:none;"><i class="bi bi-people"></i><span class="nav-label">Usuarios</span></a>
+
     </div>
 
     <div class="sidebar-footer">
@@ -254,7 +253,7 @@
         <i class="bi bi-box-arrow-left" style="color:#f87171;"></i>
         <span class="nav-label" style="color:rgba(255,255,255,0.4);">Cerrar sesión</span>
       </div>
-      <div class="user-mini" style="margin-top:6px;">
+      <div class="user-mini" onclick="window.location.href='usuarios.html'" style="margin-top:6px; cursor:pointer;" title="Ver mi perfil">
         <div class="user-av" id="sidebarAv">?</div>
         <div class="user-info">
           <div class="user-name" id="sidebarName">—</div>
@@ -280,14 +279,6 @@
       </div>
       <div class="topbar-right">
         <div class="topbar-empresa" id="topEmpresa"><i class="bi bi-building"></i> Cargando...</div>
-        <div class="topbar-user">
-          <div class="topbar-av" id="topAv">?</div>
-          <div>
-            <div class="topbar-uname" id="topName">—</div>
-            <div class="topbar-urole" id="topRole">—</div>
-          </div>
-        </div>
-        <button class="logout-btn" onclick="doLogout()" title="Salir"><i class="bi bi-box-arrow-right"></i></button>
       </div>
     </div>
 
@@ -518,16 +509,16 @@
     _sess = sess;
 
     var nombre = sess.nombre || sess.correo || 'Consultor';
-    document.getElementById('topName').textContent     = nombre;
-    document.getElementById('topRole').textContent     = sess.role || '';
-    document.getElementById('topAv').textContent       = initials(nombre);
+    var tName = document.getElementById('topName'); if (tName) tName.textContent = nombre;
+    var tRole = document.getElementById('topRole'); if (tRole) tRole.textContent = sess.role || '';
+    var tAv = document.getElementById('topAv'); if (tAv) tAv.textContent = initials(nombre);
     document.getElementById('sidebarAv').textContent   = initials(nombre);
     document.getElementById('sidebarName').textContent = nombre;
     document.getElementById('sidebarRole').textContent = sess.role || '';
 
     if ((sess.role||'').toUpperCase() === 'SUPER_ADMIN') {
-      document.getElementById('adminSection').style.display = '';
-      document.getElementById('navUsuarios').style.display  = '';
+      var adminSec = document.getElementById('adminSection'); if (adminSec) adminSec.style.display = '';
+      var navUser = document.getElementById('navUsuarios'); if (navUser) navUser.style.display = '';
     }
 
     // Pre-fill consultor fields from session
@@ -537,7 +528,7 @@
 
     // Load empresa
     try {
-      var er = await callAPI('obtenerEmpresaActiva', {});
+      var er = await Empresas.activa();
       if (er && er.success && er.empresa) {
         var emp = er.empresa.razonSocial || '—';
         document.getElementById('tdEmpresa').value = emp;
@@ -561,7 +552,7 @@
     var sel = document.getElementById('regSelect');
     sel.innerHTML = '<option value="">— Cargando… —</option>';
     try {
-      var r = await callAPI('listarTiemposDedicados', {});
+      var r = await TiempoDedicado.listar();
       sel.innerHTML = '<option value="">— Selecciona un registro —</option>';
       if (r && r.success && r.items && r.items.length) {
         r.items.forEach(function(it) {
@@ -593,7 +584,7 @@
     _sheetId = id;
     document.getElementById('regMsg').textContent = 'Cargando datos…';
     try {
-      var r = await callAPI('obtenerTiempoDedicado', { sheetId: id });
+      var r = await TiempoDedicado.obtener(id);
       if (r && r.success) {
         var res = r.resumen || {};
         document.getElementById('tdNombre').value  = res.nombre   || (_sess.nombre || '');
@@ -631,7 +622,7 @@
     var nombre = document.getElementById('nuevoNombre').value.trim();
     if (!nombre) { showToast('El nombre es obligatorio', 'error'); return; }
     try {
-      var r = await callAPI('crearTiempoDedicado', { nombre: nombre });
+      var r = await TiempoDedicado.crear(nombre);
       if (r && r.success) {
         cerrarModal();
         showToast('Registro creado: ' + nombre, 'success');
@@ -720,7 +711,7 @@
     var btn = document.getElementById('btnGuardar');
     setLoading(btn, true);
     try {
-      var r = await callAPI('guardarTiempoDedicado', { sheetId: _sheetId, resumen: getResumen(), tareas: _tareas });
+      var r = await TiempoDedicado.guardar(_sheetId, getResumen(), _tareas);
       if (r && r.success) showToast('Guardado correctamente', 'success');
       else showToast((r && r.message) || 'Error al guardar', 'error');
     } catch(e) { showToast('Error: ' + e.message, 'error'); }
@@ -733,7 +724,7 @@
     var btn = document.getElementById('btnPDF');
     setLoading(btn, true);
     try {
-      var r = await callAPI('generarPDFTiempoDedicado', { sheetId: _sheetId });
+      var r = await TiempoDedicado.generarPDF(_sheetId);
       if (r && r.success && r.pdfUrl) { window.open(r.pdfUrl, '_blank'); showToast('PDF generado', 'success'); }
       else showToast((r && r.message) || 'Error generando PDF', 'error');
     } catch(e) { showToast('Error: ' + e.message, 'error'); }
@@ -746,7 +737,7 @@
     var btn = document.getElementById('btnCorreo');
     setLoading(btn, true);
     try {
-      var r = await callAPI('enviarCorreoTiempoDedicado', { sheetId: _sheetId });
+      var r = await TiempoDedicado.enviarCorreo(_sheetId);
       if (r && r.success) showToast('Correo enviado correctamente', 'success');
       else showToast((r && r.message) || 'Error enviando correo', 'error');
     } catch(e) { showToast('Error: ' + e.message, 'error'); }
@@ -762,10 +753,7 @@
     reader.onload = async function(ev) {
       var b64 = ev.target.result.split(',')[1];
       try {
-        var r = await callAPI('enviarCorreoTiempoDedicado', {
-          sheetId: _sheetId,
-          adjunto: { name: file.name, mimeType: file.type, bytesBase64: b64 }
-        });
+        var r = await TiempoDedicado.enviarCorreoConAdjunto(_sheetId, { name: file.name, mimeType: file.type, bytesBase64: b64 });
         if (r && r.success) showToast('Correo con adjunto enviado', 'success');
         else showToast((r && r.message) || 'Error', 'error');
       } catch(e) { showToast('Error: ' + e.message, 'error'); }
@@ -780,7 +768,7 @@
 
   async function doLogout() {
     try { await Auth.logout(); } catch(e) {}
-    window.location.href = 'index.html';
+    window.location.href = 'login.html';
   }
 </script>
 </body>

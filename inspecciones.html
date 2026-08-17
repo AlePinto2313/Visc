@@ -227,8 +227,7 @@
       <div class="sidebar-section">Análisis</div>
       <a class="nav-item active" href="inspecciones.html"><i class="bi bi-search"></i><span class="nav-label">Inspecciones</span></a>
       <a class="nav-item" href="tiempo_dedicado.html"><i class="bi bi-clock"></i><span class="nav-label">Tiempo Dedicado</span></a>
-      <div class="sidebar-section" id="adminSection" style="display:none;">Admin</div>
-      <a class="nav-item" href="usuarios.html" id="navUsuarios" style="display:none;"><i class="bi bi-people"></i><span class="nav-label">Usuarios</span></a>
+
     </div>
 
     <div class="sidebar-footer">
@@ -236,7 +235,7 @@
         <i class="bi bi-box-arrow-left" style="color:#f87171;"></i>
         <span class="nav-label" style="color:rgba(255,255,255,0.4);">Cerrar sesión</span>
       </div>
-      <div class="user-mini" style="margin-top:6px;">
+      <div class="user-mini" onclick="window.location.href='usuarios.html'" style="margin-top:6px; cursor:pointer;" title="Ver mi perfil">
         <div class="user-av" id="sidebarAv">?</div>
         <div class="user-info">
           <div class="user-name" id="sidebarName">—</div>
@@ -262,14 +261,6 @@
       </div>
       <div class="topbar-right">
         <div class="topbar-empresa" id="topEmpresa"><i class="bi bi-building"></i> Cargando...</div>
-        <div class="topbar-user">
-          <div class="topbar-av" id="topAv">?</div>
-          <div>
-            <div class="topbar-uname" id="topName">—</div>
-            <div class="topbar-urole" id="topRole">—</div>
-          </div>
-        </div>
-        <button class="logout-btn" onclick="doLogout()" title="Salir"><i class="bi bi-box-arrow-right"></i></button>
       </div>
     </div>
 
@@ -524,23 +515,23 @@
     _sess = sess;
 
     var nombre = sess.nombre || sess.correo || 'Inspector';
-    document.getElementById('topName').textContent     = nombre;
-    document.getElementById('topRole').textContent     = sess.role || '';
-    document.getElementById('topAv').textContent       = initials(nombre);
+    var tName = document.getElementById('topName'); if (tName) tName.textContent = nombre;
+    var tRole = document.getElementById('topRole'); if (tRole) tRole.textContent = sess.role || '';
+    var tAv = document.getElementById('topAv'); if (tAv) tAv.textContent = initials(nombre);
     document.getElementById('sidebarAv').textContent   = initials(nombre);
     document.getElementById('sidebarName').textContent = nombre;
     document.getElementById('sidebarRole').textContent = sess.role || '';
 
     var isAdmin = (sess.role||'').toUpperCase() === 'SUPER_ADMIN';
     if (isAdmin) {
-      document.getElementById('adminSection').style.display = '';
-      document.getElementById('navUsuarios').style.display  = '';
+      var adminSec = document.getElementById('adminSection'); if (adminSec) adminSec.style.display = '';
+      var navUser = document.getElementById('navUsuarios'); if (navUser) navUser.style.display = '';
       document.getElementById('tabPlantillas').style.display = '';
     }
 
     // Empresa
     try {
-      var er = await callAPI('obtenerEmpresaActiva', {});
+      var er = await Empresas.activa();
       if (er && er.success && er.empresa) {
         document.getElementById('topEmpresa').innerHTML = '<i class="bi bi-building"></i> ' + (er.empresa.razonSocial||'—');
       } else {
@@ -558,7 +549,7 @@
     var grid = document.getElementById('plantillasGrid');
     grid.innerHTML = '<div class="empty-state"><i class="bi bi-hourglass-split"></i><p>Cargando plantillas…</p></div>';
     try {
-      var r = await callAPI('listarPlantillasInspeccion', {});
+      var r = await Inspecciones.listarPlantillas();
       _plantillas = (r && r.success && r.plantillas) ? r.plantillas : [];
       renderPlantillasGrid();
     } catch(e) {
@@ -698,7 +689,7 @@
         observaciones:   document.getElementById('inspObs').value.trim(),
         secciones:       _seccionesInsp,
       };
-      var r = await callAPI('guardarInspeccion', { datos: datos });
+      var r = await Inspecciones.guardar(datos);
       if (r && r.success) {
         showToast('Inspección guardada' + (r.pdfUrl ? '. Abriendo PDF…' : ''), 'success');
         if (r.pdfUrl) window.open(r.pdfUrl, '_blank');
@@ -718,7 +709,7 @@
     var list = document.getElementById('historialList');
     list.innerHTML = '<div class="empty-state"><i class="bi bi-hourglass-split"></i><p>Cargando historial…</p></div>';
     try {
-      var r = await callAPI('listarInspeccionesPDF', {});
+      var r = await Inspecciones.listarPDFs();
       if (r && r.success && r.items && r.items.length) {
         list.innerHTML = '';
         r.items.forEach(function(p) {
@@ -833,7 +824,7 @@
     var plantilla = { nombre: nombre, descripcion: desc, secciones: _editorSecciones };
     if (_editorPlantilla && _editorPlantilla.id) plantilla.id = _editorPlantilla.id;
     try {
-      var r = await callAPI('guardarPlantillaInspeccion', { plantilla: plantilla });
+      var r = await Inspecciones.guardarPlantilla(plantilla);
       if (r && r.success) {
         showToast('Plantilla guardada correctamente', 'success');
         cerrarModal('modalEditorPlantilla');
@@ -849,7 +840,7 @@
   async function eliminarPlantilla(id) {
     if (!confirm('¿Eliminar esta plantilla? Esta acción no se puede deshacer.')) return;
     try {
-      var r = await callAPI('eliminarPlantillaInspeccion', { id: id });
+      var r = await Inspecciones.eliminarPlantilla(id);
       if (r && r.success) {
         showToast('Plantilla eliminada', 'success');
         await cargarPlantillasList();
@@ -867,7 +858,7 @@
 
   async function doLogout() {
     try { await Auth.logout(); } catch(e) {}
-    window.location.href = 'index.html';
+    window.location.href = 'login.html';
   }
 </script>
 </body>

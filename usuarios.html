@@ -523,33 +523,221 @@
     }
 
     .divider { border: none; border-top: 1px solid var(--gray-100); margin: 20px 0; }
-  </style>
+  
+/* ─── HARMONIZED SIDEBAR STYLES ─── */
+:root {
+  --navy: #1B2D6B;
+  --navy2: #152359;
+  --navy3: #0f1a40;
+  --o1: #F0901A;
+  --o2: #E87722;
+  --o3: #C4601A;
+  --o-light: #FFF3E6;
+  --o-mid: #FFD9AE;
+  --white: #ffffff;
+  --border: #e4e7f0;
+  --sidebar-w: 220px;
+  --sidebar-collapsed: 68px;
+}
+
+/* Override old sidebar / main wrapper styles */
+#sidebar {
+  width: var(--sidebar-w) !important;
+  background: var(--navy) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 0 0 var(--sidebar-w) !important;
+  transition: width 0.28s cubic-bezier(.4,0,.2,1) !important;
+  overflow: hidden !important;
+  z-index: 50 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  position: relative !important;
+  height: 100vh !important;
+}
+#sidebar.collapsed {
+  width: var(--sidebar-collapsed) !important;
+  flex: 0 0 var(--sidebar-collapsed) !important;
+}
+
+/* Main content area needs to adjust margin dynamically when sidebar collapses */
+#main, .main {
+  margin-left: var(--sidebar-w) !important;
+  transition: margin-left 0.28s cubic-bezier(.4,0,.2,1) !important;
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  min-width: 0 !important;
+}
+#main.shifted, .main.shifted {
+  margin-left: var(--sidebar-collapsed) !important;
+}
+
+/* Adjust media queries */
+@media (max-width: 700px) {
+  #sidebar { display: none !important; }
+  #main, .main { margin-left: 0 !important; }
+}
+
+/* Dashboard sidebar components styles */
+.sidebar-top {
+  padding: 20px 16px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.sidebar-logo {
+  width: 36px !important; height: 36px !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+  flex: 0 0 36px !important;
+  border: 1.5px solid rgba(255,255,255,0.12) !important;
+  background: var(--o2) !important;
+  display: flex !important; align-items: center !important; justify-content: center !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+.sidebar-logo img { width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important; }
+.sidebar-brand { overflow: hidden; display: block !important; text-align: left !important; }
+.sidebar-name { font-family: 'Syne', sans-serif !important; font-weight: 800 !important; font-size: 13px !important; color: #fff !important; white-space: nowrap !important; text-transform: none !important; letter-spacing: normal !important; }
+.sidebar-sub  { font-size: 10px !important; color: rgba(255,255,255,0.35) !important; white-space: nowrap !important; margin-top: 1px !important; display: block !important; }
+
+.sidebar-section { padding: 8px 10px 4px; font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.2); white-space: nowrap; overflow: hidden; display: block !important; }
+#sidebar.collapsed .sidebar-section { opacity: 0; }
+
+.nav-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 10px 14px !important;
+  margin: 2px 8px !important;
+  border-radius: 10px !important;
+  cursor: pointer !important;
+  transition: background 0.15s !important;
+  text-decoration: none !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  background: transparent !important;
+  border: none !important;
+  width: auto !important;
+  justify-content: flex-start !important;
+}
+.nav-item:hover { background: rgba(255,255,255,0.06) !important; }
+.nav-item.active { background: var(--o2) !important; }
+.nav-item i { font-size: 18px !important; color: rgba(255,255,255,0.45) !important; flex: 0 0 20px !important; text-align: center !important; transition: color 0.15s !important; display: inline-block !important; }
+.nav-item.active i { color: #fff !important; }
+.nav-item:hover i { color: rgba(255,255,255,0.8) !important; }
+.nav-label { font-size: 13px !important; font-weight: 500 !important; color: rgba(255,255,255,0.55) !important; overflow: hidden !important; display: inline !important; }
+.nav-item.active .nav-label { color: #fff !important; font-weight: 600 !important; }
+.nav-item:hover .nav-label { color: rgba(255,255,255,0.9) !important; }
+#sidebar.collapsed .nav-label, #sidebar.collapsed .sidebar-name, #sidebar.collapsed .sidebar-sub { opacity: 0; pointer-events: none; }
+
+.sidebar-footer {
+  margin-top: auto !important;
+  padding: 12px 8px !important;
+  border-top: 1px solid rgba(255,255,255,0.07) !important;
+  display: block !important;
+}
+.user-mini {
+  display: flex !important; align-items: center !important; gap: 10px !important;
+  padding: 8px 10px !important; border-radius: 10px !important;
+  cursor: pointer !important; transition: background 0.15s !important;
+  overflow: hidden !important;
+  background: transparent !important;
+  border: none !important;
+}
+.user-mini:hover { background: rgba(255,255,255,0.06) !important; }
+.user-av { width: 32px !important; height: 32px !important; border-radius: 50% !important; background: var(--o2) !important; display: flex !important; align-items: center !important; justify-content: center !important; font-weight: 700 !important; font-size: 13px !important; color: #fff !important; flex: 0 0 32px !important; }
+.user-info { overflow: hidden; display: block !important; text-align: left !important; }
+.user-name  { font-size: 12px !important; font-weight: 600 !important; color: rgba(255,255,255,0.85) !important; white-space: nowrap !important; }
+.user-role  { font-size: 10px !important; color: rgba(255,255,255,0.35) !important; white-space: nowrap !important; display: block !important; }
+#sidebar.collapsed .user-info { opacity: 0; }
+
+/* Collapse button */
+.sidebar-toggle {
+  position: absolute !important; left: calc(var(--sidebar-w) - 14px) !important; top: 24px !important;
+  width: 28px !important; height: 28px !important;
+  background: var(--white) !important;
+  border: 1.5px solid var(--border) !important;
+  border-radius: 50% !important;
+  display: flex !important; align-items: center !important; justify-content: center !important;
+  cursor: pointer !important;
+  font-size: 12px !important;
+  color: var(--muted) !important;
+  z-index: 60 !important;
+  transition: left 0.28s cubic-bezier(.4,0,.2,1) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+  padding: 0 !important;
+}
+.sidebar-toggle:hover { color: var(--o2) !important; border-color: var(--o1) !important; }
+#sidebar.collapsed ~ .sidebar-toggle { left: calc(var(--sidebar-collapsed) - 14px) !important; }
+</style>
 </head>
 <body>
 
 <!-- ══ SIDEBAR ══ -->
-<aside id="sidebar">
-  <div class="sidebar-logo">
-    <div class="logo-mark">V</div>
-    <span class="logo-text">VISC</span>
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-logo">
+        <img src="https://drive.google.com/thumbnail?id=1cQzpSYj8YwSBqhaOmo53kI9wdVQmgWOZ&sz=200" alt="VISC"
+             onerror="this.style.display='none';this.parentElement.textContent='V'">
+      </div>
+      <div class="sidebar-brand">
+        <div class="sidebar-name">VISC</div>
+        <div class="sidebar-sub">Sistema de Seguridad</div>
+      </div>
+    </div>
+
+    <div style="flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 0;">
+      <div class="sidebar-section">Principal</div>
+      <a class="nav-item " href="dashboard.html">
+        <i class="bi bi-grid-1x2"></i>
+        <span class="nav-label">Dashboard</span>
+      </a>
+      <a class="nav-item " href="observaciones.html">
+        <i class="bi bi-clipboard-check"></i>
+        <span class="nav-label">Observaciones</span>
+      </a>
+      <a class="nav-item " href="visitas.html">
+        <i class="bi bi-person-check"></i>
+        <span class="nav-label">Visitas</span>
+      </a>
+      <a class="nav-item " href="asistencia.html">
+        <i class="bi bi-calendar-check"></i>
+        <span class="nav-label">Asistencia</span>
+      </a>
+      <div class="sidebar-section">Análisis</div>
+      <a class="nav-item " href="inspecciones.html">
+        <i class="bi bi-search"></i>
+        <span class="nav-label">Inspecciones</span>
+      </a>
+      <a class="nav-item " href="tiempo_dedicado.html">
+        <i class="bi bi-clock"></i>
+        <span class="nav-label">Tiempo Dedicado</span>
+      </a>
+
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="nav-item" onclick="doLogout()" style="margin:0;">
+        <i class="bi bi-box-arrow-left" style="color:#f87171;"></i>
+        <span class="nav-label" style="color:rgba(255,255,255,0.4);">Cerrar sesión</span>
+      </div>
+      <div class="user-mini" onclick="window.location.href='usuarios.html'" style="margin-top:6px; cursor:pointer;" title="Ver mi perfil">
+        <div class="user-av" id="sidebarAv">?</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebarName">—</div>
+          <div class="user-role" id="sidebarRole">—</div>
+        </div>
+      </div>
+    </div>
   </div>
-  <nav class="sidebar-nav">
-    <div class="nav-section-label">Módulos</div>
-    <a href="dashboard.html" class="nav-item"><i class="bi bi-grid-1x2-fill"></i><span class="label">Dashboard</span></a>
-    <a href="observaciones.html" class="nav-item"><i class="bi bi-eye-fill"></i><span class="label">Observaciones</span></a>
-    <a href="visitas.html" class="nav-item"><i class="bi bi-geo-alt-fill"></i><span class="label">Visitas</span></a>
-    <a href="asistencia.html" class="nav-item"><i class="bi bi-person-check-fill"></i><span class="label">Asistencia</span></a>
-    <a href="tiempo_dedicado.html" class="nav-item"><i class="bi bi-clock-history"></i><span class="label">Tiempo dedicado</span></a>
-    <a href="inspecciones.html" class="nav-item"><i class="bi bi-clipboard2-check-fill"></i><span class="label">Inspecciones</span></a>
-    <a href="ast.html" class="nav-item"><i class="bi bi-shield-fill-check"></i><span class="label">AST</span></a>
-    <div class="nav-section-label">Administración</div>
-    <a href="usuarios.html" class="nav-item active"><i class="bi bi-people-fill"></i><span class="label">Usuarios</span></a>
-    <a href="empresas.html" class="nav-item"><i class="bi bi-building-fill"></i><span class="label">Empresas</span></a>
-  </nav>
-  <div class="sidebar-footer">
-    <a href="#" class="nav-item" id="btn-logout"><i class="bi bi-box-arrow-left"></i><span class="label">Cerrar sesión</span></a>
-  </div>
-</aside>
+  
+  <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" title="Colapsar">
+    <i class="bi bi-chevron-left" id="toggleIcon"></i>
+  </button>
 
 <!-- ══ TOPBAR ══ -->
 <header id="topbar">
@@ -579,6 +767,9 @@
     <button class="tab-btn" data-tab="usuarios" data-admin-only>
       <i class="bi bi-people-fill"></i> Gestión de usuarios
     </button>
+      <button class="tab-btn" data-tab="empresas" data-admin-only>
+        <i class="bi bi-building"></i> Gestión de empresas
+      </button>
   </div>
 
   <!-- ── TAB: Perfil ── -->
@@ -662,7 +853,16 @@
         </div>
       </div>
 
-      <div class="section-label">Subir nueva firma</div>
+      <div class="section-label" style="margin-top:30px;">Dibujar nueva firma (Lienzo interactivo)</div>
+      <div class="sig-wrap" style="position:relative; margin-bottom:20px; max-width:600px;">
+        <canvas class="sig-canvas" id="sig-usuario" width="600" height="150" style="border:1.5px dashed var(--gray-400);border-radius:10px;background:#fff;cursor:crosshair;touch-action:none;width:100%;height:150px;display:block;"></canvas>
+        <button class="btn btn-sm btn-outline" onclick="clearCanvas('sig-usuario')" style="position:absolute;bottom:10px;right:10px;background:rgba(255,255,255,0.9);padding:4px 10px;font-size:11px;border-radius:4px;cursor:pointer;">Limpiar lienzo</button>
+      </div>
+      <button class="btn btn-primary" id="btn-guardar-firma-dibujada" style="margin-bottom:30px;">
+        <i class="bi bi-check-lg"></i> Guardar firma dibujada
+      </button>
+
+      <div class="section-label">Subir nueva firma (Imagen)</div>
       <div class="firma-dropzone" id="firma-dropzone" onclick="document.getElementById('inp-firma-file').click()">
         <i class="bi bi-cloud-arrow-up"></i>
         <p>Haz clic o arrastra una imagen aquí</p>
@@ -681,6 +881,25 @@
             <i class="bi bi-x"></i> Cancelar
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB: Empresas (SUPER_ADMIN) ── -->
+  <div class="tab-pane" id="tab-empresas">
+    <div class="users-toolbar">
+      <div class="search-box">
+        <i class="bi bi-search"></i>
+        <input type="text" id="inp-buscar-empresa" placeholder="Buscar por razon social o RUT..." />
+      </div>
+      <button class="btn btn-orange" id="btn-nueva-empresa">
+        <i class="bi bi-plus-lg"></i> Nueva empresa
+      </button>
+    </div>
+    <div class="companies-list" id="companies-list" style="margin-top:14px; display:flex; flex-direction:column; gap:8px;">
+      <div style="text-align:center;padding:40px;color:var(--gray-400);">
+        <div class="spinner" style="border-color:var(--gray-200);border-top-color:var(--gray-400);margin:0 auto 8px;"></div>
+        Cargando empresas...
       </div>
     </div>
   </div>
@@ -704,6 +923,30 @@
     </div>
   </div>
 </main>
+
+<!-- ══ MODAL: Nueva empresa ══ -->
+<div class="modal-backdrop" id="modal-nueva-empresa">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title"><i class="bi bi-building" style="color:var(--orange);margin-right:6px;"></i> Nueva empresa</span>
+      <button class="modal-close" id="btn-cerrar-modal-empresa"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="form-row" style="padding: 20px; display:flex; flex-direction:column; gap:14px;">
+      <div class="form-group">
+        <label class="form-label" style="font-weight:600; font-size:12px; margin-bottom:4px; display:block;">RUT / RUN de la Empresa *</label>
+        <input type="text" id="me-run" class="form-control" placeholder="12.345.678-9" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" style="font-weight:600; font-size:12px; margin-bottom:4px; display:block;">Razon Social *</label>
+        <input type="text" id="me-razon" class="form-control" placeholder="Nombre o Razon Social" />
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:10px;">
+        <button class="btn btn-outline" id="btn-cancelar-modal-empresa">Cancelar</button>
+        <button class="btn btn-orange" id="btn-crear-empresa-submit">Crear empresa</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ══ MODAL: Nuevo usuario ══ -->
 <div class="modal-backdrop" id="modal-nuevo-usuario">
@@ -759,7 +1002,28 @@
 <!-- ══ TOAST CONTAINER ══ -->
 <div id="toast-container"></div>
 
-<script src="js/api.js"></script>
+<script src="js/api.js"></script><script>
+// ── Sidebar collapse logic (Harmonized) ──
+var _collapsed = false;
+function toggleSidebar() {
+  _collapsed = !_collapsed;
+  var sb = document.getElementById('sidebar');
+  var ic = document.getElementById('toggleIcon');
+  var btn = document.getElementById('sidebarToggle');
+  var mainEl = document.getElementById('main');
+  if (_collapsed) {
+    if (sb) sb.classList.add('collapsed');
+    if (ic) ic.className = 'bi bi-chevron-right';
+    if (btn) btn.style.left = 'calc(' + getComputedStyle(sb).width + ' - 14px)';
+    if (mainEl) mainEl.classList.add('shifted');
+  } else {
+    if (sb) sb.classList.remove('collapsed');
+    if (ic) ic.className = 'bi bi-chevron-left';
+    if (btn) btn.style.left = '';
+    if (mainEl) mainEl.classList.remove('shifted');
+  }
+}
+</script>
 <script>
 /* ─────────────────────────────────────────────
    CONSTANTES
@@ -777,10 +1041,10 @@ const NIVELES = [
    AUTH
 ───────────────────────────────────────────── */
 requireAuth();
-const session = getSession ? getSession() : (JSON.parse(localStorage.getItem('visc_session') || 'null'));
+const session = Auth.getSessionLocal();
 const userNombre = session?.nombre || 'Usuario';
 const userCorreo = session?.correo || '';
-const userRol    = session?.rol    || '';
+const userRol    = session?.role   || '';
 const initials   = userNombre.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
 
 /* ─────────────────────────────────────────────
@@ -797,17 +1061,23 @@ const sidebar = document.getElementById('sidebar');
 const topbar  = document.getElementById('topbar');
 const main    = document.getElementById('main');
 
-document.getElementById('btn-toggle-sidebar').addEventListener('click', () => {
-  sidebar.classList.toggle('collapsed');
-  topbar.classList.toggle('collapsed');
-  main.classList.toggle('collapsed');
-});
+const btnToggleSidebar = document.getElementById('btn-toggle-sidebar');
+if (btnToggleSidebar) {
+  btnToggleSidebar.addEventListener('click', () => {
+    sidebar.classList.toggle('collapsed');
+    topbar.classList.toggle('collapsed');
+    main.classList.toggle('collapsed');
+  });
+}
 
-document.getElementById('btn-logout').addEventListener('click', e => {
-  e.preventDefault();
-  if(typeof logout === 'function') logout();
-  else { localStorage.removeItem('visc_session'); location.href = 'index.html'; }
-});
+const btnLogout = document.getElementById('btn-logout');
+if (btnLogout) {
+  btnLogout.addEventListener('click', e => {
+    e.preventDefault();
+    if(typeof logout === 'function') logout();
+    else { localStorage.removeItem('visc_session'); location.href = 'login.html'; }
+  });
+}
 
 /* ─────────────────────────────────────────────
    TABS
@@ -816,6 +1086,7 @@ function switchTab(tabId) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
   document.querySelectorAll('.tab-pane').forEach(p => p.classList.toggle('active', p.id === 'tab-' + tabId));
   if (tabId === 'usuarios') loadUsers();
+  if (tabId === 'empresas') loadCompanies();
 }
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => switchTab(btn.dataset.tab));
@@ -823,7 +1094,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
 // Mostrar tab admin solo a SUPER_ADMIN
 if (userRol === 'SUPER_ADMIN') {
-  document.querySelectorAll('[data-admin-only]').forEach(el => el.style.display = '');
+  document.querySelectorAll('[data-admin-only]').forEach(el => el.style.display = 'flex');
 }
 
 /* ─────────────────────────────────────────────
@@ -882,7 +1153,7 @@ document.getElementById('form-perfil').addEventListener('submit', async e => {
   try {
     const payload = { nombre };
     if (correoNuevo !== userCorreo) { payload.correoNuevo = correoNuevo; payload.claveActual = claveActual; }
-    const res = await callAPI('actualizarPerfil', payload);
+    const res = await Auth.actualizarPerfil(payload);
     if (res?.ok || res?.success || res?.resultado === 'ok') {
       toast('Perfil actualizado correctamente.');
       document.getElementById('perfil-nombre-display').textContent = nombre;
@@ -916,7 +1187,7 @@ document.getElementById('form-clave').addEventListener('submit', async e => {
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Cambiando…';
   try {
-    const res = await callAPI('actualizarPerfil', { claveActual, claveNueva });
+    const res = await Auth.actualizarPerfil({ claveActual, claveNueva });
     if (res?.ok || res?.success || res?.resultado === 'ok') {
       toast('Contraseña cambiada correctamente.');
       document.getElementById('form-clave').reset();
@@ -934,9 +1205,79 @@ document.getElementById('form-clave').addEventListener('submit', async e => {
 /* ─────────────────────────────────────────────
    FIRMA – cargar actual
 ───────────────────────────────────────────── */
+// ── Canvas helper functions (drawn signature) ──
+function initCanvas(id) {
+  const canvas = document.getElementById(id);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let drawing = false;
+
+  canvas.addEventListener('mousedown', e => { drawing = true; ctx.beginPath(); ctx.moveTo(...pos(e, canvas)); });
+  canvas.addEventListener('mousemove', e => { if (!drawing) return; ctx.lineTo(...pos(e, canvas)); ctx.strokeStyle = '#1B2D6B'; ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.stroke(); });
+  canvas.addEventListener('mouseup', () => drawing = false);
+  canvas.addEventListener('mouseleave', () => drawing = false);
+
+  canvas.addEventListener('touchstart', e => { e.preventDefault(); drawing = true; ctx.beginPath(); ctx.moveTo(...pos(e.touches[0], canvas)); }, {passive:false});
+  canvas.addEventListener('touchmove', e => { e.preventDefault(); if (!drawing) return; ctx.lineTo(...pos(e.touches[0], canvas)); ctx.strokeStyle = '#1B2D6B'; ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.stroke(); }, {passive:false});
+  canvas.addEventListener('touchend', () => drawing = false);
+}
+
+function pos(e, canvas) {
+  const r = canvas.getBoundingClientRect();
+  return [(e.clientX - r.left) * (canvas.width / r.width), (e.clientY - r.top) * (canvas.height / r.height)];
+}
+
+function clearCanvas(id) {
+  const canvas = document.getElementById(id);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+// Save drawn signature
+async function guardarFirmaDibu() {
+  const canvas = document.getElementById('sig-usuario');
+  if (!canvas) return;
+  const blank = document.createElement('canvas');
+  blank.width = canvas.width;
+  blank.height = canvas.height;
+  if (canvas.toDataURL() === blank.toDataURL()) {
+    toast('Dibuja tu firma antes de guardar.', 'error');
+    return;
+  }
+
+  const base64 = canvas.toDataURL();
+  const btn = document.getElementById('btn-guardar-firma-dibujada');
+  btn.disabled = True;
+  btn.textContent = 'Guardando...';
+  try {
+    const res = await Auth.guardarFirma(base64);
+    if (res && res.success) {
+      toast('Firma dibujada guardada correctamente.');
+      document.getElementById('firma-actual-img').src = base64;
+      document.getElementById('firma-actual-section').style.display = 'block';
+      clearCanvas('sig-usuario');
+    } else {
+      toast(res?.message || 'Error al guardar la firma.', 'error');
+    }
+  } catch(e) {
+    toast('Error de conexión al guardar.', 'error');
+  } finally {
+    btn.disabled = False;
+    btn.innerHTML = '<i class="bi bi-check-lg"></i> Guardar firma dibujada';
+  }
+}
+
+// Delay execution slightly to ensure everything is bound
+setTimeout(() => {
+  initCanvas('sig-usuario');
+  const dBtn = document.getElementById('btn-guardar-firma-dibujada');
+  if (dBtn) dBtn.addEventListener('click', guardarFirmaDibu);
+}, 200);
+
 async function loadFirmaActual() {
   try {
-    const res = await callAPI('getFirmaUsuario', {});
+    const res = await Auth.getFirma();
     if (res?.firmaBase64 || res?.firma) {
       const src = res.firmaBase64 || res.firma;
       document.getElementById('firma-actual-img').src = src.startsWith('data:') ? src : 'data:image/png;base64,' + src;
@@ -991,7 +1332,7 @@ document.getElementById('btn-guardar-firma').addEventListener('click', async () 
   const btn = document.getElementById('btn-guardar-firma');
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Guardando…';
   try {
-    const res = await callAPI('guardarFirmaUsuario', { firmaBase64 });
+    const res = await Auth.guardarFirma(firmaBase64);
     if (res?.ok || res?.success || res?.resultado === 'ok') {
       toast('Firma guardada correctamente.');
       document.getElementById('firma-actual-img').src = firmaBase64;
@@ -1007,7 +1348,7 @@ document.getElementById('btn-guardar-firma').addEventListener('click', async () 
 document.getElementById('btn-borrar-firma').addEventListener('click', async () => {
   if (!confirm('¿Borrar la firma guardada?')) return;
   try {
-    await callAPI('guardarFirmaUsuario', { firmaBase64: null });
+    await Auth.guardarFirma(null);
     document.getElementById('firma-actual-section').style.display = 'none';
     toast('Firma eliminada.');
   } catch(_) { toast('Error al borrar firma.', 'error'); }
@@ -1024,8 +1365,8 @@ async function loadUsers() {
   list.innerHTML = `<div style="text-align:center;padding:40px;color:var(--gray-400);"><div class="spinner" style="border-color:var(--gray-200);border-top-color:var(--gray-400);margin:0 auto 8px;"></div>Cargando usuarios…</div>`;
   try {
     const [resUsers, resEmpresas] = await Promise.all([
-      callAPI('listarUsuarios', {}),
-      callAPI('listarEmpresas', {}),
+      Usuarios.listar(),
+      Empresas.listar(),
     ]);
     allUsers = resUsers?.usuarios || resUsers?.data || resUsers || [];
     allEmpresas = resEmpresas?.empresas || resEmpresas?.data || resEmpresas || [];
@@ -1084,11 +1425,11 @@ function buildUserRow(u) {
 
 function buildExpandPanel(u) {
   const empresasChecks = allEmpresas.map(emp => {
-    const empId = emp.id || emp.correo || emp.nombre;
+    const empId = emp.run;
     const checked = (u.empresas || []).includes(empId) ? 'checked' : '';
     return `<label class="empresa-check-label">
       <input type="checkbox" value="${empId}" ${checked} class="emp-check" />
-      ${emp.nombre || empId}
+      ${emp.razonSocial || empId}
     </label>`;
   }).join('');
 
@@ -1161,7 +1502,7 @@ async function saveUserEdits(row, u) {
 
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
   try {
-    const res = await callAPI('editarUsuario', { correoUsuario: u.correo, nombre, rol, modulos, empresas });
+    const res = await Usuarios.editar(u.correo, { nombre, rol, modulos, empresas });
     if (res?.ok || res?.success || res?.resultado === 'ok') {
       toast(`Usuario ${u.correo} actualizado.`);
       // Actualizar datos locales
@@ -1177,7 +1518,7 @@ async function saveUserEdits(row, u) {
 async function deleteUser(correo, row) {
   if (!confirm(`¿Eliminar al usuario ${correo}? Esta acción no se puede deshacer.`)) return;
   try {
-    const res = await callAPI('eliminarUsuario', { correoUsuario: correo });
+    const res = await Usuarios.eliminar(correo);
     if (res?.ok || res?.success || res?.resultado === 'ok') {
       row.remove();
       allUsers = allUsers.filter(u => u.correo !== correo);
@@ -1226,10 +1567,10 @@ function buildModalEmpresasChecks() {
   const cont = document.getElementById('m-empresas-checks');
   if (!allEmpresas.length) { cont.innerHTML = '<span style="font-size:12px;color:var(--gray-400);">No hay empresas disponibles.</span>'; return; }
   cont.innerHTML = allEmpresas.map(emp => {
-    const empId = emp.id || emp.correo || emp.nombre;
+    const empId = emp.run;
     return `<label class="empresa-check-label">
       <input type="checkbox" value="${empId}" class="m-emp-check" />
-      ${emp.nombre || empId}
+      ${emp.razonSocial || empId}
     </label>`;
   }).join('');
 }
@@ -1273,7 +1614,7 @@ document.getElementById('btn-crear-usuario').addEventListener('click', async () 
 
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Creando…';
   try {
-    const res = await callAPI('crearUsuario', { correo, clave, nombre, rol, empresas, modulos });
+    const res = await Usuarios.crear({ correo, clave, nombre, rol, empresas, modulos });
     if (res?.ok || res?.success || res?.resultado === 'ok') {
       toast(`Usuario ${correo} creado correctamente.`);
       closeModal();
@@ -1285,5 +1626,6 @@ document.getElementById('btn-crear-usuario').addEventListener('click', async () 
   finally { btn.disabled = false; btn.innerHTML = '<i class="bi bi-person-plus-fill"></i> Crear usuario'; }
 });
 </script>
+<script src="js/empresas.js"></script>
 </body>
 </html>

@@ -354,37 +354,221 @@
       .actions { flex-direction: column; }
       .btn { justify-content: center; }
     }
-  </style>
+  
+/* ─── HARMONIZED SIDEBAR STYLES ─── */
+:root {
+  --navy: #1B2D6B;
+  --navy2: #152359;
+  --navy3: #0f1a40;
+  --o1: #F0901A;
+  --o2: #E87722;
+  --o3: #C4601A;
+  --o-light: #FFF3E6;
+  --o-mid: #FFD9AE;
+  --white: #ffffff;
+  --border: #e4e7f0;
+  --sidebar-w: 220px;
+  --sidebar-collapsed: 68px;
+}
+
+/* Override old sidebar / main wrapper styles */
+#sidebar {
+  width: var(--sidebar-w) !important;
+  background: var(--navy) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 0 0 var(--sidebar-w) !important;
+  transition: width 0.28s cubic-bezier(.4,0,.2,1) !important;
+  overflow: hidden !important;
+  z-index: 50 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  position: relative !important;
+  height: 100vh !important;
+}
+#sidebar.collapsed {
+  width: var(--sidebar-collapsed) !important;
+  flex: 0 0 var(--sidebar-collapsed) !important;
+}
+
+/* Main content area needs to adjust margin dynamically when sidebar collapses */
+#main, .main {
+  margin-left: var(--sidebar-w) !important;
+  transition: margin-left 0.28s cubic-bezier(.4,0,.2,1) !important;
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  min-width: 0 !important;
+}
+#main.shifted, .main.shifted {
+  margin-left: var(--sidebar-collapsed) !important;
+}
+
+/* Adjust media queries */
+@media (max-width: 700px) {
+  #sidebar { display: none !important; }
+  #main, .main { margin-left: 0 !important; }
+}
+
+/* Dashboard sidebar components styles */
+.sidebar-top {
+  padding: 20px 16px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.sidebar-logo {
+  width: 36px !important; height: 36px !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+  flex: 0 0 36px !important;
+  border: 1.5px solid rgba(255,255,255,0.12) !important;
+  background: var(--o2) !important;
+  display: flex !important; align-items: center !important; justify-content: center !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+.sidebar-logo img { width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important; }
+.sidebar-brand { overflow: hidden; display: block !important; text-align: left !important; }
+.sidebar-name { font-family: 'Syne', sans-serif !important; font-weight: 800 !important; font-size: 13px !important; color: #fff !important; white-space: nowrap !important; text-transform: none !important; letter-spacing: normal !important; }
+.sidebar-sub  { font-size: 10px !important; color: rgba(255,255,255,0.35) !important; white-space: nowrap !important; margin-top: 1px !important; display: block !important; }
+
+.sidebar-section { padding: 8px 10px 4px; font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.2); white-space: nowrap; overflow: hidden; display: block !important; }
+#sidebar.collapsed .sidebar-section { opacity: 0; }
+
+.nav-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 10px 14px !important;
+  margin: 2px 8px !important;
+  border-radius: 10px !important;
+  cursor: pointer !important;
+  transition: background 0.15s !important;
+  text-decoration: none !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  background: transparent !important;
+  border: none !important;
+  width: auto !important;
+  justify-content: flex-start !important;
+}
+.nav-item:hover { background: rgba(255,255,255,0.06) !important; }
+.nav-item.active { background: var(--o2) !important; }
+.nav-item i { font-size: 18px !important; color: rgba(255,255,255,0.45) !important; flex: 0 0 20px !important; text-align: center !important; transition: color 0.15s !important; display: inline-block !important; }
+.nav-item.active i { color: #fff !important; }
+.nav-item:hover i { color: rgba(255,255,255,0.8) !important; }
+.nav-label { font-size: 13px !important; font-weight: 500 !important; color: rgba(255,255,255,0.55) !important; overflow: hidden !important; display: inline !important; }
+.nav-item.active .nav-label { color: #fff !important; font-weight: 600 !important; }
+.nav-item:hover .nav-label { color: rgba(255,255,255,0.9) !important; }
+#sidebar.collapsed .nav-label, #sidebar.collapsed .sidebar-name, #sidebar.collapsed .sidebar-sub { opacity: 0; pointer-events: none; }
+
+.sidebar-footer {
+  margin-top: auto !important;
+  padding: 12px 8px !important;
+  border-top: 1px solid rgba(255,255,255,0.07) !important;
+  display: block !important;
+}
+.user-mini {
+  display: flex !important; align-items: center !important; gap: 10px !important;
+  padding: 8px 10px !important; border-radius: 10px !important;
+  cursor: pointer !important; transition: background 0.15s !important;
+  overflow: hidden !important;
+  background: transparent !important;
+  border: none !important;
+}
+.user-mini:hover { background: rgba(255,255,255,0.06) !important; }
+.user-av { width: 32px !important; height: 32px !important; border-radius: 50% !important; background: var(--o2) !important; display: flex !important; align-items: center !important; justify-content: center !important; font-weight: 700 !important; font-size: 13px !important; color: #fff !important; flex: 0 0 32px !important; }
+.user-info { overflow: hidden; display: block !important; text-align: left !important; }
+.user-name  { font-size: 12px !important; font-weight: 600 !important; color: rgba(255,255,255,0.85) !important; white-space: nowrap !important; }
+.user-role  { font-size: 10px !important; color: rgba(255,255,255,0.35) !important; white-space: nowrap !important; display: block !important; }
+#sidebar.collapsed .user-info { opacity: 0; }
+
+/* Collapse button */
+.sidebar-toggle {
+  position: absolute !important; left: calc(var(--sidebar-w) - 14px) !important; top: 24px !important;
+  width: 28px !important; height: 28px !important;
+  background: var(--white) !important;
+  border: 1.5px solid var(--border) !important;
+  border-radius: 50% !important;
+  display: flex !important; align-items: center !important; justify-content: center !important;
+  cursor: pointer !important;
+  font-size: 12px !important;
+  color: var(--muted) !important;
+  z-index: 60 !important;
+  transition: left 0.28s cubic-bezier(.4,0,.2,1) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+  padding: 0 !important;
+}
+.sidebar-toggle:hover { color: var(--o2) !important; border-color: var(--o1) !important; }
+#sidebar.collapsed ~ .sidebar-toggle { left: calc(var(--sidebar-collapsed) - 14px) !important; }
+</style>
 </head>
 <body>
 
 <!-- SIDEBAR -->
-<nav id="sidebar">
-  <div class="sidebar-logo">
-    <div class="sidebar-logo-icon"><i class="bi bi-building"></i></div>
-    <span class="sidebar-logo-text">VISC</span>
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-logo">
+        <img src="https://drive.google.com/thumbnail?id=1cQzpSYj8YwSBqhaOmo53kI9wdVQmgWOZ&sz=200" alt="VISC"
+             onerror="this.style.display='none';this.parentElement.textContent='V'">
+      </div>
+      <div class="sidebar-brand">
+        <div class="sidebar-name">VISC</div>
+        <div class="sidebar-sub">Sistema de Seguridad</div>
+      </div>
+    </div>
+
+    <div style="flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 0;">
+      <div class="sidebar-section">Principal</div>
+      <a class="nav-item " href="dashboard.html">
+        <i class="bi bi-grid-1x2"></i>
+        <span class="nav-label">Dashboard</span>
+      </a>
+      <a class="nav-item " href="observaciones.html">
+        <i class="bi bi-clipboard-check"></i>
+        <span class="nav-label">Observaciones</span>
+      </a>
+      <a class="nav-item " href="visitas.html">
+        <i class="bi bi-person-check"></i>
+        <span class="nav-label">Visitas</span>
+      </a>
+      <a class="nav-item active" href="asistencia.html">
+        <i class="bi bi-calendar-check"></i>
+        <span class="nav-label">Asistencia</span>
+      </a>
+      <div class="sidebar-section">Análisis</div>
+      <a class="nav-item " href="inspecciones.html">
+        <i class="bi bi-search"></i>
+        <span class="nav-label">Inspecciones</span>
+      </a>
+      <a class="nav-item " href="tiempo_dedicado.html">
+        <i class="bi bi-clock"></i>
+        <span class="nav-label">Tiempo Dedicado</span>
+      </a>
+
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="nav-item" onclick="doLogout()" style="margin:0;">
+        <i class="bi bi-box-arrow-left" style="color:#f87171;"></i>
+        <span class="nav-label" style="color:rgba(255,255,255,0.4);">Cerrar sesión</span>
+      </div>
+      <div class="user-mini" onclick="window.location.href='usuarios.html'" style="margin-top:6px; cursor:pointer;" title="Ver mi perfil">
+        <div class="user-av" id="sidebarAv">?</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebarName">—</div>
+          <div class="user-role" id="sidebarRole">—</div>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="sidebar-nav">
-    <a href="dashboard.html" onclick="go(event,'dashboard.html')">
-      <i class="bi bi-grid-1x2"></i><span class="sidebar-label">Inicio</span>
-    </a>
-    <a href="visitas.html" onclick="go(event,'visitas.html')">
-      <i class="bi bi-clipboard-check"></i><span class="sidebar-label">Visitas</span>
-    </a>
-    <a href="asistencia.html" class="active">
-      <i class="bi bi-person-check"></i><span class="sidebar-label">Asistencia</span>
-    </a>
-    <a href="reportes.html" onclick="go(event,'reportes.html')">
-      <i class="bi bi-bar-chart-line"></i><span class="sidebar-label">Reportes</span>
-    </a>
-    <a href="configuracion.html" onclick="go(event,'configuracion.html')">
-      <i class="bi bi-gear"></i><span class="sidebar-label">Configuración</span>
-    </a>
-  </div>
-  <div class="sidebar-footer">
-    <a href="#" id="logout-btn"><i class="bi bi-box-arrow-left"></i><span class="sidebar-label">Cerrar sesión</span></a>
-  </div>
-</nav>
+  
+  <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" title="Colapsar">
+    <i class="bi bi-chevron-left" id="toggleIcon"></i>
+  </button>
 
 <!-- TOPBAR -->
 <header id="topbar">
@@ -496,7 +680,28 @@
 
 <div id="toast"></div>
 
-<script src="js/api.js"></script>
+<script src="js/api.js"></script><script>
+// ── Sidebar collapse logic (Harmonized) ──
+var _collapsed = false;
+function toggleSidebar() {
+  _collapsed = !_collapsed;
+  var sb = document.getElementById('sidebar');
+  var ic = document.getElementById('toggleIcon');
+  var btn = document.getElementById('sidebarToggle');
+  var mainEl = document.getElementById('main');
+  if (_collapsed) {
+    if (sb) sb.classList.add('collapsed');
+    if (ic) ic.className = 'bi bi-chevron-right';
+    if (btn) btn.style.left = 'calc(' + getComputedStyle(sb).width + ' - 14px)';
+    if (mainEl) mainEl.classList.add('shifted');
+  } else {
+    if (sb) sb.classList.remove('collapsed');
+    if (ic) ic.className = 'bi bi-chevron-left';
+    if (btn) btn.style.left = '';
+    if (mainEl) mainEl.classList.remove('shifted');
+  }
+}
+</script>
 <script>
   // ── Auth ──
   requireAuth();
@@ -508,7 +713,15 @@
   const userInitials = userName.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
 
   document.getElementById('topbar-company').textContent = empresa;
-  document.getElementById('topbar-avatar').textContent  = userInitials;
+  (async function() {
+    try {
+      const er = await Empresas.activa();
+      if (er && er.success && er.empresa) {
+        document.getElementById('topbar-company').textContent = er.empresa.razonSocial;
+      }
+    } catch(e) {}
+  })();
+  var sbN = document.getElementById('sidebarName'); if (sbN) sbN.textContent = userName; var sbR = document.getElementById('sidebarRole'); if (sbR) sbR.textContent = session.role || 'Profesional'; var sbA = document.getElementById('sidebarAv'); if (sbA) sbA.textContent = userInitials; document.getElementById('topbar-avatar').textContent  = userInitials;
   document.getElementById('greeting-text').textContent  = 'Hola, ' + userName.split(' ')[0];
 
   const now = new Date();
@@ -531,7 +744,7 @@
   document.getElementById('logout-btn').addEventListener('click', e => {
     e.preventDefault();
     if (typeof logout === 'function') logout();
-    else { sessionStorage.clear(); localStorage.clear(); window.location.href = 'index.html'; }
+    else { sessionStorage.clear(); localStorage.clear(); window.location.href = 'login.html'; }
   });
 
   // ── Canvas ──
@@ -664,7 +877,7 @@
     btn.innerHTML = '<span class="spinner"></span>Guardando...';
     btn.disabled = true;
     try {
-      await callAPI('guardarAsistencia', buildDatos());
+      await Asistencias.guardar(buildDatos());
       showToast('Registro guardado correctamente', 'success');
     } catch(e) {
       showToast('Error al guardar: ' + (e.message || 'intente nuevamente'), 'error');
@@ -683,7 +896,7 @@
     btn.innerHTML = '<span class="spinner"></span>Enviando...';
     btn.disabled = true;
     try {
-      await callAPI('enviarConfirmacionesAsistencia', buildDatos());
+      await Asistencias.enviarConfirmaciones(buildDatos());
       showToast(`Confirmaciones enviadas a ${conEmail.length} participante(s)`, 'success');
     } catch(e) {
       showToast('Error al enviar: ' + (e.message || 'intente nuevamente'), 'error');
@@ -699,7 +912,7 @@
     btn.innerHTML = '<span class="spinner dark"></span>Generando PDF...';
     btn.disabled = true;
     try {
-      const res = await callAPI('generarPDFAsistencia', buildDatos());
+      const res = await Asistencias.generarPDFConFirmas(buildDatos());
       if (res && res.url) window.open(res.url, '_blank');
       showToast('PDF generado correctamente', 'success');
     } catch(e) {
