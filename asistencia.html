@@ -202,7 +202,7 @@
       outline: none;
     }
     input:focus, select:focus, textarea:focus { border-color: var(--navy); }
-    textarea { resize: vertical; min-height: 90px; }
+    textarea { resize: vertical; min-height: 90px; width: 100%; box-sizing: border-box; }
 
     /* ── SIGNATURE ── */
     .sig-wrap { position: relative; }
@@ -213,6 +213,7 @@
       cursor: crosshair;
       background: #fafbff;
       display: block;
+      touch-action: none;
     }
     .sig-clear {
       position: absolute; top: 6px; right: 6px;
@@ -384,7 +385,9 @@
   padding: 0 !important;
   margin: 0 !important;
   border: none !important;
-  position: relative !important;
+  position: fixed !important;
+  left: 0 !important;
+  top: 0 !important;
   height: 100vh !important;
 }
 #sidebar.collapsed {
@@ -405,10 +408,71 @@
   margin-left: var(--sidebar-collapsed) !important;
 }
 
-/* Adjust media queries */
-@media (max-width: 700px) {
-  #sidebar { display: none !important; }
-  #main, .main { margin-left: 0 !important; }
+/* Media query for mobile responsive menu and layout */
+.topbar-toggle-mobile { display: none; }
+@media (max-width: 768px) {
+  #sidebar, .sidebar {
+    position: fixed !important;
+    left: -240px !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    height: 100vh !important;
+    width: 240px !important;
+    z-index: 1000 !important;
+    display: flex !important;
+    transition: left 0.3s cubic-bezier(.4,0,.2,1) !important;
+  }
+  #sidebar.collapsed, .sidebar.collapsed {
+    left: 0 !important;
+  }
+  #main, .main {
+    margin-left: 0 !important;
+    padding: 16px !important;
+    width: 100% !important;
+  }
+  #topbar, .topbar {
+    left: 0 !important;
+    padding: 0 16px !important;
+    width: 100% !important;
+    height: 64px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+  #sidebarToggle, .sidebar-toggle {
+    display: none !important;
+  }
+  .topbar-toggle-mobile, .topbar-toggle {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  /* Mobile Topbar Cleanups */
+  #greeting-date, .greeting-sub, .topbar-date, .greeting-date, .topbar-left p {
+    display: none !important;
+  }
+  #topbar-company, .topbar-company, .empresa-badge, .topbar-empresa, #topbar-empresa, .topbar-right .empresa-badge {
+    display: none !important;
+  }
+  .topbar-greeting, .topbar-left {
+    margin-left: 8px !important;
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+  }
+  .greeting-text, .topbar-greeting .greeting-text, .greeting, .topbar-left .greeting {
+    font-size: 14px !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    margin: 0 !important;
+  }
+  /* Form responsiveness */
+  .form-grid, .form-row, .reacciones-grid, .grid-2col, .participants-grid {
+    grid-template-columns: 1fr !important;
+  }
 }
 
 /* Dashboard sidebar components styles */
@@ -619,7 +683,7 @@
   <div class="card">
     <div class="card-title"><i class="bi bi-person-badge"></i>Información del instructor</div>
     <div class="form-grid">
-      <div class="form-group">
+      <div class="form-group full">
         <label>Nombre instructor</label>
         <input type="text" id="inst-nombre" placeholder="Nombre completo del instructor" />
       </div>
@@ -638,7 +702,7 @@
     <div class="participants-header">
       <div class="card-title" style="margin-bottom:0">
         <i class="bi bi-people"></i>Participantes
-        <span class="count-badge" id="participant-count">1</span>
+        <span class="count-badge" id="participant-count">0</span>
       </div>
     </div>
 
@@ -707,7 +771,7 @@ function toggleSidebar() {
   requireAuth();
 
   // ── Session ──
-  const session = typeof getSession === 'function' ? getSession() : {};
+  const session = requireAuth() || {};
   const empresa  = session.empresa || session.company || 'Mi Empresa';
   const userName = session.nombre || session.name || 'Usuario';
   const userInitials = userName.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
@@ -769,7 +833,9 @@ function toggleSidebar() {
     const c = document.getElementById(id);
     c.getContext('2d').clearRect(0, 0, c.width, c.height);
   }
-  initCanvas('sig-instructor');
+  setTimeout(() => {
+    initCanvas('sig-instructor');
+  }, 200);
 
   // ── Participants ──
   let pCount = 0;
@@ -935,8 +1001,9 @@ function toggleSidebar() {
     addParticipant();
   }
 
-  // ── Init: agregar un participante por defecto ──
-  addParticipant();
+  // ── Init: comenzar con 0 participantes ──
+  // addParticipant(); // Se remueve para iniciar en 0 según especificación
+  updateCount();
 </script>
 </body>
 </html>

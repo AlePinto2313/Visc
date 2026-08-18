@@ -195,10 +195,76 @@
     @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 
     @media (max-width: 900px) { .form-grid-3 { grid-template-columns: 1fr 1fr; } }
+/* Media query for mobile responsive menu and layout */
+.topbar-toggle-mobile { display: none; }
+@media (max-width: 768px) {
+  #sidebar, .sidebar {
+    position: fixed !important;
+    left: -240px !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    height: 100vh !important;
+    width: 240px !important;
+    z-index: 1000 !important;
+    display: flex !important;
+    transition: left 0.3s cubic-bezier(.4,0,.2,1) !important;
+  }
+  #sidebar.collapsed, .sidebar.collapsed {
+    left: 0 !important;
+  }
+  #main, .main {
+    margin-left: 0 !important;
+    padding: 16px !important;
+    width: 100% !important;
+  }
+  #topbar, .topbar {
+    left: 0 !important;
+    padding: 0 16px !important;
+    width: 100% !important;
+    height: 64px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+  #sidebarToggle, .sidebar-toggle {
+    display: none !important;
+  }
+  .topbar-toggle-mobile, .topbar-toggle {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  /* Mobile Topbar Cleanups */
+  #greeting-date, .greeting-sub, .topbar-date, .greeting-date, .topbar-left p {
+    display: none !important;
+  }
+  #topbar-company, .topbar-company, .empresa-badge, .topbar-empresa, #topbar-empresa, .topbar-right .empresa-badge {
+    display: none !important;
+  }
+  .topbar-greeting, .topbar-left {
+    margin-left: 8px !important;
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+  }
+  .greeting-text, .topbar-greeting .greeting-text, .greeting, .topbar-left .greeting {
+    font-size: 14px !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    margin: 0 !important;
+  }
+  /* Form responsiveness */
+  .form-grid, .form-row, .reacciones-grid, .grid-2col, .participants-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
     @media (max-width: 600px) {
-      .form-grid-2, .form-grid-3 { grid-template-columns: 1fr; }
-      .sidebar { display: none; } .content { padding: 16px 14px 24px; } .topbar { padding: 0 16px; }
-      .plantillas-grid { grid-template-columns: 1fr; }
+      .form-grid-2, .form-grid-3 { grid-template-columns: 1fr !important; }
+      .content { padding: 16px 14px 24px; }
+      .plantillas-grid { grid-template-columns: 1fr !important; }
     }
   </style>
 </head>
@@ -255,6 +321,9 @@
 
     <!-- TOPBAR -->
     <div class="topbar">
+    <button class="topbar-toggle-mobile" onclick="toggleSidebar()" style="background:none;border:none;cursor:pointer;color:var(--navy);font-size:20px;padding:4px;display:flex;align-items:center;margin-right:12px;margin-left:-8px;">
+      <i class="bi bi-list"></i>
+    </button>
       <div class="topbar-left">
         <div class="greeting">Inspecciones de <span>Seguridad</span></div>
         <div class="topbar-date" id="topDate">—</div>
@@ -441,6 +510,20 @@
 <script>
   var _sess = null;
   var _collapsed = false;
+  /* ── Helper to unify template titles ── */
+  function formatTemplateName(name) {
+    if (name === 'INSPECCIÓN DE VEHÍCULO – Camioneta Fibra Optica') {
+      return 'Inspección de vehículo – Camioneta Fibra Óptica';
+    }
+    if (name === 'AUTOEVALUACIÓN ERGONÓMICA DE PUESTO DE TRABAJO') {
+      return 'Autoevaluación ergonómica de puesto de trabajo';
+    }
+    if (name === 'INSPECCIÓN DE CAMIÓN DE ALUMBRADO PÚBLICO') {
+      return 'Inspección de camión de alumbrado público';
+    }
+    return name;
+  }
+
   var _plantillas = [];        // plantillas disponibles
   var _plantillaActiva = null; // plantilla seleccionada para inspección
   var _seccionesInsp = [];     // estado de la inspección en curso
@@ -571,7 +654,7 @@
       card.className = 'plantilla-card';
       card.innerHTML =
         '<div class="plantilla-card-icon"><i class="bi bi-clipboard2-check"></i></div>' +
-        '<div class="plantilla-card-name">' + escHtml(p.nombre) + '</div>' +
+        '<div class="plantilla-card-name">' + escHtml(formatTemplateName(p.nombre)) + '</div>' +
         '<div class="plantilla-card-desc">' + escHtml(p.descripcion||'Sin descripción') + '</div>' +
         '<div class="plantilla-card-meta"><i class="bi bi-layers"></i> ' + sec + ' secciones · ' + items + ' ítems</div>';
       card.onclick = function(){ abrirInspeccion(p); };
@@ -582,7 +665,7 @@
   /* ── Abrir inspección ── */
   function abrirInspeccion(plantilla) {
     _plantillaActiva = plantilla;
-    document.getElementById('modalInspTitle').textContent = plantilla.nombre;
+    document.getElementById('modalInspTitle').textContent = formatTemplateName(plantilla.nombre);
     document.getElementById('modalInspSub').textContent  = plantilla.descripcion || 'Completa todos los campos';
     // Pre-fill inspector from session
     document.getElementById('inspInspector').value = (_sess && _sess.nombre) || '';
@@ -756,7 +839,7 @@
           '<i class="bi bi-clipboard2-check"></i>' +
         '</div>' +
         '<div class="admin-plantilla-info">' +
-          '<div class="admin-plantilla-name">' + escHtml(p.nombre) + '</div>' +
+          '<div class="admin-plantilla-name">' + escHtml(formatTemplateName(p.nombre)) + '</div>' +
           '<div class="admin-plantilla-meta">' + escHtml(p.descripcion||'Sin descripción') + ' · ' + sec + ' secciones, ' + items + ' ítems</div>' +
         '</div>' +
         '<div class="btn-group">' +

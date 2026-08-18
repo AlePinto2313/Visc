@@ -270,9 +270,73 @@
       .main-grid { grid-template-columns: 1fr; }
       .stat-strip { grid-template-columns: repeat(2, 1fr); }
     }
+/* Media query for mobile responsive menu and layout */
+.topbar-toggle-mobile { display: none; }
+@media (max-width: 768px) {
+  #sidebar, .sidebar {
+    position: fixed !important;
+    left: -240px !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    height: 100vh !important;
+    width: 240px !important;
+    z-index: 1000 !important;
+    display: flex !important;
+    transition: left 0.3s cubic-bezier(.4,0,.2,1) !important;
+  }
+  #sidebar.collapsed, .sidebar.collapsed {
+    left: 0 !important;
+  }
+  #main, .main {
+    margin-left: 0 !important;
+    padding: 16px !important;
+    width: 100% !important;
+  }
+  #topbar, .topbar {
+    left: 0 !important;
+    padding: 0 16px !important;
+    width: 100% !important;
+    height: 64px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+  #sidebarToggle, .sidebar-toggle {
+    display: none !important;
+  }
+  .topbar-toggle-mobile, .topbar-toggle {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  /* Mobile Topbar Cleanups */
+  #greeting-date, .greeting-sub, .topbar-date, .greeting-date, .topbar-left p {
+    display: none !important;
+  }
+  #topbar-company, .topbar-company, .empresa-badge, .topbar-empresa, #topbar-empresa, .topbar-right .empresa-badge {
+    display: none !important;
+  }
+  .topbar-greeting, .topbar-left {
+    margin-left: 8px !important;
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+  }
+  .greeting-text, .topbar-greeting .greeting-text, .greeting, .topbar-left .greeting {
+    font-size: 14px !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    margin: 0 !important;
+  }
+  /* Form responsiveness */
+  .form-grid, .form-row, .reacciones-grid, .grid-2col, .participants-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
     @media (max-width: 700px) {
-      .sidebar { display: none; }
-      .topbar { padding: 0 16px; }
       .content { padding: 16px 16px 24px; }
       .stat-strip { grid-template-columns: 1fr 1fr; gap: 10px; }
     }
@@ -349,6 +413,9 @@
 
     <!-- TOPBAR -->
     <div class="topbar">
+    <button class="topbar-toggle-mobile" onclick="toggleSidebar()" style="background:none;border:none;cursor:pointer;color:var(--navy);font-size:20px;padding:4px;display:flex;align-items:center;margin-right:12px;margin-left:-8px;">
+      <i class="bi bi-list"></i>
+    </button>
       <div class="topbar-left">
         <div class="greeting">Hola, <span id="greetName">bienvenido</span> 👋</div>
         <div class="topbar-date" id="topDate">Cargando fecha...</div>
@@ -367,7 +434,7 @@
           <div class="stat-icon obs"><i class="bi bi-clipboard-check"></i></div>
           <div>
             <div class="stat-label">Observaciones</div>
-            <div class="stat-value" id="stObs">—</div>
+            <div class="stat-value" id="stObs" style="font-size:14px;color:var(--text-muted);">Cargando...</div>
             <div class="stat-trend" id="stObsTrend"></div>
           </div>
         </div>
@@ -375,7 +442,7 @@
           <div class="stat-icon vis"><i class="bi bi-person-check"></i></div>
           <div>
             <div class="stat-label">Visitas</div>
-            <div class="stat-value" id="stVis">—</div>
+            <div class="stat-value" id="stVis" style="font-size:14px;color:var(--text-muted);">Cargando...</div>
             <div class="stat-trend" id="stVisTrend"></div>
           </div>
         </div>
@@ -383,7 +450,7 @@
           <div class="stat-icon asis"><i class="bi bi-calendar-check"></i></div>
           <div>
             <div class="stat-label">Asistencias</div>
-            <div class="stat-value" id="stAsis">—</div>
+            <div class="stat-value" id="stAsis" style="font-size:14px;color:var(--text-muted);">Cargando...</div>
             <div class="stat-trend" id="stAsisTrend"></div>
           </div>
         </div>
@@ -391,7 +458,7 @@
           <div class="stat-icon insp"><i class="bi bi-search"></i></div>
           <div>
             <div class="stat-label">Inspecciones</div>
-            <div class="stat-value" id="stInsp">—</div>
+            <div class="stat-value" id="stInsp" style="font-size:14px;color:var(--text-muted);">Cargando...</div>
             <div class="stat-trend" id="stInspTrend"></div>
           </div>
         </div>
@@ -599,7 +666,12 @@
 
   function setPlaceholderStats() {
     ['stObs','stVis','stAsis','stInsp'].forEach(function(id){
-      document.getElementById(id).textContent = '0';
+      var el = document.getElementById(id);
+      if (el) {
+        el.style.fontSize = '';
+        el.style.color = '';
+        el.textContent = '0';
+      }
     });
     document.getElementById('chartBadge').textContent = 'Sin datos';
     buildRecentActivity(null);
@@ -608,6 +680,8 @@
   function animStat(id, val) {
     var el = document.getElementById(id);
     if (!el) return;
+    el.style.fontSize = '';
+    el.style.color = '';
     var start = 0; var end = val; var dur = 800; var t0 = performance.now();
     function step(now) {
       var prog = Math.min((now - t0) / dur, 1);
