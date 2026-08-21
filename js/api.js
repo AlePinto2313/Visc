@@ -202,6 +202,29 @@ const Inspecciones = {
   },
 };
 
+// ── Capacitaciones ────────────────────────────────────────────────────────────
+
+const Capacitaciones = {
+  async listar() {
+    return callAPI('listarCapacitaciones', { token: Auth.getToken() });
+  },
+  async guardar(capacitacion) {
+    return callAPI('guardarCapacitacion', { token: Auth.getToken(), capacitacion });
+  },
+  async eliminar(id) {
+    return callAPI('eliminarCapacitacion', { token: Auth.getToken(), id });
+  },
+  async guardarEvaluacion(idCapacitacion, respuestasUsuario) {
+    return callAPI('guardarEvaluacion', { token: Auth.getToken(), idCapacitacion, respuestasUsuario });
+  },
+  async listarEvaluaciones() {
+    return callAPI('listarEvaluaciones', { token: Auth.getToken() });
+  },
+  async calificarEvaluacionManual(idEvaluacion, calificacionesMap, observaciones, estadoManual) {
+    return callAPI('calificarEvaluacionManual', { token: Auth.getToken(), idEvaluacion, calificacionesMap, observaciones, estadoManual });
+  },
+};
+
 // ── Helpers de UI ─────────────────────────────────────────────────────────────
 
 function toast(msg, tipo = 'info') {
@@ -238,3 +261,68 @@ function tienePermiso(modulo, nivel = 'leer') {
   const n = (sess.modulos || {})[modulo] || '';
   return (niveles[n] || 0) >= (niveles[nivel] || 1);
 }
+
+// ── Theme Customizer ─────────────────────────────────────────────────────────
+
+const Theme = {
+  async getColor() {
+    return callAPI('getThemeColor', {});
+  },
+  async setColor(color) {
+    return callAPI('setThemeColor', { token: Auth.getToken(), color });
+  }
+};
+
+function applyThemeColor(hex) {
+  if (!hex || !hex.startsWith('#')) hex = '#4F46E5';
+  localStorage.setItem('theme_color', hex);
+  
+  // Helper to lighten/darken hex colors
+  function adjustColor(hexColor, percent) {
+    var num = parseInt(hexColor.replace('#',''), 16),
+        amt = Math.round(2.55 * percent),
+        R = (num >> 16) + amt,
+        G = (num >> 8 & 0x00FF) + amt,
+        B = (num & 0x0000FF) + amt;
+    return '#' + (0x1000000 + (R<255?R<0?0:R:255)*0x10000 + (G<255?G<0?0:G:255)*0x100 + (B<255?B<0?0:B:255)).toString(16).slice(1);
+  }
+
+  var secondary = adjustColor(hex, 15); // Lighter
+  var dark = adjustColor(hex, -20);      // Darker
+  var lightBg = hex + '1c';             // 11% opacity (hex '1c')
+
+  var styleEl = document.getElementById('dynamic-theme-style');
+  if (!styleEl) {
+    styleEl = document.createElement('style');
+    styleEl.id = 'dynamic-theme-style';
+    document.head.appendChild(styleEl);
+  }
+
+  styleEl.innerHTML = '\n' +
+    '    :root {\n' +
+    '      --theme-color: ' + hex + ' !important;\n' +
+    '      --theme-color-secondary: ' + secondary + ' !important;\n' +
+    '      --theme-color-dark: ' + dark + ' !important;\n' +
+    '      --theme-color-lightBg: ' + lightBg + ' !important;\n' +
+    '    }\n' +
+    '  ';
+}
+
+// Auto-run theme color load
+(function() {
+  // 1. Instantly apply cached theme color from localStorage to avoid screen flicker
+  var cachedColor = localStorage.getItem('theme_color') || '#4F46E5';
+  applyThemeColor(cachedColor);
+
+  // 2. Fetch fresh theme color from Google Sheets asynchronously and update DOM
+  document.addEventListener('DOMContentLoaded', function() {
+    // Only fetch from server if a token is present
+    if (localStorage.getItem('visc_token')) {
+      Theme.getColor().then(function(res) {
+        if (res && res.success && res.color) {
+          applyThemeColor(res.color);
+        }
+      }).catch(function() {});
+    }
+  });
+})();

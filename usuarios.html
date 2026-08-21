@@ -737,6 +737,7 @@
 .sidebar-toggle:hover { color: var(--o2) !important; border-color: var(--o1) !important; }
 #sidebar.collapsed ~ .sidebar-toggle { left: calc(var(--sidebar-collapsed) - 14px) !important; }
 </style>
+  <link rel="stylesheet" href="css/theme.css">
 </head>
 <body>
 
@@ -779,6 +780,10 @@
       <a class="nav-item " href="tiempo_dedicado.html">
         <i class="bi bi-clock"></i>
         <span class="nav-label">Tiempo Dedicado</span>
+      </a>
+      <a class="nav-item" href="capacitaciones.html">
+        <i class="bi bi-journal-bookmark"></i>
+        <span class="sidebar-label">Capacitaciones</span>
       </a>
 
     </div>
@@ -895,6 +900,31 @@
           </button>
         </div>
       </form>
+    </div>
+
+    <!-- SECCIÓN DE SELECCIÓN DE COLOR (SOLO PARA SUPER_ADMIN) -->
+    <div class="card" id="theme-color-section" style="display:none; margin-top: 20px;">
+      <div class="card-title"><i class="bi bi-palette-fill"></i> Personalizar color de la aplicación</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:15px;">Selecciona el color corporativo de la plataforma. Este cambio se aplicará globalmente para todos los usuarios.</p>
+      <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <label class="form-label" style="margin:0;">Color principal:</label>
+          <input type="color" id="theme-color-picker" style="border:1.5px solid var(--border); border-radius:8px; width:44px; height:44px; padding:0; cursor:pointer;" />
+        </div>
+        <!-- Preselected palette -->
+        <div style="display:flex; gap:8px;" id="theme-preselected-palette">
+          <button class="palette-color-btn" style="background:#4F46E5; width:32px; height:32px; border-radius:50%; border:none; cursor:pointer; transition: transform 0.15s;" data-color="#4F46E5" title="Indigo"></button>
+          <button class="palette-color-btn" style="background:#3B82F6; width:32px; height:32px; border-radius:50%; border:none; cursor:pointer; transition: transform 0.15s;" data-color="#3B82F6" title="Blue"></button>
+          <button class="palette-color-btn" style="background:#10B981; width:32px; height:32px; border-radius:50%; border:none; cursor:pointer; transition: transform 0.15s;" data-color="#10B981" title="Emerald Green"></button>
+          <button class="palette-color-btn" style="background:#EF4444; width:32px; height:32px; border-radius:50%; border:none; cursor:pointer; transition: transform 0.15s;" data-color="#EF4444" title="Red"></button>
+          <button class="palette-color-btn" style="background:#F59E0B; width:32px; height:32px; border-radius:50%; border:none; cursor:pointer; transition: transform 0.15s;" data-color="#F59E0B" title="Amber Orange"></button>
+          <button class="palette-color-btn" style="background:#EC4899; width:32px; height:32px; border-radius:50%; border:none; cursor:pointer; transition: transform 0.15s;" data-color="#EC4899" title="Pink"></button>
+          <button class="palette-color-btn" style="background:#06B6D4; width:32px; height:32px; border-radius:50%; border:none; cursor:pointer; transition: transform 0.15s;" data-color="#06B6D4" title="Cyan"></button>
+        </div>
+        <button class="btn btn-primary" id="btn-save-theme-color" style="margin-left:auto;">
+          <i class="bi bi-save"></i> Guardar color de tema
+        </button>
+      </div>
     </div>
   </div>
 
@@ -1091,7 +1121,7 @@ function toggleSidebar() {
 /* ─────────────────────────────────────────────
    CONSTANTES
 ───────────────────────────────────────────── */
-const MODULOS = ['dashboard','observaciones','visitas','asistencia','tiempo_dedicado','inspecciones','ast','usuarios','empresas'];
+const MODULOS = ['dashboard','observaciones','visitas','asistencia','tiempo_dedicado','inspecciones','ast','usuarios','empresas','capacitaciones'];
 const NIVELES = [
   { value: 'leer',   label: 'Leer' },
   { value: 'crear',  label: 'Crear' },
@@ -1170,6 +1200,55 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 // Mostrar tab admin solo a SUPER_ADMIN
 if (userRol === 'SUPER_ADMIN') {
   document.querySelectorAll('[data-admin-only]').forEach(el => el.style.display = 'flex');
+
+  // Mostrar sección de selección de color
+  const themeSec = document.getElementById('theme-color-section');
+  if (themeSec) themeSec.style.display = 'block';
+
+  const picker = document.getElementById('theme-color-picker');
+  const cachedColor = localStorage.getItem('theme_color') || '#4F46E5';
+  if (picker) {
+    picker.value = cachedColor;
+    
+    // Al mover el picker de color, previsualizar instantáneamente
+    picker.addEventListener('input', (e) => {
+      applyThemeColor(e.target.value);
+    });
+  }
+
+  // Configurar botones de la paleta preseleccionada
+  document.querySelectorAll('.palette-color-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const color = btn.dataset.color;
+      if (picker) picker.value = color;
+      applyThemeColor(color);
+      btn.style.transform = 'scale(1.15)';
+      setTimeout(() => btn.style.transform = 'scale(1)', 150);
+    });
+  });
+
+  // Guardar el color del tema de forma persistente en Sheets / PropertiesService
+  const saveBtn = document.getElementById('btn-save-theme-color');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', async () => {
+      const selectedColor = picker ? picker.value : '#4F46E5';
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<span class="spinner"></span> Guardando...';
+      try {
+        const res = await Theme.setColor(selectedColor);
+        if (res && res.success) {
+          toast('Color de tema corporativo guardado y aplicado correctamente.');
+        } else {
+          toast(res?.message || 'Error al guardar el color de tema.', 'error');
+        }
+      } catch (err) {
+        toast('Error de conexión con el servidor.', 'error');
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="bi bi-save"></i> Guardar color de tema';
+      }
+    });
+  }
 }
 
 /* ─────────────────────────────────────────────

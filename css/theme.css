@@ -1,0 +1,392 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+
+/* ── GLOBAL TYPOGRAPHY HARMONIZATION ── */
+*, *::before, *::after, body, html, p, span, div, a, input, button, select, option, textarea, label, td, th, tr, strong, b, i, em, small, optgroup {
+  font-family: 'Inter', sans-serif !important;
+}
+
+h1, h2, h3, h4, h5, h6,
+.page-title, .page-title span, .page-subtitle,
+.card-title, .card-header,
+.section-title, .section-title div,
+.form-section-title,
+.sidebar-name, .sidebar-logo,
+.greeting, .greeting span, .greeting-text, .greeting-text span, .topbar-greeting,
+.stat-value, .stat-label,
+.brand-name, .logo-circle {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+}
+
+/* ==========================================================================
+   theme.css - Modern Light Theme Overrides (Matching high-fidelity mockup)
+   ========================================================================== */
+
+:root {
+  --navy: #1B2D6B;
+  --surface: #F4F6FC; /* Light gray-blue background as in the mockup */
+  --white: #FFFFFF;
+  --text: #0F172A; /* Slate 900 for dark text */
+  --muted: #64748B; /* Slate 500 for muted text */
+  --border: #E2E8F0; /* Slate 200 for clean borders */
+  --bg: #F4F6FC;
+}
+
+body, html, .app, .main {
+  background-color: var(--surface) !important;
+  color: var(--text) !important;
+}
+
+/* ── SIDEBAR OVERRIDES ── */
+#sidebar, .sidebar {
+  background: var(--white) !important;
+  border-right: 1.5px solid var(--border) !important;
+  box-shadow: none !important;
+}
+
+#sidebar .sidebar-top, .sidebar .sidebar-top {
+  border-bottom: 1.5px solid var(--border) !important;
+}
+
+#sidebar .sidebar-logo, .sidebar .sidebar-logo {
+  background: linear-gradient(135deg, var(--theme-color, #4F46E5), var(--theme-color-secondary, #818CF8)) !important;
+  border: none !important;
+}
+
+#sidebar .sidebar-logo img, .sidebar .sidebar-logo img {
+  display: none !important; /* Hide old img if any, or let the 'V' text show */
+}
+
+/* Let the 'V' logo show cleanly */
+#sidebar .sidebar-logo::before, .sidebar .sidebar-logo::before {
+  content: "V" !important;
+  color: #ffffff !important;
+  font-family: 'Syne', sans-serif !important;
+  font-weight: 900 !important;
+  font-size: 16px !important;
+}
+
+#sidebar .sidebar-name, .sidebar .sidebar-name {
+  color: var(--text) !important;
+  font-family: 'Syne', sans-serif !important;
+  font-weight: 800 !important;
+  font-size: 15px !important;
+}
+
+#sidebar .sidebar-sub, .sidebar .sidebar-sub {
+  color: var(--muted) !important;
+}
+
+#sidebar .sidebar-section, .sidebar .sidebar-section {
+  color: var(--muted) !important;
+  opacity: 0.7 !important;
+  font-size: 9px !important;
+  margin-top: 10px !important;
+}
+
+/* Sidebar links/nav items */
+#sidebar .nav-item, .sidebar .nav-item {
+  color: var(--muted) !important;
+  margin: 4px 12px !important;
+  padding: 10px 14px !important;
+}
+
+#sidebar .nav-item i, .sidebar .nav-item i {
+  color: #94A3B8 !important; /* Slate 400 */
+}
+
+#sidebar .nav-item:hover, .sidebar .nav-item:hover {
+  background: #F1F5F9 !important; /* Slate 100 */
+  color: var(--text) !important;
+}
+
+#sidebar .nav-item:hover i, .sidebar .nav-item:hover i {
+  color: var(--text) !important;
+}
+
+/* Active sidebar item with beautiful gradient and blue shadow as in the mockup */
+#sidebar .nav-item.active, .sidebar .nav-item.active {
+  background: linear-gradient(135deg, var(--theme-color, #4F46E5), var(--theme-color-secondary, #818CF8)) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px var(--theme-color-lightBg) !important;
+}
+
+#sidebar .nav-item.active i, .sidebar .nav-item.active i {
+  color: #ffffff !important;
+}
+
+#sidebar .nav-label, .sidebar .nav-label {
+  color: inherit !important;
+  font-weight: 500 !important;
+}
+
+#sidebar .nav-item.active .nav-label, .sidebar .nav-item.active .nav-label {
+  font-weight: 700 !important;
+}
+
+#sidebar .sidebar-footer, .sidebar .sidebar-footer {
+  border-top: 1.5px solid var(--border) !important;
+}
+
+#sidebar .user-mini, .sidebar .user-mini {
+  border: 1.5px solid var(--border) !important;
+  border-radius: 12px !important;
+  background: #FAFAFC !important;
+  padding: 8px 10px !important;
+}
+
+#sidebar .user-name, .sidebar .user-name {
+  color: var(--text) !important;
+  font-weight: 700 !important;
+}
+
+#sidebar .user-role, .sidebar .user-role {
+  color: var(--muted) !important;
+}
+
+#sidebar .user-av, .sidebar .user-av {
+  background: var(--theme-color, #4F46E5) !important;
+}
+
+/* Collapse Toggle Button */
+.sidebar-toggle {
+  background: var(--white) !important;
+  border: 1.5px solid var(--border) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important;
+}
+
+.sidebar-toggle:hover {
+  color: var(--theme-color, #4F46E5) !important;
+  border-color: var(--theme-color-secondary, #818CF8) !important;
+}
+
+/* ── TOPBAR OVERRIDES ── */
+#topbar, .topbar {
+  background: transparent !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+  height: 80px !important;
+}
+
+.topbar-greeting .greeting-text, .greeting {
+  font-family: 'Syne', sans-serif !important;
+  font-weight: 900 !important;
+  font-size: 20px !important;
+  color: var(--text) !important;
+}
+
+.topbar-greeting .greeting-text span, .greeting span {
+  color: var(--theme-color, #4F46E5) !important;
+}
+
+#greeting-date, .greeting-sub {
+  color: var(--muted) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  margin-top: 2px !important;
+}
+
+#topbar-company, .topbar-company, .topbar-empresa {
+  background: var(--white) !important;
+  border: 1.5px solid var(--border) !important;
+  color: var(--text) !important;
+  font-weight: 700 !important;
+  font-size: 11px !important;
+  border-radius: 999px !important;
+  padding: 6px 16px !important;
+}
+
+#topbar-company i, .topbar-company i, .topbar-empresa i {
+  color: var(--theme-color, #4F46E5) !important;
+}
+
+.topbar-user {
+  border-color: var(--border) !important;
+  background: var(--white) !important;
+}
+
+.topbar-user:hover {
+  border-color: var(--theme-color-secondary, #818CF8) !important;
+  background: var(--white) !important;
+}
+
+/* ── CARDS & PANELS OVERRIDES ── */
+.card, .dashboard-card, .sec-card, .serv-card, .stat-card, .cap-card {
+  background: var(--white) !important;
+  border-radius: 16px !important;
+  border: none !important;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03), 0 2px 4px rgba(15, 23, 42, 0.01) !important;
+  padding: 24px !important;
+}
+
+.section-title, .form-section-title {
+  font-family: 'Syne', sans-serif !important;
+  font-weight: 800 !important;
+  color: var(--text) !important;
+}
+
+.badge {
+  background: var(--theme-color-lightBg) !important;
+  color: var(--theme-color, #4F46E5) !important;
+}
+
+/* Activa Card on Right panel of dashboard */
+.active-company-card, .hp-card, .active-company-badge-custom {
+  background: linear-gradient(135deg, var(--theme-color, #0F172A), var(--theme-color-dark, #1E1B4B)) !important;
+  border-radius: 16px !important;
+  padding: 24px !important;
+  color: #ffffff !important;
+}
+
+/* Buttons unifications */
+.btn, .btn-primary, .btn-main, .action-btn {
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+}
+
+.btn-primary, .btn-main, .action-btn.primary {
+  background: var(--theme-color, #4F46E5) !important;
+  border-color: var(--theme-color, #4F46E5) !important;
+  color: #ffffff !important;
+  transition: all 0.2s !important;
+}
+
+.btn-primary:hover, .btn-main:hover, .action-btn.primary:hover {
+  background: var(--theme-color-dark, #3730A3) !important;
+  border-color: var(--theme-color-dark, #3730A3) !important;
+}
+
+
+/* ── STAT STRIP & CARDS (Matching high-fidelity mockup) ── */
+.stat-strip {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
+  gap: 20px !important;
+  margin-bottom: 24px !important;
+}
+
+.stat-card {
+  background: var(--white) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03), 0 2px 4px rgba(15, 23, 42, 0.01) !important;
+  padding: 20px 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 16px !important;
+  border: none !important;
+  transition: transform 0.2s !important;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px) !important;
+}
+
+.stat-icon {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 20px !important;
+  flex-shrink: 0 !important;
+}
+
+/* Color schemes for the icons */
+.stat-icon.obs {
+  background-color: #FFEFE6 !important; /* Soft orange */
+  color: #E87722 !important;
+}
+.stat-icon.vis {
+  background-color: #EEF2FF !important; /* Soft blue */
+  color: #3B82F6 !important;
+}
+.stat-icon.asis {
+  background-color: #ECFDF5 !important; /* Soft green */
+  color: #10B981 !important;
+}
+.stat-icon.insp {
+  background-color: #F5F3FF !important; /* Soft purple */
+  color: #8B5CF6 !important;
+}
+
+.stat-label {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: var(--muted) !important;
+  margin-bottom: 4px !important;
+}
+
+.stat-value {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text) !important;
+  line-height: 1 !important;
+}
+
+/* Right Panel: Empresa Activa Card Gradient */
+.hp-card, .active-company-card {
+  background: linear-gradient(135deg, var(--theme-color, #1B2D6B), var(--theme-color-dark, #0f1a40)) !important;
+}
+
+
+/* ── HIDE TOPBAR GREETINGS AND DATES (Requested by User) ── */
+.topbar-greeting,
+.topbar-left .greeting,
+.greeting,
+.topbar-date,
+#topDate,
+#greeting-text,
+#greeting-date {
+  display: none !important;
+}
+
+
+/* ── REMOVE SPECIFIC HEADER GREETING IN OBSERVACIONES ── */
+#greeting, 
+#greeting + p,
+.topbar-left h1, 
+.topbar-left p {
+  display: none !important;
+}
+
+/* ── DYNAMIC ORANGE-TO-THEME-COLOR OVERRIDES ── */
+:root {
+  --orange: var(--theme-color, #4F46E5) !important;
+  --orange-light: var(--theme-color-secondary, #818CF8) !important;
+  --o2: var(--theme-color, #4F46E5) !important;
+  --o1: var(--theme-color-secondary, #818CF8) !important;
+}
+
+/* Active tab underlines unifications */
+.tab-btn.active, 
+.sub-tab.active,
+.tabs-bar button.active,
+.sub-tabs button.active {
+  color: var(--theme-color, #4F46E5) !important;
+  border-bottom-color: var(--theme-color, #4F46E5) !important;
+}
+
+/* Orange icons inside card and page titles */
+.card-title i, 
+.section-title i, 
+.page-title i, 
+.pdf-item i,
+.form-section-title i {
+  color: var(--theme-color, #4F46E5) !important;
+}
+
+/* Form action clear hover states */
+.sig-clear:hover {
+  color: var(--theme-color, #4F46E5) !important;
+  border-color: var(--theme-color, #4F46E5) !important;
+}
+
+/* Soft orange backgrounds for general checklist items */
+.stat-icon.obs,
+.stat-icon.vis,
+.stat-icon.asis,
+.stat-icon.insp {
+  background-color: var(--theme-color-lightBg) !important;
+  color: var(--theme-color, #4F46E5) !important;
+}

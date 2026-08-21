@@ -341,6 +341,7 @@
       .stat-strip { grid-template-columns: 1fr 1fr; gap: 10px; }
     }
   </style>
+  <link rel="stylesheet" href="css/theme.css">
 </head>
 <body>
 <div class="app" id="app">
@@ -385,6 +386,10 @@
         <i class="bi bi-clock"></i>
         <span class="nav-label">Tiempo Dedicado</span>
       </a>
+      <a class="nav-item" href="capacitaciones.html">
+        <i class="bi bi-journal-bookmark"></i>
+        <span class="sidebar-label">Capacitaciones</span>
+      </a>
 
     </div>
 
@@ -417,7 +422,7 @@
       <i class="bi bi-list"></i>
     </button>
       <div class="topbar-left">
-        <div class="greeting">Hola, <span id="greetName">bienvenido</span> 👋</div>
+        <div class="greeting">Hola, <span id="greetName">bienvenido</span> </div>
         <div class="topbar-date" id="topDate">Cargando fecha...</div>
       </div>
       <div class="topbar-right">
@@ -587,12 +592,14 @@
     }
 
     // Load empresa
+    var companyMods = null;
     try {
       var er = await Empresas.activa();
       if (er && er.success && er.empresa) {
         document.getElementById('empName').textContent = er.empresa.razonSocial || '—';
         document.getElementById('empRun').textContent  = 'RUT: ' + (er.empresa.run || '—');
         document.getElementById('topEmpresa').innerHTML = '<i class="bi bi-building"></i> ' + (er.empresa.razonSocial || '—');
+        companyMods = er.empresa.modulos;
       } else {
         document.getElementById('empName').textContent = 'Sin empresa activa';
         document.getElementById('topEmpresa').innerHTML = '<i class="bi bi-building"></i> Sin empresa';
@@ -600,7 +607,7 @@
     } catch(e) { document.getElementById('empName').textContent = 'Sin empresa'; }
 
     // Build quick access modules
-    buildModules(sess);
+    buildModules(sess, companyMods);
 
     // Load stats + chart
     loadStats();
@@ -613,15 +620,25 @@
     { key:'asistencia',      label:'Asistencia',     sub:'Control de personal',    icon:'bi-calendar-check', href:'asistencia.html' },
     { key:'inspecciones',    label:'Inspecciones',   sub:'Auditoría y control',    icon:'bi-search',         href:'inspecciones.html' },
     { key:'tiempo_dedicado', label:'Tiempo Dedicado',sub:'Horas por actividad',    icon:'bi-clock',          href:'tiempo_dedicado.html' },
+    { key:'capacitaciones',  label:'Capacitaciones', sub:'Formación y evaluaciones', icon:'bi-journal-bookmark', href:'capacitaciones.html' },
   ];
 
-  function buildModules(sess) {
+  function buildModules(sess, companyMods) {
     var modulos = sess.modulos || {};
     var list    = document.getElementById('modList');
     list.innerHTML = '';
     var first   = true;
+    var modulosOperacionales = ['observaciones', 'visitas', 'asistencia', 'tiempo_dedicado', 'inspecciones', 'ast', 'capacitaciones'];
+
     MODULOS.forEach(function(m) {
       if (!modulos[m.key] && (sess.role||'').toUpperCase() !== 'SUPER_ADMIN') return;
+
+      // Si es un módulo operacional de la empresa y está inactivo para la empresa, ocultarlo (excepto para SUPER_ADMIN)
+      if ((sess.role||'').toUpperCase() !== 'SUPER_ADMIN' && modulosOperacionales.indexOf(m.key) >= 0) {
+        if (companyMods && companyMods[m.key] === false) {
+          return; // Deshabilitado para la empresa activa
+        }
+      }
       var btn = document.createElement('a');
       btn.href = m.href;
       btn.className = 'mod-btn' + (first && m.highlight ? ' highlight' : '');
