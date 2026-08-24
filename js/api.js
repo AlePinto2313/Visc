@@ -208,6 +208,9 @@ const Capacitaciones = {
   async listar() {
     return callAPI('listarCapacitaciones', { token: Auth.getToken() });
   },
+  async listarUsuariosEmpresa() {
+    return callAPI('listarUsuariosEmpresaCapacitaciones', { token: Auth.getToken() });
+  },
   async guardar(capacitacion) {
     return callAPI('guardarCapacitacion', { token: Auth.getToken(), capacitacion });
   },

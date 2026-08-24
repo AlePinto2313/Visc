@@ -494,6 +494,14 @@
 
       <div style="border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px;">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+          <h4 style="font-family: 'Syne', sans-serif; font-size: 13.5px; font-weight: 800;"><i class="bi bi-people"></i> Usuarios asignados</h4>
+        </div>
+        <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">Si no seleccionas a nadie, la capacitación queda visible para toda la empresa.</p>
+        <div id="editorAsignadosList" style="display: flex; flex-direction: column; gap: 4px; max-height: 160px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 8px;"></div>
+      </div>
+
+      <div style="border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
           <h4 style="font-family: 'Syne', sans-serif; font-size: 13.5px; font-weight: 800;"><i class="bi bi-folder2"></i> Material Complementario</h4>
           <button class="btn-main secondary" style="padding: 4px 10px; font-size: 11px;" onclick="agregarMaterialFila()"><i class="bi bi-plus-circle"></i> Agregar material</button>
         </div>
@@ -959,11 +967,12 @@
     }
 
     // EDITOR DE CAPACITACIONES (ADMIN)
-    function abrirEditorCapacitacion(id) {
+    async function abrirEditorCapacitacion(id) {
       editCapId = id;
       document.getElementById('editorMaterialesList').innerHTML = '';
       document.getElementById('editorPreguntasList').innerHTML = '';
-      
+
+      var asignadosActuales = [];
       if (id) {
         document.getElementById('editorCapTitle').textContent = 'Editar Capacitación';
         var cap = allCapacitaciones.find(c => c.id === id);
@@ -973,6 +982,7 @@
           document.getElementById('editCapDescripcion').value = cap.descripcion || '';
           (cap.materiales || []).forEach(m => agregarMaterialFila(m.nombre, m.tipo, m.url));
           (cap.preguntas || []).forEach(p => agregarPregunta(p.tipo, p));
+          asignadosActuales = cap.asignados || [];
         }
       } else {
         document.getElementById('editorCapTitle').textContent = 'Nueva Capacitación';
@@ -982,7 +992,34 @@
         agregarMaterialFila();
         agregarPregunta('alternativa');
       }
+
+      await cargarSelectorAsignados(asignadosActuales);
       openModal('modalEditorCap');
+    }
+
+    async function cargarSelectorAsignados(asignadosActuales) {
+      var wrap = document.getElementById('editorAsignadosList');
+      wrap.innerHTML = '<p style="font-size:11px; color:var(--text-muted);">Cargando usuarios...</p>';
+      try {
+        var res = await Capacitaciones.listarUsuariosEmpresa();
+        var usuarios = (res && res.success) ? res.usuarios : [];
+        var asignadosN = (asignadosActuales || []).map(c => (c || '').toString().trim().toLowerCase());
+        if (!usuarios.length) {
+          wrap.innerHTML = '<p style="font-size:11px; color:var(--text-muted);">No hay usuarios registrados en esta empresa.</p>';
+          return;
+        }
+        wrap.innerHTML = '';
+        usuarios.forEach(u => {
+          var checked = asignadosN.indexOf(u.correo.toLowerCase()) >= 0;
+          var row = document.createElement('label');
+          row.style.display = 'flex'; row.style.alignItems = 'center'; row.style.gap = '8px'; row.style.fontSize = '12px'; row.style.cursor = 'pointer';
+          row.innerHTML = '<input type="checkbox" class="asignado-check" value="' + u.correo + '" ' + (checked ? 'checked' : '') + '>' +
+            '<span>' + u.nombre + '</span> <span style="color:var(--text-muted); font-size:10.5px;">(' + u.correo + ')</span>';
+          wrap.appendChild(row);
+        });
+      } catch (e) {
+        wrap.innerHTML = '<p style="font-size:11px; color:var(--danger);">Error al cargar usuarios.</p>';
+      }
     }
 
     function agregarMaterialFila(nombre = '', tipo = 'youtube', url = '') {
@@ -1097,10 +1134,14 @@
 
       if (!valid) { showToast('Asegúrate de llenar las preguntas y elegir sus respuestas correctas.', true); return; }
 
+      var asignados = [];
+      document.querySelectorAll('.asignado-check:checked').forEach(c => asignados.push(c.value));
+
       var payload = {
         id: editCapId, nombre: nombre, descripcion: desc,
         materiales: materiales, preguntas: preguntas,
-        criterios: { porcentajeAprobacion: aprobacion }, estado: 'Activa'
+        criterios: { porcentajeAprobacion: aprobacion }, estado: 'Activa',
+        asignados: asignados
       };
 
       try {
