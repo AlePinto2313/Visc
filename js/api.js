@@ -2,7 +2,7 @@
 // js/api.js — Capa de comunicación con Apps Script
 // =============================================
 // IMPORTANTE: cambia SCRIPT_URL por la URL de tu Web App desplegada.
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzws4nlqGsp8WdqO2MsfMYnbNN-Fyu7rp0O5eDjfjaQT_4X7-plAHSvaQT-nckgyeuEzA/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzsnGhauqQ6laU8tOmwpujFwNBpq6iacGk9bEinpnYqt4qSiOxxT3SEDEZOPImIIUFweg/exec';
 // ── Core fetch ────────────────────────────────────────────────────────────────
 
 async function callAPI(action, params = {}) {
