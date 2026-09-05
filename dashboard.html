@@ -377,6 +377,10 @@
         <i class="bi bi-calendar-check"></i>
         <span class="nav-label">Asistencia</span>
       </a>
+      <a class="nav-item" href="repositorio.html">
+        <i class="bi bi-folder2-open"></i>
+        <span class="nav-label">Repositorio Digital</span>
+      </a>
       <div class="sidebar-section">Análisis</div>
       <a class="nav-item" href="inspecciones.html">
         <i class="bi bi-search"></i>
@@ -618,6 +622,7 @@
     { key:'observaciones',   label:'Observaciones', sub:'Registro y seguimiento', icon:'bi-clipboard-check', href:'observaciones.html', highlight:true },
     { key:'visitas',         label:'Visitas',        sub:'Control de ingreso',     icon:'bi-person-check',   href:'visitas.html' },
     { key:'asistencia',      label:'Asistencia',     sub:'Control de personal',    icon:'bi-calendar-check', href:'asistencia.html' },
+    { key:'repositorio',     label:'Repositorio Digital', sub:'Documentos SST y Nómina', icon:'bi-folder2-open', href:'repositorio.html' },
     { key:'inspecciones',    label:'Inspecciones',   sub:'Auditoría y control',    icon:'bi-search',         href:'inspecciones.html' },
     { key:'tiempo_dedicado', label:'Tiempo Dedicado',sub:'Horas por actividad',    icon:'bi-clock',          href:'tiempo_dedicado.html' },
     { key:'capacitaciones',  label:'Capacitaciones', sub:'Formación y evaluaciones', icon:'bi-journal-bookmark', href:'capacitaciones.html' },
@@ -628,7 +633,7 @@
     var list    = document.getElementById('modList');
     list.innerHTML = '';
     var first   = true;
-    var modulosOperacionales = ['observaciones', 'visitas', 'asistencia', 'tiempo_dedicado', 'inspecciones', 'ast', 'capacitaciones'];
+    var modulosOperacionales = ['observaciones', 'visitas', 'asistencia', 'tiempo_dedicado', 'inspecciones', 'ast', 'capacitaciones', 'repositorio'];
 
     MODULOS.forEach(function(m) {
       if (!modulos[m.key] && (sess.role||'').toUpperCase() !== 'SUPER_ADMIN') return;

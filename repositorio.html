@@ -1,0 +1,1444 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Repositorio Digital — VISC</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy: #1B2D6B;
+      --navy-dark: #152359;
+      --orange: #E87722;
+      --orange-light: #F0901A;
+      --white: #ffffff;
+      --sidebar-w: 220px;
+      --topbar-h: 60px;
+      --bg: #f4f6fb;
+      --card-bg: #ffffff;
+      --border: #e0e4ef;
+      --text: #1a1a2e;
+      --text-muted: #6b7280;
+      --radius: 12px;
+      --o1: #FF8C00;
+      --o2: #E87722;
+      --o3: #D94F00;
+      --green: #10B981;
+      --red: #EF4444;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── SIDEBAR ── */
+    #sidebar {
+      width: var(--sidebar-w);
+      background: var(--navy);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      left: 0; top: 0; bottom: 0;
+      z-index: 100;
+      transition: width 0.25s ease;
+      overflow: hidden;
+    }
+    #sidebar.collapsed { width: 56px; }
+    #sidebar.collapsed .sidebar-label,
+    #sidebar.collapsed .sidebar-sub,
+    #sidebar.collapsed .nav-label,
+    #sidebar.collapsed .sidebar-section,
+    #sidebar.collapsed .user-info { display: none; }
+    #sidebar.collapsed .sidebar-logo { width: 32px; height: 32px; }
+
+    .sidebar-top { padding: 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .sidebar-logo { width: 42px; height: 42px; border-radius: 8px; overflow: hidden; background: var(--white); display: flex; align-items: center; justify-content: center; }
+    .sidebar-logo img { width: 100%; height: 100%; object-fit: cover; }
+    .sidebar-brand { display: flex; flex-direction: column; }
+    .sidebar-name { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 16px; color: var(--white); }
+    .sidebar-sub { font-size: 9.5px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: .06em; }
+
+    .sidebar-section { font-size: 9.5px; font-weight: 700; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: .08em; padding: 18px 16px 6px; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 16px; color: rgba(255,255,255,0.6); text-decoration: none; font-size: 13.5px; transition: all 0.15s; }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--white); }
+    .nav-item.active { background: var(--orange); color: var(--white); font-weight: 600; }
+    .nav-item i { font-size: 18px; }
+
+    .sidebar-footer { margin-top: auto; padding: 12px; border-top: 1px solid rgba(255,255,255,0.08); }
+    .user-mini { display: flex; align-items: center; gap: 10px; padding: 6px; border-radius: 8px; background: rgba(255,255,255,0.03); }
+    .user-av { width: 32px; height: 32px; border-radius: 50%; background: var(--orange); color: var(--white); font-weight: 700; font-size: 12px; display: flex; align-items: center; justify-content: center; }
+    .user-info { display: flex; flex-direction: column; overflow: hidden; }
+    .user-name { font-size: 12.5px; font-weight: 600; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-role { font-size: 10px; color: rgba(255,255,255,0.4); }
+
+    .sidebar-toggle {
+      position: absolute; left: calc(var(--sidebar-w) - 14px); top: 24px;
+      width: 28px; height: 28px;
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 12px; color: var(--text-muted);
+      z-index: 110; transition: left 0.25s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06); padding: 0;
+    }
+    #sidebar.collapsed ~ .sidebar-toggle { left: 42px; }
+
+    /* ── MAIN LAYOUT ── */
+    #main {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      transition: margin-left 0.25s ease;
+      padding: 24px 32px;
+      padding-top: calc(var(--topbar-h) + 24px);
+    }
+    #main.shifted { margin-left: 56px; }
+
+    /* ── TOPBAR ── */
+    #topbar {
+      height: var(--topbar-h);
+      position: fixed;
+      top: 0; right: 0; left: var(--sidebar-w);
+      background: var(--white);
+      border-bottom: 1.5px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px; z-index: 90;
+      transition: left 0.25s ease;
+    }
+    #sidebar.collapsed ~ #topbar { left: 56px; }
+
+    .topbar-greeting { display: flex; flex-direction: column; }
+    .greeting-text { font-size: 14.5px; font-weight: 600; color: var(--navy); }
+    .greeting-sub { font-size: 11px; color: var(--text-muted); }
+    .topbar-company { font-weight: 700; color: var(--orange); font-size: 14px; background: rgba(232,119,34,0.08); padding: 6px 14px; border-radius: 99px; display: flex; align-items: center; gap: 8px; }
+    .topbar-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--navy); color: var(--white); font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; }
+
+    /* ── PAGE TITLE ── */
+    .page-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 24px; color: var(--navy); display: flex; align-items: center; gap: 10px; margin-bottom: 2px; }
+    .page-subtitle { font-size: 13.5px; color: var(--text-muted); margin-bottom: 24px; }
+
+    /* ── TABS CONTAINER ── */
+    .tabs-container { display: flex; gap: 8px; border-bottom: 1.5px solid var(--border); padding-bottom: 2px; margin-bottom: 24px; }
+    .tab-btn { background: none; border: none; padding: 10px 20px; font-size: 14px; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 3.5px solid transparent; transition: all 0.15s; border-radius: 6px 6px 0 0; display: flex; align-items: center; gap: 8px; }
+    .tab-btn:hover { color: var(--navy); background: rgba(27,45,107,0.03); }
+    .tab-btn.active { color: var(--navy); border-bottom-color: var(--orange); background: rgba(232,119,34,0.04); }
+
+    /* ── GENERAL CARD ── */
+    .card { background: var(--card-bg); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 24px; position: relative; }
+    .card-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16.5px; color: var(--navy); margin-bottom: 18px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+
+    /* ── BUTTONS ── */
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px; font-size: 13px; font-weight: 600; border-radius: 8px; border: 1.5px solid transparent; cursor: pointer; transition: all 0.15s; text-decoration: none; }
+    .btn-primary { background: var(--orange); color: var(--white); }
+    .btn-primary:hover { background: var(--orange-light); }
+    .btn-secondary { background: var(--white); border-color: var(--border); color: var(--navy); }
+    .btn-secondary:hover { border-color: var(--navy); background: rgba(27,45,107,0.03); }
+    .btn-danger { background: var(--red); color: var(--white); }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-navy { background: var(--navy); color: var(--white); }
+    .btn-navy:hover { background: var(--navy-dark); }
+    .btn-sm { padding: 6px 12px; font-size: 11.5px; border-radius: 6px; }
+
+    /* ── TAB 1: REPOSITORIO LAYOUT ── */
+    .repo-layout { display: grid; grid-template-columns: 280px 1fr; gap: 24px; min-height: 480px; }
+    
+    .category-list { display: flex; flex-direction: column; gap: 6px; background: var(--white); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 12px; height: fit-content; }
+    .category-item { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; color: var(--text); cursor: pointer; transition: all 0.15s; border-left: 3px solid transparent; text-align: left; background: none; border: none; width: 100%; }
+    .category-item:hover { background: rgba(27,45,107,0.03); color: var(--navy); }
+    .category-item.active { background: rgba(232,119,34,0.06); color: var(--orange-light); font-weight: 600; border-left-color: var(--orange); }
+    .category-count { font-size: 10.5px; font-weight: 600; background: var(--border); color: var(--text-muted); padding: 2px 7px; border-radius: 99px; }
+    .category-item.active .category-count { background: var(--orange); color: var(--white); }
+
+    .files-container { background: var(--white); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 24px; display: flex; flex-direction: column; gap: 14px; min-height: 400px; }
+    .files-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid var(--border); padding-bottom: 14px; margin-bottom: 10px; }
+    .files-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; color: var(--navy); }
+    .files-actions { display: flex; gap: 8px; }
+
+    .file-card { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border: 1px solid var(--border); border-radius: 8px; background: var(--white); transition: all 0.15s; }
+    .file-card:hover { border-color: var(--navy); box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+    .file-meta { display: flex; align-items: center; gap: 14px; }
+    .file-icon { font-size: 24px; color: var(--navy); display: flex; align-items: center; }
+    .file-icon.pdf { color: #dc2626; }
+    .file-icon.youtube { color: #ef4444; }
+    .file-info { display: flex; flex-direction: column; gap: 2px; }
+    .file-name { font-size: 13.5px; font-weight: 600; color: var(--text); word-break: break-all; }
+    .file-sub { font-size: 11px; color: var(--text-muted); display: flex; gap: 12px; flex-wrap: wrap; }
+    .file-actions { display: flex; gap: 8px; }
+    .file-btn-dl { color: var(--navy); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border); background: var(--white); transition: all 0.15s; text-decoration: none; }
+    .file-btn-dl:hover { background: rgba(27,45,107,0.05); border-color: var(--navy); }
+    .file-btn-del { color: var(--red); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border); background: var(--white); transition: all 0.15s; }
+    .file-btn-del:hover { background: rgba(239,68,68,0.06); border-color: var(--red); }
+
+    .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 48px; color: var(--text-muted); text-align: center; }
+    .empty-state i { font-size: 42px; color: var(--border); }
+    .empty-state p { font-size: 13.5px; max-width: 300px; }
+
+    /* ── TAB 2: PERSONAL LAYOUT ── */
+    .personal-header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
+    .search-row { display: flex; gap: 10px; flex: 1; min-width: 280px; max-width: 480px; }
+    .search-input-wrap { position: relative; flex: 1; }
+    .search-input-wrap i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 14px; }
+    .search-input { width: 100%; padding: 10px 14px 10px 36px; border-radius: 8px; border: 1.5px solid var(--border); font-size: 13px; outline: none; transition: all 0.15s; font-family: inherit; }
+    .search-input:focus { border-color: var(--navy); }
+    .status-select { padding: 9px 12px; border-radius: 8px; border: 1.5px solid var(--border); font-size: 13px; outline: none; background: var(--white); font-family: inherit; }
+    .status-select:focus { border-color: var(--navy); }
+
+    .personal-actions { display: flex; gap: 8px; }
+
+    /* ── MODERN TABLES ── */
+    .table-container { overflow-x: auto; border: 1.5px solid var(--border); border-radius: 8px; background: var(--white); }
+    .table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+    .table th { background: #f8fafc; padding: 12px 16px; font-weight: 600; color: var(--navy); border-bottom: 1.5px solid var(--border); text-transform: uppercase; font-size: 11px; letter-spacing: .04em; }
+    .table td { padding: 12px 16px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+    .table tr:last-child td { border-bottom: none; }
+    .table tr:hover td { background: rgba(27,45,107,0.01); }
+
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 99px; font-size: 10.5px; font-weight: 600; }
+    .badge-success { background: rgba(16,185,129,0.1); color: var(--green); }
+    .badge-danger { background: rgba(239,68,68,0.1); color: var(--red); }
+
+    /* ── MODALS ── */
+    .modal-backdrop { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15,23,42,0.4); display: none; align-items: center; justify-content: center; z-index: 200; padding: 16px; backdrop-filter: blur(2px); }
+    .modal-backdrop.show { display: flex; }
+    .modal-card { background: var(--white); border-radius: var(--radius); border: 1.5px solid var(--border); box-shadow: 0 10px 25px rgba(0,0,0,0.15); width: 100%; max-width: 520px; display: flex; flex-direction: column; overflow: hidden; animation: modalAnim 0.25s ease-out; }
+    .modal-card.lg { max-width: 720px; }
+    @keyframes modalAnim { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+    .modal-header { padding: 18px 24px; border-bottom: 1.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .modal-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16.5px; color: var(--navy); }
+    .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; }
+    .modal-close:hover { background: rgba(0,0,0,0.05); color: var(--text); }
+
+    .modal-body { padding: 24px; overflow-y: auto; max-height: calc(80vh - 120px); }
+    .modal-footer { padding: 16px 24px; border-top: 1.5px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; background: #fafbfc; }
+
+    /* ── FORMS ── */
+    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+    .form-group label { font-size: 12.5px; font-weight: 600; color: var(--navy); }
+    .form-control { padding: 10px 14px; border-radius: 8px; border: 1.5px solid var(--border); font-size: 13px; outline: none; font-family: inherit; }
+    .form-control:focus { border-color: var(--navy); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    /* ── DROPZONE ── */
+    .dropzone { border: 2px dashed var(--border); border-radius: 8px; padding: 32px 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; cursor: pointer; transition: all 0.15s; text-align: center; background: #fafbfc; }
+    .dropzone:hover { border-color: var(--orange); background: rgba(232,119,34,0.02); }
+    .dropzone i { font-size: 32px; color: var(--text-muted); }
+    .dropzone p { font-size: 13px; font-weight: 500; color: var(--text); }
+    .dropzone span { font-size: 11px; color: var(--text-muted); }
+
+    /* ── PREVIEW BOX ── */
+    .preview-box { border: 1.5px solid var(--border); border-radius: 8px; padding: 12px 16px; background: rgba(16,185,129,0.04); display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .preview-file-info { display: flex; align-items: center; gap: 10px; font-size: 12.5px; font-weight: 500; }
+    .preview-file-info i { font-size: 20px; color: var(--green); }
+
+    /* ── IMPORT PREVIEW TABLE ── */
+    .import-preview-container { border: 1.5px solid var(--border); border-radius: 8px; overflow: hidden; margin-top: 14px; max-height: 240px; overflow-y: auto; }
+    .import-preview-table { width: 100%; border-collapse: collapse; font-size: 11.5px; text-align: left; }
+    .import-preview-table th { background: #f1f5f9; padding: 8px 12px; font-weight: 600; color: var(--navy); border-bottom: 1px solid var(--border); }
+    .import-preview-table td { padding: 8px 12px; border-bottom: 1px solid #e2e8f0; }
+
+    /* ── TOAST NOTIFICATIONS ── */
+    #toast { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 8px; z-index: 300; }
+    .toast { padding: 12px 20px; border-radius: 8px; color: var(--white); font-size: 13px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 10px; animation: toastAnim 0.2s cubic-bezier(.4,0,.2,1); }
+    @keyframes toastAnim { from { transform: translateY(10px) scale(0.9); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+    .toast-success { background: var(--green); }
+    .toast-danger { background: var(--red); }
+    .toast-info { background: var(--navy); }
+    .toast-warning { background: var(--orange-light); }
+
+    /* ── LOADING SPINNER OVERLAY ── */
+    #spinner { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.7); display: none; align-items: center; justify-content: center; z-index: 500; flex-direction: column; gap: 14px; backdrop-filter: blur(1px); }
+    #spinner.show { display: flex; }
+    .spin { width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--orange); border-radius: 50%; animation: spinAnim 1s linear infinite; }
+    @keyframes spinAnim { to { transform: rotate(360deg); } }
+    .spinner-text { font-size: 13.5px; font-weight: 600; color: var(--navy); }
+
+    /* ── WARNING CARD ── */
+    .warning-card { background: rgba(232,119,34,0.06); border: 1.5px solid rgba(232,119,34,0.3); border-radius: var(--radius); padding: 32px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; max-width: 480px; margin: 48px auto; }
+    .warning-card i { font-size: 48px; color: var(--orange); }
+    .warning-card h3 { font-family: 'Syne', sans-serif; font-weight: 700; color: var(--navy); font-size: 18px; }
+    .warning-card p { font-size: 13.5px; color: var(--text-muted); line-height: 1.5; }
+
+    /* ── RESPONSIVENESS ── */
+    @media (max-width: 900px) {
+      .repo-layout { grid-template-columns: 1fr; }
+      #main { padding: 16px; padding-top: calc(var(--topbar-h) + 16px); margin-left: 0; }
+      #sidebar { transform: translateX(-100%); width: var(--sidebar-w) !important; }
+      #sidebar.open { transform: translateX(0); }
+      #main.shifted { margin-left: 0; }
+      #sidebar.collapsed { width: var(--sidebar-w); transform: translateX(-100%); }
+      #sidebar.collapsed.open { transform: translateX(0); }
+      .sidebar-toggle { display: none; }
+      #topbar { left: 0 !important; padding: 0 16px; }
+      #mobileToggleBtn { display: flex !important; }
+    }
+  </style>
+  <link rel="stylesheet" href="css/theme.css" />
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-logo">
+        <img src="https://drive.google.com/thumbnail?id=1cQzpSYj8YwSBqhaOmo53kI9wdVQmgWOZ&sz=200" alt="VISC" onerror="this.style.display='none';this.parentElement.textContent='V'" />
+      </div>
+      <div class="sidebar-brand">
+        <div class="sidebar-name">VISC</div>
+        <div class="sidebar-sub">Sistema de Seguridad</div>
+      </div>
+    </div>
+
+    <div style="flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 0;">
+      <div class="sidebar-section">Principal</div>
+      <a class="nav-item" href="dashboard.html">
+        <i class="bi bi-grid-1x2"></i>
+        <span class="nav-label">Dashboard</span>
+      </a>
+      <a class="nav-item" href="observaciones.html">
+        <i class="bi bi-clipboard-check"></i>
+        <span class="nav-label">Observaciones</span>
+      </a>
+      <a class="nav-item" href="visitas.html">
+        <i class="bi bi-person-check"></i>
+        <span class="nav-label">Visitas</span>
+      </a>
+      <a class="nav-item" href="asistencia.html">
+        <i class="bi bi-calendar-check"></i>
+        <span class="nav-label">Asistencia</span>
+      </a>
+      <a class="nav-item active" href="repositorio.html">
+        <i class="bi bi-folder2-open"></i>
+        <span class="nav-label">Repositorio Digital</span>
+      </a>
+      <div class="sidebar-section">Análisis</div>
+      <a class="nav-item" href="inspecciones.html">
+        <i class="bi bi-search"></i>
+        <span class="nav-label">Inspecciones</span>
+      </a>
+      <a class="nav-item" href="tiempo_dedicado.html">
+        <i class="bi bi-clock"></i>
+        <span class="nav-label">Tiempo Dedicado</span>
+      </a>
+      <a class="nav-item" href="capacitaciones.html">
+        <i class="bi bi-journal-bookmark"></i>
+        <span class="nav-label">Capacitaciones</span>
+      </a>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="nav-item" onclick="doLogout()" style="margin:0;cursor:pointer;">
+        <i class="bi bi-box-arrow-left" style="color:#f87171;"></i>
+        <span class="nav-label" style="color:rgba(255,255,255,0.4);">Cerrar sesión</span>
+      </div>
+      <div class="user-mini" onclick="window.location.href='usuarios.html'" style="margin-top:6px; cursor:pointer;" title="Ver mi perfil">
+        <div class="user-av" id="sidebarAv">?</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebarName">—</div>
+          <div class="user-role" id="sidebarRole">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" title="Colapsar">
+    <i class="bi bi-chevron-left" id="toggleIcon"></i>
+  </button>
+
+  <!-- TOPBAR -->
+  <header id="topbar">
+    <button class="topbar-toggle" onclick="toggleMobileSidebar()" style="background:none;border:none;cursor:pointer;color:var(--navy);font-size:22px;display:none;align-items:center;" id="mobileToggleBtn">
+      <i class="bi bi-list"></i>
+    </button>
+    <div class="topbar-greeting">
+      <div class="greeting-text" id="greeting-text">Hola</div>
+      <div class="greeting-sub" id="greeting-date"></div>
+    </div>
+    <div class="topbar-company" id="topbar-company">—</div>
+    <div class="topbar-avatar" id="topbar-avatar">—</div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main id="main">
+    
+    <!-- NO ACTIVE COMPANY WARNING -->
+    <div id="warningContainer" style="display:none;">
+      <div class="warning-card">
+        <i class="bi bi-exclamation-triangle"></i>
+        <h3>Sin empresa activa</h3>
+        <p>No tiene ninguna empresa seleccionada actualmente. Por favor, vuelva al menú principal o dashboard y elija una empresa activa en el panel superior.</p>
+        <button class="btn btn-navy" onclick="window.location.href='dashboard.html'"><i class="bi bi-house"></i> Ir al Dashboard</button>
+      </div>
+    </div>
+
+    <!-- MAIN PLATFORM CONTENT -->
+    <div id="platformContent">
+      <div class="page-title"><i class="bi bi-folder2-open" style="color:var(--orange);"></i> Repositorio Digital & Nómina</div>
+      <div class="page-subtitle">Espacio documental organizado SST y control de personal en línea</div>
+
+      <!-- TABS SELECTOR -->
+      <div class="tabs-container">
+        <button class="tab-btn active" id="tabBtnDocs" onclick="switchTab('docs')"><i class="bi bi-folder2"></i> Documentos SST</button>
+        <button class="tab-btn" id="tabBtnPersonal" onclick="switchTab('personal')"><i class="bi bi-people"></i> Nómina de Personal</button>
+      </div>
+
+      <!-- TAB 1: REPOSITORIO DE DOCUMENTOS -->
+      <div id="tabDocs" class="tab-content">
+        <div class="repo-layout">
+          <!-- LEFT: CATEGORIES -->
+          <div class="category-list">
+            <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; padding:6px 14px; letter-spacing:.04em;">Secciones Fijas</div>
+            <button class="category-item active" id="cat-1" onclick="selectCategory('1. IRL')">
+              <span><i class="bi bi-shield-check"></i> 1. IRL</span>
+              <span class="category-count" id="count-1">0</span>
+            </button>
+            <button class="category-item" id="cat-2" onclick="selectCategory('2. RIOHS')">
+              <span><i class="bi bi-file-earmark-ruled"></i> 2. RIOHS</span>
+              <span class="category-count" id="count-2">0</span>
+            </button>
+            <button class="category-item" id="cat-3" onclick="selectCategory('3. Procedimientos SST')">
+              <span><i class="bi bi-card-list"></i> 3. Procedimientos SST</span>
+              <span class="category-count" id="count-3">0</span>
+            </button>
+            <button class="category-item" id="cat-4" onclick="selectCategory('4. Programa de Capacitación SST')">
+              <span><i class="bi bi-calendar-event"></i> 4. Prog. Capacitación</span>
+              <span class="category-count" id="count-4">0</span>
+            </button>
+            <button class="category-item" id="cat-5" onclick="selectCategory('5. Actas de Visita')">
+              <span><i class="bi bi-journal-check"></i> 5. Actas de Visita</span>
+              <span class="category-count" id="count-5">0</span>
+            </button>
+            <button class="category-item" id="cat-6" onclick="selectCategory('6. Registros de Capacitación y Asistencia')">
+              <span><i class="bi bi-award"></i> 6. Reg. Capacitación</span>
+              <span class="category-count" id="count-6">0</span>
+            </button>
+            <button class="category-item" id="cat-7" onclick="selectCategory('7. Documentos de Cumplimiento Legal')">
+              <span><i class="bi bi-bank"></i> 7. Cumplimiento Legal</span>
+              <span class="category-count" id="count-7">0</span>
+            </button>
+          </div>
+
+          <!-- RIGHT: LIST OF FILES -->
+          <div class="files-container">
+            <div class="files-header">
+              <div class="files-title" id="currentCategoryTitle">1. IRL</div>
+              <div class="files-actions" id="adminRepoActions" style="display:none;">
+                <button class="btn btn-primary btn-sm" onclick="openUploadModal()"><i class="bi bi-cloud-arrow-up"></i> Subir PDF</button>
+                <button class="btn btn-secondary btn-sm" onclick="openEnlaceModal()"><i class="bi bi-link-45deg"></i> Agregar Video/Link</button>
+              </div>
+            </div>
+
+            <!-- FILES LIST -->
+            <div id="filesList">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: NÓMINA DE PERSONAL -->
+      <div id="tabPersonal" class="tab-content" style="display:none;">
+        <div class="card">
+          <div class="personal-header">
+            <div class="search-row">
+              <div class="search-input-wrap">
+                <i class="bi bi-search"></i>
+                <input type="text" class="search-input" id="personalSearch" placeholder="Buscar por nombre o RUT..." oninput="filtrarPersonal()" />
+              </div>
+              <select class="status-select" id="personalStatusFilter" onchange="filtrarPersonal()">
+                <option value="ALL">Todos los Estados</option>
+                <option value="ACTIVO">Activos</option>
+                <option value="INACTIVO">Inactivos</option>
+              </select>
+            </div>
+            
+            <div class="personal-actions" id="adminPersonalActions" style="display:none;">
+              <button class="btn btn-primary btn-sm" onclick="openWorkerModal()"><i class="bi bi-person-plus"></i> Agregar Trabajador</button>
+              <button class="btn btn-secondary btn-sm" onclick="openImportModal()"><i class="bi bi-file-earmark-excel"></i> Importar CSV/Excel</button>
+            </div>
+          </div>
+
+          <!-- TABLE -->
+          <div class="table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>RUT</th>
+                  <th>Nombre Completo</th>
+                  <th>Correo Electrónico</th>
+                  <th>Cargo / Frente</th>
+                  <th>Fecha Ingreso</th>
+                  <th>Estado</th>
+                  <th class="admin-only-col" style="display:none;width:100px;">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="personalTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+          <div id="personalEmptyState" style="display:none;" class="empty-state">
+            <i class="bi bi-people"></i>
+            <p>No se encontraron trabajadores registrados.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ═══════════════════════════════════
+       MODALS SECTION
+  ═══════════════════════════════════ -->
+
+  <!-- MODAL 1: SUBIR ARCHIVO PDF -->
+  <div class="modal-backdrop" id="uploadModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title"><i class="bi bi-cloud-arrow-up"></i> Subir Documento PDF</div>
+        <button class="modal-close" onclick="closeModal('uploadModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="dropzone" onclick="document.getElementById('fileSelector').click()">
+          <i class="bi bi-file-earmark-pdf"></i>
+          <p>Haga clic o arrastre un archivo aquí para subir</p>
+          <span>Límite máximo 10MB · Solo archivos PDF</span>
+          <input type="file" id="fileSelector" accept="application/pdf" style="display:none;" onchange="handleFileSelected(event)" />
+        </div>
+        
+        <div class="preview-box" id="filePreviewBox" style="display:none; margin-top: 14px;">
+          <div class="preview-file-info">
+            <i class="bi bi-check-circle-fill"></i>
+            <span id="previewFileName">archivo.pdf</span>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="clearFileSelected()"><i class="bi bi-trash"></i></button>
+        </div>
+
+        <div class="form-group" style="margin-top:16px;">
+          <label>Nombre a Mostrar</label>
+          <input type="text" class="form-control" id="uploadFileDisplayName" placeholder="Ej: Procedimiento Altura Seguro v1" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" onclick="closeModal('uploadModal')">Cancelar</button>
+        <button class="btn btn-primary btn-sm" onclick="submitFileRepo()">Guardar Documento</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: AGREGAR ENLACE YOUTUBE -->
+  <div class="modal-backdrop" id="enlaceModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title"><i class="bi bi-link-45deg"></i> Agregar Enlace / Video</div>
+        <button class="modal-close" onclick="closeModal('enlaceModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Nombre del Recurso</label>
+          <input type="text" class="form-control" id="linkName" placeholder="Ej: Inducción de Seguridad en Video (YouTube)" />
+        </div>
+        <div class="form-group">
+          <label>URL (Enlace completo)</label>
+          <input type="url" class="form-control" id="linkUrl" placeholder="https://www.youtube.com/watch?v=..." />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" onclick="closeModal('enlaceModal')">Cancelar</button>
+        <button class="btn btn-primary btn-sm" onclick="submitLinkRepo()">Agregar Enlace</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: AGREGAR / EDITAR TRABAJADOR -->
+  <div class="modal-backdrop" id="workerModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title" id="workerModalTitle"><i class="bi bi-person-plus"></i> Registrar Trabajador</div>
+        <button class="modal-close" onclick="closeModal('workerModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editOriginalRut" />
+        
+        <div class="form-group">
+          <label>Nombre Completo</label>
+          <input type="text" class="form-control" id="wNombre" placeholder="Ej: Juan Pérez González" />
+        </div>
+        
+        <div class="form-group">
+          <label>RUT</label>
+          <input type="text" class="form-control" id="wRut" placeholder="Ej: 12.345.678-9" />
+        </div>
+
+        <div class="form-group">
+          <label>Correo Electrónico</label>
+          <input type="email" class="form-control" id="wEmail" placeholder="juan.perez@empresa.cl" />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Cargo / Frente</label>
+            <input type="text" class="form-control" id="wCargo" placeholder="Ej: Supervisor de Terreno" />
+          </div>
+          <div class="form-group">
+            <label>Fecha de Ingreso</label>
+            <input type="date" class="form-control" id="wFecha" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Estado</label>
+          <select class="form-control" id="wEstado">
+            <option value="ACTIVO">Activo</option>
+            <option value="INACTIVO">Inactivo</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" onclick="closeModal('workerModal')">Cancelar</button>
+        <button class="btn btn-primary btn-sm" onclick="submitWorkerForm()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: IMPORTAR CSV / EXCEL -->
+  <div class="modal-backdrop" id="importModal">
+    <div class="modal-card lg">
+      <div class="modal-header">
+        <div class="modal-title"><i class="bi bi-file-earmark-excel"></i> Importar Nómina de Personal</div>
+        <button class="modal-close" onclick="closeModal('importModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom: 14px; line-height: 1.5;">
+          Suba un archivo de tipo <strong>CSV (.csv)</strong> para importar de forma masiva su nómina de personal.
+          El archivo debe estar separado por comas (,) o punto y coma (;). El sistema buscará las columnas en orden o por nombre:
+          <br /><strong>[RUT, Nombre Completo, Correo, Cargo, Fecha Ingreso, Estado]</strong>.
+        </p>
+        
+        <div class="dropzone" onclick="document.getElementById('csvSelector').click()">
+          <i class="bi bi-file-earmark-spreadsheet"></i>
+          <p>Haga clic para seleccionar el archivo CSV</p>
+          <span>Solo archivos CSV codificados en UTF-8</span>
+          <input type="file" id="csvSelector" accept=".csv" style="display:none;" onchange="handleCSVSelected(event)" />
+        </div>
+
+        <div id="importPreviewSection" style="display:none; margin-top: 18px;">
+          <div style="font-weight: 700; font-size:13.5px; color: var(--navy);"><i class="bi bi-eye"></i> Vista previa de importación (<span id="importCount">0</span> filas detectadas)</div>
+          <div class="import-preview-container">
+            <table class="import-preview-table">
+              <thead>
+                <tr>
+                  <th>RUT</th>
+                  <th>Nombre Completo</th>
+                  <th>Correo</th>
+                  <th>Cargo</th>
+                  <th>Fecha Ingreso</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody id="importPreviewTableBody">
+                <!-- Loaded Dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" onclick="closeModal('importModal')">Cancelar</button>
+        <button class="btn btn-primary btn-sm" id="btnConfirmImport" style="display:none;" onclick="submitCSVImport()">Iniciar Importación</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST ALERTS CONTAINER -->
+  <div id="toast"></div>
+
+  <!-- LOADER SPINNER OVERLAY -->
+  <div id="spinner" class="spinner-container">
+    <div class="spin"></div>
+    <div class="spinner-text" id="spinnerLabel">Procesando solicitud...</div>
+  </div>
+
+  <!-- APP SCRIPTS -->
+  <script src="js/api.js"></script>
+  <script>
+    // ── Global Variables ──
+    let currentTab = 'docs';
+    let selectedCategory = '1. IRL';
+    let allRepoItems = [];
+    let allPersonal = [];
+    let isUserAdminOrPro = false;
+    let selectedFileBase64 = '';
+    let selectedFileType = '';
+    let selectedFileName = '';
+    let parsedImportList = [];
+
+    // ── Sidebar collapse logic (Harmonized) ──
+    let _collapsed = false;
+    function toggleSidebar() {
+      _collapsed = !_collapsed;
+      const sb = document.getElementById('sidebar');
+      const ic = document.getElementById('toggleIcon');
+      const btn = document.getElementById('sidebarToggle');
+      const mainEl = document.getElementById('main');
+      if (_collapsed) {
+        if (sb) sb.classList.add('collapsed');
+        if (ic) ic.className = 'bi bi-chevron-right';
+        if (btn) btn.style.left = 'calc(' + getComputedStyle(sb).width + ' - 14px)';
+        if (mainEl) mainEl.classList.add('shifted');
+      } else {
+        if (sb) sb.classList.remove('collapsed');
+        if (ic) ic.className = 'bi bi-chevron-left';
+        if (btn) btn.style.left = '';
+        if (mainEl) mainEl.classList.remove('shifted');
+      }
+    }
+
+    let _mobileOpen = false;
+    function toggleMobileSidebar() {
+      _mobileOpen = !_mobileOpen;
+      const sb = document.getElementById('sidebar');
+      if (_mobileOpen) {
+        sb.classList.add('open');
+      } else {
+        sb.classList.remove('open');
+      }
+    }
+
+    // ── Toast alerts ──
+    function toast(msg, tipo) {
+      if (!tipo) { tipo = 'info'; }
+      const container = document.getElementById('toast');
+      const t = document.createElement('div');
+      t.className = "toast toast-" + tipo;
+      t.innerHTML = "<i class="bi bi-" + (tipo === 'success' ? 'check-circle' : tipo === 'danger' ? 'x-circle' : 'info-circle') + ""></i> <span>" + msg + "</span>";
+      container.appendChild(t);
+      setTimeout(function() { t.remove(); }, 3500);
+    }
+
+    function showLoading(show, label) {
+      if (!label) { label = 'Cargando datos...'; }
+      const spinner = document.getElementById('spinner');
+      const text = document.getElementById('spinnerLabel');
+      if (text) { text.textContent = label; }
+      if (show) { spinner.classList.add('show'); }
+      else { spinner.classList.remove('show'); }
+    }
+
+    // ── Page Initialization ──
+    (async function init() {
+      // 1. Session check
+      const session = requireAuth();
+      if (!session) return; // redirects to login.html if not authenticated
+
+      // 2. Set profile info
+      const userName = session.nombre || session.correo || 'Usuario';
+      const userInitials = userName.split(' ').filter(function(x) { return x; }).map(function(n) { return n[0]; }).join('').substring(0,2).toUpperCase() || 'U';
+      
+      const sbN = document.getElementById('sidebarName'); if (sbN) sbN.textContent = userName;
+      const sbR = document.getElementById('sidebarRole'); if (sbR) sbR.textContent = session.role || 'Profesional';
+      const sbA = document.getElementById('sidebarAv'); if (sbA) sbA.textContent = userInitials;
+      document.getElementById('topbar-avatar').textContent = userInitials;
+
+      // Date
+      const dateEl = document.getElementById('greeting-date');
+      if (dateEl) {
+        const opt = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        dateEl.textContent = new Date().toLocaleDateString('es-CL', opt);
+      }
+
+      // 3. Apply Theme Color
+      try {
+        const themeRes = await Theme.getColor();
+        if (themeRes.success && themeRes.color) {
+          applyThemeColor(themeRes.color);
+        }
+      } catch(e) {}
+
+      // 4. Fetch Active Company
+      try {
+        const companyRes = await Empresas.activa();
+        if (companyRes.success && companyRes.empresa) {
+          document.getElementById('topbar-company').innerHTML = "<i class="bi bi-building"></i> " + companyRes.empresa.razonSocial;
+          document.getElementById('platformContent').style.display = 'block';
+          document.getElementById('warningContainer').style.display = 'none';
+          
+          // Role evaluation for write privileges
+          const role = (session.role || '').toUpperCase();
+          isUserAdminOrPro = (role === 'SUPER_ADMIN' || role === 'PROFESIONAL_VISC');
+          
+          if (isUserAdminOrPro) {
+            document.getElementById('adminRepoActions').style.display = 'flex';
+            document.getElementById('adminPersonalActions').style.display = 'flex';
+            
+            // Show table column for actions
+            document.querySelectorAll('.admin-only-col').forEach(function(el) { el.style.display = 'table-cell'; });
+          }
+          
+          // Load Data
+          await cargarDatos();
+        } else {
+          document.getElementById('platformContent').style.display = 'none';
+          document.getElementById('warningContainer').style.display = 'block';
+          document.getElementById('topbar-company').textContent = 'Seleccione una empresa';
+        }
+      } catch(e) {
+        toast('Error al inicializar la empresa: ' + e.message, 'danger');
+      }
+    })();
+
+    // ── LOAD PLATFORM DATA ──
+    async function cargarDatos() {
+      showLoading(true, 'Cargando repositorio documental...');
+      try {
+        // Document Repository
+        const repoRes = await Repositorio.listar();
+        if (repoRes.success) {
+          allRepoItems = repoRes.items || [];
+          renderRepoCounts();
+          renderRepoFiles();
+        } else {
+          toast(repoRes.message || 'Error al listar documentos', 'danger');
+        }
+
+        // Employee Roster
+        const personalRes = await Repositorio.listarPersonal();
+        if (personalRes.success) {
+          allPersonal = personalRes.personal || [];
+          filtrarPersonal();
+        } else {
+          toast(personalRes.message || 'Error al listar personal', 'danger');
+        }
+
+      } catch(e) {
+        toast('Error al consultar datos: ' + e.message, 'danger');
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    // ── TABS SWITCHER ──
+    function switchTab(tabId) {
+      currentTab = tabId;
+      document.getElementById('tabDocs').style.display = tabId === 'docs' ? 'block' : 'none';
+      document.getElementById('tabPersonal').style.display = tabId === 'personal' ? 'block' : 'none';
+      
+      document.getElementById('tabBtnDocs').classList.toggle('active', tabId === 'docs');
+      document.getElementById('tabBtnPersonal').classList.toggle('active', tabId === 'personal');
+    }
+
+    // ── REPOSITORIO DE DOCUMENTOS FUNCTIONALITY ──
+    function selectCategory(catName) {
+      selectedCategory = catName;
+      
+      // Update menu highlighting
+      const index = parseInt(catName.split('.')[0]);
+      for (let i = 1; i <= 7; i++) {
+        document.getElementById("cat-" + i).classList.toggle('active', i === index);
+      }
+
+      document.getElementById('currentCategoryTitle').textContent = catName;
+      renderRepoFiles();
+    }
+
+    function renderRepoCounts() {
+      const counts = {
+        '1. IRL': 0,
+        '2. RIOHS': 0,
+        '3. Procedimientos SST': 0,
+        '4. Programa de Capacitación SST': 0,
+        '5. Actas de Visita': 0,
+        '6. Registros de Capacitación y Asistencia': 0,
+        '7. Documentos de Cumplimiento Legal': 0
+      };
+
+      allRepoItems.forEach(function(item) {
+        if (counts[item.categoria] !== undefined) {
+          counts[item.categoria]++;
+        }
+      });
+
+      for (let i = 1; i <= 7; i++) {
+        const key = Object.keys(counts)[i-1];
+        document.getElementById("count-" + i).textContent = counts[key];
+      }
+    }
+
+    function renderRepoFiles() {
+      const filesList = document.getElementById('filesList');
+      filesList.innerHTML = '';
+
+      const filtered = allRepoItems.filter(function(item) { return item.categoria === selectedCategory; });
+
+      if (filtered.length === 0) {
+        filesList.innerHTML = 
+          "<div class="empty-state">" +
+            "<i class="bi bi-folder-x"></i>" +
+            "<p>No hay documentos ni enlaces cargados en esta sección.</p>" +
+          "</div>";
+        return;
+      }
+
+      filtered.forEach(function(item) {
+        const isPdf = item.tipo === 'PDF';
+        const iconClass = isPdf ? 'bi-file-earmark-pdf pdf' : 'bi-youtube youtube';
+        
+        const card = document.createElement('div');
+        card.className = 'file-card';
+        
+        let actionsHtml = "<a class="file-btn-dl" href="" + item.url + "" target="_blank" title="Ver / Descargar"><i class="bi bi-box-arrow-up-right"></i></a>";
+        if (isUserAdminOrPro) {
+          actionsHtml += "<button class="file-btn-del" onclick="eliminarItemRepositorio('" + item.id + "')" title="Eliminar"><i class="bi bi-trash"></i></button>";
+        }
+
+        const dateStr = item.fecha ? new Date(item.fecha).toLocaleDateString('es-CL', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
+
+        card.innerHTML = 
+          "<div class="file-meta">" +
+            "<div class="file-icon " + (isPdf ? "pdf" : "youtube") + "">" +
+              "<i class="bi " + iconClass + ""></i>" +
+            "</div>" +
+            "<div class="file-info">" +
+              "<span class="file-name">" + item.nombre + "</span>" +
+              "<div class="file-sub">" +
+                "<span><i class="bi bi-clock"></i> " + dateStr + "</span>" +
+                "<span><i class="bi bi-person"></i> Por: " + (item.autor || "Sistema") + "</span>" +
+                "<span><i class="bi bi-tag"></i> " + (isPdf ? "Archivo PDF" : "Video/Enlace") + "</span>" +
+              "</div>" +
+            "</div>" +
+          "</div>" +
+          "<div class="file-actions">" +
+            actionsHtml +
+          "</div>";
+          
+        filesList.appendChild(card);
+      });
+    }
+
+    // Subir archivo PDF
+    function openUploadModal() {
+      document.getElementById('uploadFileDisplayName').value = '';
+      clearFileSelected();
+      openModal('uploadModal');
+    }
+
+    function handleFileSelected(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      if (file.type !== 'application/pdf') {
+        toast('Solo se permiten archivos PDF', 'danger');
+        clearFileSelected();
+        return;
+      }
+
+      if (file.size > 10 * 1024 * 1024) { // 10MB limit
+        toast('El tamaño máximo de archivo es de 10MB', 'danger');
+        clearFileSelected();
+        return;
+      }
+
+      selectedFileName = file.name;
+      selectedFileType = file.type;
+
+      // Show preview
+      document.getElementById('previewFileName').textContent = file.name;
+      document.getElementById('filePreviewBox').style.display = 'flex';
+      
+      // Auto pre-fill name input
+      document.getElementById('uploadFileDisplayName').value = file.name.replace(/\.[^/.]+$/, ""); // Strip extension
+
+      // Convert to base64
+      const reader = new FileReader();
+      reader.onload = function() {
+        selectedFileBase64 = reader.result.split(',')[1];
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function clearFileSelected() {
+      document.getElementById('fileSelector').value = '';
+      document.getElementById('filePreviewBox').style.display = 'none';
+      selectedFileBase64 = '';
+      selectedFileType = '';
+      selectedFileName = '';
+    }
+
+    async function submitFileRepo() {
+      const displayName = document.getElementById('uploadFileDisplayName').value.trim();
+      if (!selectedFileBase64) {
+        toast('Por favor, seleccione un archivo PDF.', 'danger');
+        return;
+      }
+      if (!displayName) {
+        toast('Por favor, asigne un nombre al documento.', 'danger');
+        return;
+      }
+
+      closeModal('uploadModal');
+      showLoading(true, 'Subiendo archivo a Google Drive y registrando...');
+
+      try {
+        const res = await Repositorio.subirArchivo(selectedCategory, displayName + '.pdf', selectedFileBase64, selectedFileType);
+        if (res.success) {
+          toast('Documento PDF subido con éxito', 'success');
+          // Update in-memory list
+          allRepoItems.push(res.item);
+          renderRepoCounts();
+          renderRepoFiles();
+        } else {
+          toast(res.message || 'Error al subir documento', 'danger');
+        }
+      } catch(e) {
+        toast('Error crítico al subir: ' + e.message, 'danger');
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    // Agregar enlace de video
+    function openEnlaceModal() {
+      document.getElementById('linkName').value = '';
+      document.getElementById('linkUrl').value = '';
+      openModal('enlaceModal');
+    }
+
+    async function submitLinkRepo() {
+      const name = document.getElementById('linkName').value.trim();
+      const url = document.getElementById('linkUrl').value.trim();
+
+      if (!name || !url) {
+        toast('Por favor, complete todos los campos.', 'danger');
+        return;
+      }
+
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        toast('Por favor, introduzca una URL válida.', 'danger');
+        return;
+      }
+
+      closeModal('enlaceModal');
+      showLoading(true, 'Guardando enlace...');
+
+      try {
+        const res = await Repositorio.agregarEnlace(selectedCategory, name, url);
+        if (res.success) {
+          toast('Enlace agregado con éxito', 'success');
+          allRepoItems.push(res.item);
+          renderRepoCounts();
+          renderRepoFiles();
+        } else {
+          toast(res.message || 'Error al guardar enlace', 'danger');
+        }
+      } catch(e) {
+        toast('Error de red: ' + e.message, 'danger');
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    // Eliminar ítem del repositorio
+    async function eliminarItemRepositorio(id) {
+      if (!confirm('¿Está seguro de que desea eliminar este documento? Se borrará también de Google Drive.')) return;
+      
+      showLoading(true, 'Borrando del servidor...');
+      try {
+        const res = await Repositorio.eliminarItem(id);
+        if (res.success) {
+          toast('Documento eliminado correctamente', 'success');
+          allRepoItems = allRepoItems.filter(function(item) { return item.id !== id; });
+          renderRepoCounts();
+          renderRepoFiles();
+        } else {
+          toast(res.message || 'Error al eliminar', 'danger');
+        }
+      } catch(e) {
+        toast('Error de red: ' + e.message, 'danger');
+      } finally {
+        showLoading(false);
+      }
+    }
+
+
+    // ── TAB 2: NÓMINA DE PERSONAL FUNCTIONALITY ──
+    function renderPersonalTable(data) {
+      const tbody = document.getElementById('personalTableBody');
+      tbody.innerHTML = '';
+
+      if (data.length === 0) {
+        document.getElementById('personalEmptyState').style.display = 'flex';
+        return;
+      }
+      document.getElementById('personalEmptyState').style.display = 'none';
+
+      data.forEach(function(p) {
+        const tr = document.createElement('tr');
+        
+        // Format RUT nicely
+        const formattedRut = formatRutDisplay(p.rut);
+        const stateBadge = p.estado === 'ACTIVO' ? "<span class="badge badge-success">Activo</span>" : "<span class="badge badge-danger">Inactivo</span>";
+
+        let actionCol = '';
+        if (isUserAdminOrPro) {
+          actionCol = 
+            "<td class="admin-only-col">" +
+              "<button class="file-btn-dl" style="display:inline-flex;margin-right:4px;" onclick="editWorker('" + p.rut + "')" title="Editar"><i class="bi bi-pencil"></i></button>" +
+              "<button class="file-btn-del" style="display:inline-flex;" onclick="deleteWorker('" + p.rut + "')" title="Eliminar"><i class="bi bi-trash"></i></button>" +
+            "</td>";
+        }
+
+        tr.innerHTML = 
+          "<td style="font-family:monospace;font-weight:600;">" + formattedRut + "</td>" +
+          "<td style="font-weight:500;">" + p.nombre + "</td>" +
+          "<td>" + (p.email || "<span style="color:var(--text-muted);">—</span>") + "</td>" +
+          "<td>" + (p.cargo || "<span style="color:var(--text-muted);">—</span>") + "</td>" +
+          "<td>" + (p.fechaIngreso ? formatDateDisplay(p.fechaIngreso) : "<span style="color:var(--text-muted);">—</span>") + "</td>" +
+          "<td>" + stateBadge + "</td>" +
+          actionCol;
+          
+        tbody.appendChild(tr);
+      });
+    }
+
+    function formatRutDisplay(rut) {
+      if (!rut) return '—';
+      const clean = rut.replace(/[^0-9Kk]/g, '');
+      if (clean.length < 2) return rut;
+      const dv = clean.slice(-1).toUpperCase();
+      const num = clean.slice(0, -1);
+      
+      // Add points
+      let fmt = '';
+      let count = 0;
+      for (let i = num.length - 1; i >= 0; i--) {
+        fmt = num[i] + fmt;
+        count++;
+        if (count === 3 && i > 0) {
+          fmt = '.' + fmt;
+          count = 0;
+        }
+      }
+      return fmt + '-' + dv;
+    }
+
+    function formatDateDisplay(isoStr) {
+      if (!isoStr) return '—';
+      try {
+        const d = new Date(isoStr);
+        if (isNaN(d.getTime())) return isoStr;
+        return d.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      } catch {
+        return isoStr;
+      }
+    }
+
+    function filtrarPersonal() {
+      const query = document.getElementById('personalSearch').value.trim().toLowerCase();
+      const statusFilter = document.getElementById('personalStatusFilter').value;
+
+      const filtered = allPersonal.filter(function(p) {
+        // Status filter
+        if (statusFilter !== 'ALL' && p.estado !== statusFilter) return false;
+
+        // Query filter (Name or RUT)
+        if (query) {
+          const matchName = p.nombre.toLowerCase().includes(query);
+          const matchRut = p.rut.toLowerCase().includes(query.replace(/[\.\-]/g, ''));
+          return matchName || matchRut;
+        }
+        return true;
+      });
+
+      renderPersonalTable(filtered);
+    }
+
+    // Add / Edit worker Modal
+    function openWorkerModal() {
+      document.getElementById('workerModalTitle').innerHTML = '<i class="bi bi-person-plus"></i> Registrar Trabajador';
+      document.getElementById('editOriginalRut').value = '';
+      document.getElementById('wNombre').value = '';
+      document.getElementById('wRut').value = '';
+      document.getElementById('wRut').disabled = false;
+      document.getElementById('wEmail').value = '';
+      document.getElementById('wCargo').value = '';
+      document.getElementById('wFecha').value = '';
+      document.getElementById('wEstado').value = 'ACTIVO';
+      openModal('workerModal');
+    }
+
+    function editWorker(rut) {
+      const p = allPersonal.find(function(x) { return x.rut === rut; });
+      if (!p) return;
+
+      document.getElementById('workerModalTitle').innerHTML = '<i class="bi bi-pencil"></i> Editar Trabajador';
+      document.getElementById('editOriginalRut').value = p.rut;
+      document.getElementById('wNombre').value = p.nombre;
+      document.getElementById('wRut').value = formatRutDisplay(p.rut);
+      document.getElementById('wRut').disabled = true; // Protect RUT as key
+      document.getElementById('wEmail').value = p.email || '';
+      document.getElementById('wCargo').value = p.cargo || '';
+      
+      // format date for input[type=date] (yyyy-MM-dd)
+      if (p.fechaIngreso) {
+        try {
+          const d = new Date(p.fechaIngreso);
+          if (!isNaN(d.getTime())) {
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            document.getElementById('wFecha').value = yyyy + "-" + mm + "-" + dd;
+          } else {
+            document.getElementById('wFecha').value = '';
+          }
+        } catch {
+          document.getElementById('wFecha').value = '';
+        }
+      } else {
+        document.getElementById('wFecha').value = '';
+      }
+      
+      document.getElementById('wEstado').value = p.estado || 'ACTIVO';
+      openModal('workerModal');
+    }
+
+    async function submitWorkerForm() {
+      const nombre = document.getElementById('wNombre').value.trim();
+      const rut = document.getElementById('wRut').value.trim();
+      const email = document.getElementById('wEmail').value.trim();
+      const cargo = document.getElementById('wCargo').value.trim();
+      const fecha = document.getElementById('wFecha').value;
+      const estado = document.getElementById('wEstado').value;
+
+      if (!nombre || !rut) {
+        toast('Nombre completo y RUT son obligatorios', 'danger');
+        return;
+      }
+
+      closeModal('workerModal');
+      showLoading(true, 'Guardando ficha de trabajador...');
+
+      const datos = {
+        rut: rut.replace(/[\.\-]/g, '').trim().toUpperCase(),
+        nombre,
+        email,
+        cargo,
+        fechaIngreso: fecha,
+        estado
+      };
+
+      try {
+        const res = await Repositorio.guardarPersonal(datos);
+        if (res.success) {
+          toast('Trabajador guardado con éxito', 'success');
+          
+          // Local memory sync
+          const idx = allPersonal.findIndex(function(x) { return x.rut === datos.rut; });
+          if (idx > -1) {
+            allPersonal[idx] = datos;
+          } else {
+            allPersonal.push(datos);
+          }
+          filtrarPersonal();
+        } else {
+          toast(res.message || 'Error al guardar', 'danger');
+        }
+      } catch(e) {
+        toast('Error de red: ' + e.message, 'danger');
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    async function deleteWorker(rut) {
+      if (!confirm('¿Está seguro de que desea eliminar a este trabajador de la nómina?')) return;
+      
+      showLoading(true, 'Eliminando de la nómina...');
+      try {
+        const res = await Repositorio.eliminarPersonal(rut);
+        if (res.success) {
+          toast('Trabajador eliminado con éxito', 'success');
+          allPersonal = allPersonal.filter(function(x) { return x.rut !== rut; });
+          filtrarPersonal();
+        } else {
+          toast(res.message || 'Error al eliminar', 'danger');
+        }
+      } catch(e) {
+        toast('Error de red: ' + e.message, 'danger');
+      } finally {
+        showLoading(false);
+      }
+    }
+
+
+    // ── CSV IMPORTER FUNCTIONALITY ──
+    function openImportModal() {
+      document.getElementById('csvSelector').value = '';
+      document.getElementById('importPreviewSection').style.display = 'none';
+      document.getElementById('btnConfirmImport').style.display = 'none';
+      parsedImportList = [];
+      openModal('importModal');
+    }
+
+    function handleCSVSelected(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      showLoading(true, 'Procesando archivo...');
+      const reader = new FileReader();
+      reader.onload = function() {
+        try {
+          const text = reader.result;
+          parsedImportList = parseCSV(text);
+          showLoading(false);
+
+          if (parsedImportList.length === 0) {
+            toast('No se encontraron filas válidas en el CSV', 'warning');
+            return;
+          }
+
+          // Show Preview
+          document.getElementById('importCount').textContent = parsedImportList.length;
+          const tbody = document.getElementById('importPreviewTableBody');
+          tbody.innerHTML = '';
+          
+          // Display first 15 rows in preview
+          parsedImportList.slice(0, 15).forEach(function(row) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = 
+              "<td>" + formatRutDisplay(row.rut) + "</td>" +
+              "<td>" + row.nombre + "</td>" +
+              "<td>" + (row.email || "—") + "</td>" +
+              "<td>" + (row.cargo || "—") + "</td>" +
+              "<td>" + (row.fechaIngreso || "—") + "</td>" +
+              "<td><span class="badge " + (row.estado === 'ACTIVO' ? 'badge-success' : 'badge-danger') + "">" + row.estado + "</span></td>";
+            tbody.appendChild(tr);
+          });
+          
+          if (parsedImportList.length > 15) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = "<td colspan="6" style="text-align:center;color:var(--text-muted);font-style:italic;">Y " + (parsedImportList.length - 15) + " filas más...</td>";
+            tbody.appendChild(tr);
+          }
+
+          document.getElementById('importPreviewSection').style.display = 'block';
+          document.getElementById('btnConfirmImport').style.display = 'inline-block';
+        } catch(e) {
+          showLoading(false);
+          toast('Error al parsear archivo: ' + e.message, 'danger');
+        }
+      };
+      reader.readAsText(file, "UTF-8");
+    }
+
+    function parseCSV(text) {
+      const lines = text.split(/?
+/);
+      const result = [];
+      if (!lines.length) return [];
+
+      // Auto-detect delimiter (comma or semicolon)
+      const firstLine = lines[0];
+      const delimiter = firstLine.includes(';') ? ';' : ',';
+      
+      let startIndex = 0;
+      // Detect if first line is a header row
+      const firstLineNorm = firstLine.toLowerCase();
+      if (firstLineNorm.includes('rut') || firstLineNorm.includes('nombre') || firstLineNorm.includes('correo') || firstLineNorm.includes('email') || firstLineNorm.includes('cargo')) {
+        startIndex = 1;
+      }
+
+      for (let i = startIndex; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+
+        // Split columns considering quotes
+        const cols = line.split(delimiter).map(function(c) { return c.replace(/^["']|["']$/g, '').trim(); });
+        if (cols.length < 2 || !cols[0] || !cols[1]) continue; // RUT and Name are strictly required
+
+        const rawRut = cols[0].replace(/[\.\-\s]/g, '').toUpperCase();
+        const nombre = cols[1];
+        const email = cols[2] || '';
+        const cargo = cols[3] || '';
+        const fecha = cols[4] || '';
+        const rawState = (cols[5] || 'ACTIVO').toUpperCase();
+        const estado = (rawState.includes('INAC') || rawState.includes('DESA')) ? 'INACTIVO' : 'ACTIVO';
+
+        result.push({
+          rut: rawRut,
+          nombre,
+          email,
+          cargo,
+          fechaIngreso: fecha,
+          estado
+        });
+      }
+      return result;
+    }
+
+    async function submitCSVImport() {
+      if (parsedImportList.length === 0) return;
+
+      closeModal('importModal');
+      showLoading(true, "Importando " + parsedImportList.length + " trabajadores a la planilla...");
+
+      try {
+        const res = await Repositorio.importarPersonal(parsedImportList);
+        if (res.success) {
+          toast("Nómina importada: " + res.agregados + " agregados, " + res.actualizados + " actualizados", 'success');
+          // Reload
+          await cargarDatos();
+        } else {
+          toast(res.message || 'Error en la importación', 'danger');
+        }
+      } catch(e) {
+        toast('Error crítico: ' + e.message, 'danger');
+      } finally {
+        showLoading(false);
+      }
+    }
+
+
+    // ── MODAL HELPERS ──
+    function openModal(id) {
+      document.getElementById(id).classList.add('show');
+    }
+
+    // Close modal
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('show');
+    }
+
+    // Close on click outside modal card
+    document.querySelectorAll('.modal-backdrop').forEach(function(backdrop) {
+      backdrop.addEventListener('click', function(e) {
+        if (e.target === this) {
+          closeModal(this.id);
+        }
+      });
+    });
+
+    // Logout
+    function doLogout() {
+      Auth.logout();
+      window.location.href = 'login.html';
+    }
+
+    function requireAuth() {
+      const token = Auth.getToken();
+      if (!token) { window.location.href = 'login.html'; return null; }
+      return Auth.getSessionLocal();
+    }
+  </script>
+</body>
+<html>

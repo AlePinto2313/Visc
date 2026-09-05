@@ -228,6 +228,35 @@ const Capacitaciones = {
   },
 };
 
+// ── Repositorio & Personal ───────────────────────────────────────────────────
+
+const Repositorio = {
+  async listar() {
+    return callAPI('listarRepositorio', { token: Auth.getToken() });
+  },
+  async subirArchivo(categoria, nombre, bytesBase64, mimeType) {
+    return callAPI('subirArchivoRepositorio', { token: Auth.getToken(), categoria, nombre, bytesBase64, mimeType });
+  },
+  async agregarEnlace(categoria, nombre, url) {
+    return callAPI('agregarEnlaceRepositorio', { token: Auth.getToken(), categoria, nombre, url });
+  },
+  async eliminarItem(id) {
+    return callAPI('eliminarItemRepositorio', { token: Auth.getToken(), id });
+  },
+  async listarPersonal() {
+    return callAPI('listarPersonal', { token: Auth.getToken() });
+  },
+  async guardarPersonal(datos) {
+    return callAPI('guardarPersonal', { token: Auth.getToken(), datos });
+  },
+  async eliminarPersonal(rut) {
+    return callAPI('eliminarPersonal', { token: Auth.getToken(), rut });
+  },
+  async importarPersonal(lista) {
+    return callAPI('importarPersonal', { token: Auth.getToken(), lista });
+  }
+};
+
 // ── Helpers de UI ─────────────────────────────────────────────────────────────
 
 function toast(msg, tipo = 'info') {
