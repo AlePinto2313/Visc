@@ -721,8 +721,8 @@
       if (!tipo) { tipo = 'info'; }
       const container = document.getElementById('toast');
       const t = document.createElement('div');
-      t.className = "toast toast-" + tipo;
-      t.innerHTML = "<i class="bi bi-" + (tipo === 'success' ? 'check-circle' : tipo === 'danger' ? 'x-circle' : 'info-circle') + ""></i> <span>" + msg + "</span>";
+      t.className = 'toast toast-' + tipo;
+      t.innerHTML = '<i class="bi bi-' + (tipo === 'success' ? 'check-circle' : tipo === 'danger' ? 'x-circle' : 'info-circle') + '"></i> <span>' + msg + '</span>';
       container.appendChild(t);
       setTimeout(function() { t.remove(); }, 3500);
     }
@@ -770,7 +770,7 @@
       try {
         const companyRes = await Empresas.activa();
         if (companyRes.success && companyRes.empresa) {
-          document.getElementById('topbar-company').innerHTML = "<i class="bi bi-building"></i> " + companyRes.empresa.razonSocial;
+          document.getElementById('topbar-company').innerHTML = '<i class="bi bi-building"></i> ' + companyRes.empresa.razonSocial;
           document.getElementById('platformContent').style.display = 'block';
           document.getElementById('warningContainer').style.display = 'none';
           
@@ -852,6 +852,7 @@
       renderRepoFiles();
     }
 
+    // counts
     function renderRepoCounts() {
       const counts = {
         '1. IRL': 0,
@@ -883,10 +884,10 @@
 
       if (filtered.length === 0) {
         filesList.innerHTML = 
-          "<div class="empty-state">" +
-            "<i class="bi bi-folder-x"></i>" +
-            "<p>No hay documentos ni enlaces cargados en esta sección.</p>" +
-          "</div>";
+          '<div class="empty-state">' +
+            '<i class="bi bi-folder-x"></i>' +
+            '<p>No hay documentos ni enlaces cargados en esta sección.</p>' +
+          '</div>';
         return;
       }
 
@@ -897,30 +898,30 @@
         const card = document.createElement('div');
         card.className = 'file-card';
         
-        let actionsHtml = "<a class="file-btn-dl" href="" + item.url + "" target="_blank" title="Ver / Descargar"><i class="bi bi-box-arrow-up-right"></i></a>";
+        let actionsHtml = '<a class="file-btn-dl" href="' + item.url + '" target="_blank" title="Ver / Descargar"><i class="bi bi-box-arrow-up-right"></i></a>';
         if (isUserAdminOrPro) {
-          actionsHtml += "<button class="file-btn-del" onclick="eliminarItemRepositorio('" + item.id + "')" title="Eliminar"><i class="bi bi-trash"></i></button>";
+          actionsHtml += '<button class="file-btn-del" onclick="eliminarItemRepositorio(\'' + item.id + '\')" title="Eliminar"><i class="bi bi-trash"></i></button>';
         }
 
         const dateStr = item.fecha ? new Date(item.fecha).toLocaleDateString('es-CL', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
 
         card.innerHTML = 
-          "<div class="file-meta">" +
-            "<div class="file-icon " + (isPdf ? "pdf" : "youtube") + "">" +
-              "<i class="bi " + iconClass + ""></i>" +
-            "</div>" +
-            "<div class="file-info">" +
-              "<span class="file-name">" + item.nombre + "</span>" +
-              "<div class="file-sub">" +
-                "<span><i class="bi bi-clock"></i> " + dateStr + "</span>" +
-                "<span><i class="bi bi-person"></i> Por: " + (item.autor || "Sistema") + "</span>" +
-                "<span><i class="bi bi-tag"></i> " + (isPdf ? "Archivo PDF" : "Video/Enlace") + "</span>" +
-              "</div>" +
-            "</div>" +
-          "</div>" +
-          "<div class="file-actions">" +
+          '<div class="file-meta">' +
+            '<div class="file-icon ' + (isPdf ? 'pdf' : 'youtube') + '">' +
+              '<i class="bi ' + iconClass + '"></i>' +
+            '</div>' +
+            '<div class="file-info">' +
+              '<span class="file-name">' + item.nombre + '</span>' +
+              '<div class="file-sub">' +
+                '<span><i class="bi bi-clock"></i> ' + dateStr + '</span>' +
+                '<span><i class="bi bi-person"></i> Por: ' + (item.autor || 'Sistema') + '</span>' +
+                '<span><i class="bi bi-tag"></i> ' + (isPdf ? 'Archivo PDF' : 'Video/Enlace') + '</span>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="file-actions">' +
             actionsHtml +
-          "</div>";
+          '</div>';
           
         filesList.appendChild(card);
       });
@@ -1087,24 +1088,24 @@
         
         // Format RUT nicely
         const formattedRut = formatRutDisplay(p.rut);
-        const stateBadge = p.estado === 'ACTIVO' ? "<span class="badge badge-success">Activo</span>" : "<span class="badge badge-danger">Inactivo</span>";
+        const stateBadge = p.estado === 'ACTIVO' ? '<span class="badge badge-success">Activo</span>' : '<span class="badge badge-danger">Inactivo</span>';
 
         let actionCol = '';
         if (isUserAdminOrPro) {
           actionCol = 
-            "<td class="admin-only-col">" +
-              "<button class="file-btn-dl" style="display:inline-flex;margin-right:4px;" onclick="editWorker('" + p.rut + "')" title="Editar"><i class="bi bi-pencil"></i></button>" +
-              "<button class="file-btn-del" style="display:inline-flex;" onclick="deleteWorker('" + p.rut + "')" title="Eliminar"><i class="bi bi-trash"></i></button>" +
-            "</td>";
+            '<td class="admin-only-col">' +
+              '<button class="file-btn-dl" style="display:inline-flex;margin-right:4px;" onclick="editWorker(\'' + p.rut + '\')" title="Editar"><i class="bi bi-pencil"></i></button>' +
+              '<button class="file-btn-del" style="display:inline-flex;" onclick="deleteWorker(\'' + p.rut + '\')" title="Eliminar"><i class="bi bi-trash"></i></button>' +
+            '</td>';
         }
 
         tr.innerHTML = 
-          "<td style="font-family:monospace;font-weight:600;">" + formattedRut + "</td>" +
-          "<td style="font-weight:500;">" + p.nombre + "</td>" +
-          "<td>" + (p.email || "<span style="color:var(--text-muted);">—</span>") + "</td>" +
-          "<td>" + (p.cargo || "<span style="color:var(--text-muted);">—</span>") + "</td>" +
-          "<td>" + (p.fechaIngreso ? formatDateDisplay(p.fechaIngreso) : "<span style="color:var(--text-muted);">—</span>") + "</td>" +
-          "<td>" + stateBadge + "</td>" +
+          '<td style="font-family:monospace;font-weight:600;">' + formattedRut + '</td>' +
+          '<td style="font-weight:500;">' + p.nombre + '</td>' +
+          '<td>' + (p.email || '<span style="color:var(--text-muted);">—</span>') + '</td>' +
+          '<td>' + (p.cargo || '<span style="color:var(--text-muted);">—</span>') + '</td>' +
+          '<td>' + (p.fechaIngreso ? formatDateDisplay(p.fechaIngreso) : '<span style="color:var(--text-muted);">—</span>') + '</td>' +
+          '<td>' + stateBadge + '</td>' +
           actionCol;
           
         tbody.appendChild(tr);
@@ -1316,18 +1317,18 @@
           parsedImportList.slice(0, 15).forEach(function(row) {
             const tr = document.createElement('tr');
             tr.innerHTML = 
-              "<td>" + formatRutDisplay(row.rut) + "</td>" +
-              "<td>" + row.nombre + "</td>" +
-              "<td>" + (row.email || "—") + "</td>" +
-              "<td>" + (row.cargo || "—") + "</td>" +
-              "<td>" + (row.fechaIngreso || "—") + "</td>" +
-              "<td><span class="badge " + (row.estado === 'ACTIVO' ? 'badge-success' : 'badge-danger') + "">" + row.estado + "</span></td>";
+              '<td>' + formatRutDisplay(row.rut) + '</td>' +
+              '<td>' + row.nombre + '</td>' +
+              '<td>' + (row.email || '—') + '</td>' +
+              '<td>' + (row.cargo || '—') + '</td>' +
+              '<td>' + (row.fechaIngreso || '—') + '</td>' +
+              '<td><span class="badge ' + (row.estado === 'ACTIVO' ? 'badge-success' : 'badge-danger') + '">' + row.estado + '</span></td>';
             tbody.appendChild(tr);
           });
           
           if (parsedImportList.length > 15) {
             const tr = document.createElement('tr');
-            tr.innerHTML = "<td colspan="6" style="text-align:center;color:var(--text-muted);font-style:italic;">Y " + (parsedImportList.length - 15) + " filas más...</td>";
+            tr.innerHTML = '<td colspan="6" style="text-align:center;color:var(--text-muted);font-style:italic;">Y ' + (parsedImportList.length - 15) + ' filas más...</td>';
             tbody.appendChild(tr);
           }
 
@@ -1342,8 +1343,7 @@
     }
 
     function parseCSV(text) {
-      const lines = text.split(/?
-/);
+      const lines = text.split(/\r?\n/);
       const result = [];
       if (!lines.length) return [];
 
@@ -1441,4 +1441,4 @@
     }
   </script>
 </body>
-<html>
+</html>
