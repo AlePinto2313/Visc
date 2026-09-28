@@ -367,6 +367,14 @@ body, html, .app, .main {
   border-bottom-color: var(--theme-color, #4F46E5) !important;
 }
 
+.tabs .tab-btn.active {
+  color: #ffffff !important;
+}
+
+.tabs .tab-btn.active i {
+  color: inherit !important;
+}
+
 /* Orange icons inside card and page titles */
 .card-title i, 
 .section-title i, 
@@ -389,4 +397,41 @@ body, html, .app, .main {
 .stat-icon.insp {
   background-color: var(--theme-color-lightBg) !important;
   color: var(--theme-color, #4F46E5) !important;
+}
+
+/* Mobile drawer: pages use `.collapsed` to open the sidebar, so labels must stay visible. */
+@media (max-width: 768px) {
+  #sidebar.collapsed .nav-label,
+  .sidebar.collapsed .nav-label,
+  #sidebar.collapsed .sidebar-label,
+  .sidebar.collapsed .sidebar-label,
+  #sidebar.collapsed .nav-badge,
+  .sidebar.collapsed .nav-badge,
+  #sidebar.collapsed .sidebar-name,
+  .sidebar.collapsed .sidebar-name,
+  #sidebar.collapsed .sidebar-sub,
+  .sidebar.collapsed .sidebar-sub,
+  #sidebar.collapsed .sidebar-section,
+  .sidebar.collapsed .sidebar-section,
+  #sidebar.collapsed .user-info,
+  .sidebar.collapsed .user-info {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+
+  #sidebar.collapsed .nav-item,
+  .sidebar.collapsed .nav-item {
+    justify-content: flex-start !important;
+  }
+
+  #sidebar .nav-label,
+  .sidebar .nav-label,
+  #sidebar .sidebar-label,
+  .sidebar .sidebar-label,
+  #sidebar .sidebar-brand,
+  .sidebar .sidebar-brand,
+  #sidebar .user-info,
+  .sidebar .user-info {
+    min-width: 0 !important;
+  }
 }

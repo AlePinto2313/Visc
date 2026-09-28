@@ -342,6 +342,50 @@
     }
   </style>
   <link rel="stylesheet" href="css/theme.css">
+  <style>
+    @media (max-width: 768px) {
+      #sidebar.collapsed .nav-label,
+      .sidebar.collapsed .nav-label,
+      #sidebar.collapsed .nav-badge,
+      .sidebar.collapsed .nav-badge,
+      #sidebar.collapsed .sidebar-name,
+      .sidebar.collapsed .sidebar-name,
+      #sidebar.collapsed .sidebar-sub,
+      .sidebar.collapsed .sidebar-sub,
+      #sidebar.collapsed .sidebar-section,
+      .sidebar.collapsed .sidebar-section,
+      #sidebar.collapsed .user-info,
+      .sidebar.collapsed .user-info {
+        opacity: 1 !important;
+        pointer-events: auto !important;
+      }
+
+      #sidebar,
+      .sidebar {
+        background: var(--white) !important;
+        box-shadow: 18px 0 45px rgba(15, 23, 42, 0.14) !important;
+      }
+
+      #sidebar .nav-item,
+      .sidebar .nav-item {
+        justify-content: flex-start !important;
+      }
+
+      #sidebar .sidebar-brand,
+      .sidebar .sidebar-brand,
+      #sidebar .user-info,
+      .sidebar .user-info,
+      #sidebar .nav-label,
+      .sidebar .nav-label {
+        min-width: 0 !important;
+      }
+
+      #sidebar .sidebar-section,
+      .sidebar .sidebar-section {
+        padding: 14px 18px 6px !important;
+      }
+    }
+  </style>
 </head>
 <body>
 <div class="app" id="app">
@@ -392,7 +436,7 @@
       </a>
       <a class="nav-item" href="capacitaciones.html">
         <i class="bi bi-journal-bookmark"></i>
-        <span class="sidebar-label">Capacitaciones</span>
+        <span class="nav-label">Capacitaciones</span>
       </a>
 
     </div>

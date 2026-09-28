@@ -363,6 +363,118 @@
       .left-hero h1 { font-size: 1.9rem; }
       .panel-right { padding: 2rem 1.25rem; }
     }
+    @media (max-width: 560px) {
+      html, body { min-height: 100%; height: auto; }
+      body {
+        background:
+          linear-gradient(180deg, var(--navy) 0 260px, #f4f6fb 260px 100%);
+      }
+      .split {
+        min-height: 100svh;
+        background: transparent;
+      }
+      .panel-left {
+        min-height: auto;
+        padding: 1.15rem 1.15rem 3.65rem;
+        border-bottom-left-radius: 28px;
+        border-bottom-right-radius: 28px;
+        background:
+          radial-gradient(circle at 92% 18%, rgba(240,144,26,.18), transparent 34%),
+          radial-gradient(circle at 0% 95%, rgba(255,255,255,.13), transparent 32%),
+          linear-gradient(145deg, #1B2D6B 0%, #223879 58%, #16265f 100%);
+      }
+      .left-logo { gap: .7rem; }
+      .left-logo img {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        padding: 4px;
+        background: rgba(255,255,255,.12);
+      }
+      .left-logo-text {
+        font-size: 1.14rem;
+        letter-spacing: .02em;
+      }
+      .left-hero { padding: 1.25rem 0 0; }
+      .left-hero h1 {
+        font-size: clamp(1.58rem, 8.2vw, 2.05rem);
+        line-height: 1.05;
+        max-width: 310px;
+        margin-bottom: .7rem;
+      }
+      .left-hero p {
+        max-width: 315px;
+        font-size: .82rem;
+        line-height: 1.48;
+        margin-bottom: .85rem;
+        color: rgba(255,255,255,.68);
+      }
+      .pills { gap: .38rem; }
+      .pill {
+        font-size: .68rem;
+        padding: .28rem .54rem;
+        background: rgba(255,255,255,.08);
+        border-color: rgba(255,255,255,.16);
+      }
+      .left-footer { display: none; }
+      .geo-1 { width: 230px; height: 230px; top: -95px; right: -98px; opacity: .1; }
+      .geo-2 { width: 180px; height: 180px; bottom: -80px; left: -90px; opacity: .07; }
+      .geo-3 { display: none; }
+      .geo-stripe {
+        background-size: 42px 42px;
+        opacity: .75;
+      }
+      .panel-right {
+        align-items: flex-start;
+        padding: 0 1rem 1.8rem;
+        background: transparent;
+      }
+      .form-box {
+        position: relative;
+        z-index: 2;
+        max-width: none;
+        margin-top: -2.35rem;
+        background: var(--white);
+        border: 1px solid rgba(212,217,232,.75);
+        border-radius: 24px;
+        padding: 1.45rem 1.15rem 1.2rem;
+        box-shadow: 0 20px 48px rgba(21,35,89,.14);
+      }
+      .form-box .form-eyebrow {
+        font-size: .68rem;
+        margin-bottom: .35rem;
+      }
+      .form-box h2 {
+        font-size: 1.55rem;
+        margin-bottom: .25rem;
+      }
+      .form-box .form-sub {
+        font-size: .86rem;
+        line-height: 1.45;
+        margin-bottom: 1.35rem;
+      }
+      .field { margin-bottom: 1rem; }
+      .field label { font-size: .79rem; }
+      .input-wrap input {
+        min-height: 50px;
+        border-radius: 14px;
+        background: #f6f7fb;
+      }
+      .btn-submit {
+        min-height: 52px;
+        border-radius: 14px;
+        margin-top: 1.2rem;
+        box-shadow: 0 10px 24px rgba(232,119,34,.18);
+      }
+      .tab-nav { flex-direction: column; }
+    }
+    @media (max-width: 380px) {
+      .panel-left { padding-bottom: 3.35rem; }
+      .left-hero h1 { font-size: 1.55rem; }
+      .left-hero p { font-size: .78rem; }
+      .pill { font-size: .64rem; padding: .25rem .46rem; }
+      .form-box { padding: 1.25rem 1rem 1.1rem; }
+    }
   </style>
 </head>
 <body>
