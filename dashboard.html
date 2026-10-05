@@ -421,6 +421,9 @@
         <i class="bi bi-calendar-check"></i>
         <span class="nav-label">Asistencia</span>
       </a>
+      <a class="nav-item" href="marcaciones.html">
+        <i class="bi bi-geo-alt"></i><span class="nav-label">Marcaciones</span>
+      </a>
       <a class="nav-item" href="repositorio.html">
         <i class="bi bi-folder2-open"></i>
         <span class="nav-label">Repositorio Digital</span>
@@ -666,6 +669,7 @@
     { key:'observaciones',   label:'Observaciones', sub:'Registro y seguimiento', icon:'bi-clipboard-check', href:'observaciones.html', highlight:true },
     { key:'visitas',         label:'Visitas',        sub:'Control de ingreso',     icon:'bi-person-check',   href:'visitas.html' },
     { key:'asistencia',      label:'Asistencia',     sub:'Control de personal',    icon:'bi-calendar-check', href:'asistencia.html' },
+    { key:'marcaciones',     label:'Marcaciones',    sub:'Turnos y registro horario', icon:'bi-geo-alt', href:'marcaciones.html' },
     { key:'repositorio',     label:'Repositorio Digital', sub:'Documentos SST y Nómina', icon:'bi-folder2-open', href:'repositorio.html' },
     { key:'inspecciones',    label:'Inspecciones',   sub:'Auditoría y control',    icon:'bi-search',         href:'inspecciones.html' },
     { key:'tiempo_dedicado', label:'Tiempo Dedicado',sub:'Horas por actividad',    icon:'bi-clock',          href:'tiempo_dedicado.html' },
@@ -677,10 +681,10 @@
     var list    = document.getElementById('modList');
     list.innerHTML = '';
     var first   = true;
-    var modulosOperacionales = ['observaciones', 'visitas', 'asistencia', 'tiempo_dedicado', 'inspecciones', 'ast', 'capacitaciones', 'repositorio'];
+    var modulosOperacionales = ['observaciones', 'visitas', 'asistencia', 'tiempo_dedicado', 'inspecciones', 'ast', 'capacitaciones', 'repositorio', 'marcaciones'];
 
     MODULOS.forEach(function(m) {
-      if (!modulos[m.key] && (sess.role||'').toUpperCase() !== 'SUPER_ADMIN') return;
+      if (!modulos[m.key] && (sess.role||'').toUpperCase() !== 'SUPER_ADMIN' && m.key !== 'marcaciones') return;
 
       // Si es un módulo operacional de la empresa y está inactivo para la empresa, ocultarlo (excepto para SUPER_ADMIN)
       if ((sess.role||'').toUpperCase() !== 'SUPER_ADMIN' && modulosOperacionales.indexOf(m.key) >= 0) {

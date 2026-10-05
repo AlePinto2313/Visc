@@ -156,6 +156,18 @@ const Asistencias = {
   },
 };
 
+const Marcaciones = {
+  async obtener() { return callAPI('obtenerMarcaciones', { token: Auth.getToken() }); },
+  async usuarios() { return callAPI('listarUsuariosEmpresaMarcaciones', { token: Auth.getToken() }); },
+  async guardarConfiguracion(configuracion) { return callAPI('guardarConfiguracionMarcaciones', { token: Auth.getToken(), configuracion }); },
+  async buscarCoordenadas(direccion) { return callAPI('buscarCoordenadasMarcaciones', { token: Auth.getToken(), direccion }); },
+  async guardarTurno(turno) { return callAPI('guardarTurnoMarcacion', { token: Auth.getToken(), turno }); },
+  async eliminarTurno(id) { return callAPI('eliminarTurnoMarcacion', { token: Auth.getToken(), id }); },
+  async registrar(marcacion) { return callAPI('registrarMarcacion', { token: Auth.getToken(), marcacion }); },
+  async exportarExcel() { return callAPI('exportarMarcacionesExcel', { token: Auth.getToken() }); },
+  async desactivarTodas() { return callAPI('desactivarMarcacionesTodasEmpresas', { token: Auth.getToken() }); },
+};
+
 // ── Tiempo Dedicado ───────────────────────────────────────────────────────────
 
 const TiempoDedicado = {
