@@ -684,7 +684,7 @@
     var modulosOperacionales = ['observaciones', 'visitas', 'asistencia', 'tiempo_dedicado', 'inspecciones', 'ast', 'capacitaciones', 'repositorio', 'marcaciones'];
 
     MODULOS.forEach(function(m) {
-      if (!modulos[m.key] && (sess.role||'').toUpperCase() !== 'SUPER_ADMIN' && m.key !== 'marcaciones') return;
+      if (!tienePermiso(m.key, 'leer')) return;
 
       // Si es un módulo operacional de la empresa y está inactivo para la empresa, ocultarlo (excepto para SUPER_ADMIN)
       if ((sess.role||'').toUpperCase() !== 'SUPER_ADMIN' && modulosOperacionales.indexOf(m.key) >= 0) {

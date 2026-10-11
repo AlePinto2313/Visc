@@ -295,16 +295,55 @@ function setLoading(btn, loading) {
 function requireAuth() {
   const token = Auth.getToken();
   if (!token) { window.location.href = 'login.html'; return null; }
-  return Auth.getSessionLocal();
+  const sess = Auth.getSessionLocal();
+  const paginas = {
+    'observaciones.html':'observaciones', 'visitas.html':'visitas',
+    'asistencia.html':'asistencia', 'marcaciones.html':'marcaciones',
+    'repositorio.html':'repositorio', 'inspecciones.html':'inspecciones',
+    'tiempo_dedicado.html':'tiempo_dedicado', 'capacitaciones.html':'capacitaciones'
+  };
+  const modulo = paginas[(window.location.pathname || '').split('/').pop()];
+  if (modulo && !tienePermiso(modulo, 'leer')) {
+    window.location.href = 'dashboard.html';
+    return null;
+  }
+  return sess;
 }
 
 function tienePermiso(modulo, nivel = 'leer') {
   const sess = Auth.getSessionLocal();
   if (!sess) return false;
+  if ((sess.role || '').toUpperCase() === 'SUPER_ADMIN') return true;
   const niveles = { leer: 1, crear: 2, editar: 3, aprobar: 4, admin: 5 };
-  const n = (sess.modulos || {})[modulo] || '';
+  let n = (sess.modulos || {})[modulo];
+  // Los permisos nuevos se guardan como { activo, nivel }; el formato
+  // anterior guardaba directamente el nivel como texto.
+  if (n && typeof n === 'object') {
+    if (n.activo === false) return false;
+    n = n.nivel || '';
+  }
   return (niveles[n] || 0) >= (niveles[nivel] || 1);
 }
+
+// Todas las páginas contienen una barra lateral estática. Oculta los enlaces
+// que el usuario no puede usar, incluso cuando el permiso está desactivado.
+function aplicarPermisosNavegacion() {
+  const modulosPorPagina = {
+    'dashboard.html':'dashboard', 'observaciones.html':'observaciones',
+    'visitas.html':'visitas', 'asistencia.html':'asistencia',
+    'marcaciones.html':'marcaciones', 'repositorio.html':'repositorio',
+    'inspecciones.html':'inspecciones', 'tiempo_dedicado.html':'tiempo_dedicado',
+    'capacitaciones.html':'capacitaciones', 'usuarios.html':'usuarios'
+  };
+  document.querySelectorAll('a[href]').forEach(function(enlace) {
+    const pagina = (enlace.getAttribute('href') || '').split('/').pop().split('?')[0];
+    const modulo = modulosPorPagina[pagina];
+    if (modulo && !tienePermiso(modulo, 'leer')) enlace.style.display = 'none';
+  });
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', aplicarPermisosNavegacion);
+else aplicarPermisosNavegacion();
 
 // ── Theme Customizer ─────────────────────────────────────────────────────────
 
