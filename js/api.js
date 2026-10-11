@@ -338,7 +338,12 @@ function aplicarPermisosNavegacion() {
   document.querySelectorAll('a[href]').forEach(function(enlace) {
     const pagina = (enlace.getAttribute('href') || '').split('/').pop().split('?')[0];
     const modulo = modulosPorPagina[pagina];
-    if (modulo && !tienePermiso(modulo, 'leer')) enlace.style.display = 'none';
+    if (modulo && !tienePermiso(modulo, 'leer')) {
+      // Muchas vistas antiguas declaran .nav-item con display:flex!important.
+      // La prioridad también debe aplicarse al ocultar el enlace.
+      enlace.style.setProperty('display', 'none', 'important');
+      enlace.setAttribute('aria-hidden', 'true');
+    }
   });
 }
 
